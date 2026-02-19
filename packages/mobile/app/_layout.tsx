@@ -11,6 +11,7 @@ import { useEffect } from "react";
 import Toast from "react-native-toast-message";
 
 import { ErrorBoundary } from "../src/components/ui/ErrorBoundary";
+import { toastConfig } from "../src/components/ui/ToastConfig";
 import { useAuthStore } from "../src/stores/auth.store";
 
 SplashScreen.preventAutoHideAsync();
@@ -46,7 +47,7 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
       </Stack>
-      <Toast />
+      <Toast config={toastConfig} />
     </ErrorBoundary>
   );
 }

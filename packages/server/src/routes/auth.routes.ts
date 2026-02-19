@@ -16,6 +16,7 @@ import type { FastifyInstance } from "fastify";
 import { db } from "../config/database.js";
 import { users } from "../db/schema/users.js";
 import { AuthService } from "../services/auth.service.js";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../services/email.service.js";
 import { UnauthorizedError } from "../utils/errors.js";
 
 export async function authRoutes(fastify: FastifyInstance) {
@@ -47,30 +48,29 @@ export async function authRoutes(fastify: FastifyInstance) {
 
     if (existingUser) {
       if (!existingUser.emailVerified) {
-        // Existing but unverified — rotate token and resend
         const canSend = await authService.canSendVerificationEmail(existingUser.id);
         if (canSend) {
-          await authService.createVerificationToken(existingUser.id);
-          // TODO: Send verification email
+          const token = await authService.createVerificationToken(existingUser.id);
+          await sendVerificationEmail(body.email, token);
         }
       }
-      // Existing + verified — do nothing (no leak)
       return reply.send({
         data: { message: "If that email is valid, a verification email has been sent." },
       });
     }
 
-    // Create new user (auto-verified until email service is configured)
     const passwordHash = await authService.hashPassword(body.password);
-    await db.insert(users).values({
-      email: body.email,
-      passwordHash,
-      displayName: body.displayName,
-      emailVerified: true,
-    });
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        email: body.email,
+        passwordHash,
+        displayName: body.displayName,
+      })
+      .returning({ id: users.id });
 
-    // TODO: When email service is configured, remove emailVerified: true above,
-    // use .returning({ id }) and call authService.createVerificationToken(id)
+    const token = await authService.createVerificationToken(newUser.id);
+    await sendVerificationEmail(body.email, token);
 
     return reply.status(201).send({
       data: { message: "If that email is valid, a verification email has been sent." },
@@ -142,8 +142,8 @@ export async function authRoutes(fastify: FastifyInstance) {
     if (user && !user.emailVerified) {
       const canSend = await authService.canSendVerificationEmail(user.id);
       if (canSend) {
-        await authService.createVerificationToken(user.id);
-        // TODO: Send verification email
+        const verifyToken = await authService.createVerificationToken(user.id);
+        await sendVerificationEmail(email, verifyToken);
       }
     }
 
@@ -263,7 +263,7 @@ export async function authRoutes(fastify: FastifyInstance) {
     if (canSend) {
       const result = await authService.createPasswordResetToken(email);
       if (result) {
-        // TODO: Send password reset email with result.token
+        await sendPasswordResetEmail(email, result.token);
       }
     }
 
