@@ -60,20 +60,17 @@ export async function authRoutes(fastify: FastifyInstance) {
       });
     }
 
-    // Create new user
+    // Create new user (auto-verified until email service is configured)
     const passwordHash = await authService.hashPassword(body.password);
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        email: body.email,
-        passwordHash,
-        displayName: body.displayName,
-      })
-      .returning({ id: users.id });
+    await db.insert(users).values({
+      email: body.email,
+      passwordHash,
+      displayName: body.displayName,
+      emailVerified: true,
+    });
 
-    // Create verification token
-    await authService.createVerificationToken(newUser.id);
-    // TODO: Send verification email
+    // TODO: When email service is configured, remove emailVerified: true above,
+    // use .returning({ id }) and call authService.createVerificationToken(id)
 
     return reply.status(201).send({
       data: { message: "If that email is valid, a verification email has been sent." },
