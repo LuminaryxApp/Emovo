@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+
+# Build
+dist/
+build/
+.expo/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+
+# Drizzle
+packages/server/src/db/migrations/meta/
+
+# Expo
+packages/mobile/android/
+packages/mobile/ios/
+packages/mobile/.expo/
+
+# Sentry
+.sentryclirc
+
+# Branding assets (originals)
+Fiverr Premium Kit/
