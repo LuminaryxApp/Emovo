@@ -127,6 +127,73 @@ export async function authRoutes(fastify: FastifyInstance) {
   });
 
   /**
+   * GET /auth/verify-email?token=...
+   * Browser-friendly verification link from email.
+   */
+  fastify.get("/auth/verify-email", async (request, reply) => {
+    const { token } = request.query as { token?: string };
+
+    const htmlPage = (title: string, message: string, success: boolean) => `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>${title} — Emovo</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: Georgia, serif; background: #FEFAE0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+          .card { background: #fff; border-radius: 16px; padding: 48px 32px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+          .icon { font-size: 48px; margin-bottom: 16px; }
+          h1 { color: ${success ? "#75863C" : "#DC2626"}; font-size: 24px; margin-bottom: 12px; }
+          p { color: #4A4A4A; font-size: 16px; line-height: 1.6; }
+          .subtitle { color: #7A7A7A; font-size: 14px; margin-top: 16px; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="icon">${success ? "\u2705" : "\u274C"}</div>
+          <h1>${title}</h1>
+          <p>${message}</p>
+          <p class="subtitle">You can close this page and return to the Emovo app.</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    if (!token) {
+      return reply
+        .type("text/html")
+        .status(400)
+        .send(htmlPage("Missing Token", "No verification token was provided.", false));
+    }
+
+    try {
+      await authService.verifyEmailToken(token);
+      return reply
+        .type("text/html")
+        .send(
+          htmlPage(
+            "Email Verified!",
+            "Your email has been verified successfully. You can now sign in to Emovo.",
+            true,
+          ),
+        );
+    } catch {
+      return reply
+        .type("text/html")
+        .status(400)
+        .send(
+          htmlPage(
+            "Verification Failed",
+            "This link is invalid or has expired. Please request a new verification email from the app.",
+            false,
+          ),
+        );
+    }
+  });
+
+  /**
    * POST /auth/resend-verification
    * Anti-enumeration: always returns generic 200.
    */
