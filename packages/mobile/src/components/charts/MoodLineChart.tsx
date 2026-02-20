@@ -35,31 +35,35 @@ export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Mood Trend</Text>
-      <View style={styles.chartWrapper}>
-        <LineChart
-          data={lineData}
-          color={colors.primary}
-          thickness={2}
-          dataPointsColor={colors.primary}
-          dataPointsRadius={4}
-          noOfSections={4}
-          maxValue={5}
-          yAxisThickness={0}
-          xAxisThickness={0}
-          hideRules
-          isAnimated
-          curved
-          height={160}
-          spacing={dataPoints.length > 10 ? 30 : 50}
-          textShiftY={-10}
-          textColor={colors.textSecondary}
-          textFontSize={10}
-          startFillColor={colors.primaryLight}
-          startOpacity={0.3}
-          endOpacity={0}
-          areaChart
-        />
+      <Text style={styles.sectionLabel}>MOOD TREND</Text>
+      <View style={styles.card}>
+        <View style={styles.chartWrapper}>
+          <LineChart
+            data={lineData}
+            color={colors.primary}
+            thickness={2.5}
+            dataPointsColor={colors.primary}
+            dataPointsRadius={4}
+            noOfSections={4}
+            maxValue={5}
+            yAxisThickness={0}
+            xAxisThickness={0}
+            hideRules
+            isAnimated
+            curved
+            height={150}
+            spacing={dataPoints.length > 10 ? 30 : 50}
+            textShiftY={-10}
+            textColor={colors.textSecondary}
+            textFontSize={10}
+            startFillColor={colors.primaryLight}
+            startOpacity={0.25}
+            endOpacity={0}
+            areaChart
+            xAxisLabelTextStyle={styles.xLabel}
+            yAxisTextStyle={styles.yLabel}
+          />
+        </View>
       </View>
     </View>
   );
@@ -69,18 +73,36 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: spacing.lg,
   },
-  title: {
-    fontSize: 18,
+  sectionLabel: {
+    fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
-    marginBottom: spacing.md,
+    color: colors.sectionLabel,
+    letterSpacing: 1.5,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
+  },
+  card: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 16,
+    padding: spacing.md,
+    shadowColor: colors.cardShadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   chartWrapper: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
     alignItems: "center",
+    paddingTop: spacing.xs,
+  },
+  xLabel: {
+    fontSize: 11,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.textTertiary,
+  },
+  yLabel: {
+    fontSize: 10,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.textTertiary,
   },
 });

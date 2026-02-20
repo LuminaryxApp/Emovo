@@ -21,22 +21,25 @@ export function MoodBarChart({ distribution }: MoodBarChartProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Mood Distribution</Text>
-      <View style={styles.chartWrapper}>
-        <BarChart
-          data={barData}
-          barWidth={40}
-          spacing={16}
-          roundedTop
-          roundedBottom
-          noOfSections={5}
-          yAxisThickness={0}
-          xAxisThickness={0}
-          hideRules
-          isAnimated
-          barBorderRadius={6}
-          height={160}
-        />
+      <Text style={styles.sectionLabel}>MOOD DISTRIBUTION</Text>
+      <View style={styles.card}>
+        <View style={styles.chartWrapper}>
+          <BarChart
+            data={barData}
+            barWidth={36}
+            spacing={18}
+            roundedTop
+            roundedBottom
+            noOfSections={4}
+            yAxisThickness={0}
+            xAxisThickness={0}
+            hideRules
+            isAnimated
+            barBorderRadius={8}
+            height={150}
+            xAxisLabelTextStyle={styles.xLabel}
+          />
+        </View>
       </View>
     </View>
   );
@@ -46,18 +49,29 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: spacing.lg,
   },
-  title: {
-    fontSize: 18,
+  sectionLabel: {
+    fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
-    marginBottom: spacing.md,
+    color: colors.sectionLabel,
+    letterSpacing: 1.5,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
+  },
+  card: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 16,
+    padding: spacing.md,
+    shadowColor: colors.cardShadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   chartWrapper: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
     alignItems: "center",
+    paddingTop: spacing.xs,
+  },
+  xLabel: {
+    fontSize: 16,
   },
 });

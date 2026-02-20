@@ -3,7 +3,6 @@ import * as Haptics from "expo-haptics";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 import { colors } from "../../theme/colors";
-import { spacing } from "../../theme/spacing";
 
 interface MoodSelectorProps {
   selectedScore: number | null;
@@ -12,18 +11,21 @@ interface MoodSelectorProps {
 
 export function MoodSelector({ selectedScore, onSelect }: MoodSelectorProps) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>How are you feeling?</Text>
-      <View style={styles.row}>
-        {MOOD_SCALE.map((mood) => {
-          const isSelected = selectedScore === mood.score;
-          return (
+    <View style={styles.row}>
+      {MOOD_SCALE.map((mood) => {
+        const isSelected = selectedScore === mood.score;
+        return (
+          <View key={mood.score} style={styles.moodItem}>
             <TouchableOpacity
-              key={mood.score}
               style={[
-                styles.moodButton,
+                styles.circle,
                 { borderColor: mood.color },
-                isSelected && { backgroundColor: mood.color },
+                isSelected && {
+                  backgroundColor: mood.color,
+                  width: 64,
+                  height: 64,
+                  borderRadius: 32,
+                },
               ]}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -32,53 +34,40 @@ export function MoodSelector({ selectedScore, onSelect }: MoodSelectorProps) {
               activeOpacity={0.7}
             >
               <Text style={styles.emoji}>{mood.emoji}</Text>
-              <Text style={[styles.moodLabel, isSelected && styles.moodLabelSelected]}>
-                {mood.label}
-              </Text>
             </TouchableOpacity>
-          );
-        })}
-      </View>
+            <Text style={styles.label}>{mood.label}</Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.lg,
-  },
-  label: {
-    fontSize: 18,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
-    marginBottom: spacing.md,
-    textAlign: "center",
-  },
   row: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    gap: spacing.xs,
+    justifyContent: "space-around",
   },
-  moodButton: {
-    flex: 1,
+  moodItem: {
     alignItems: "center",
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    borderRadius: 12,
+  },
+  circle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     borderWidth: 2,
-    backgroundColor: colors.surface,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
   },
   emoji: {
-    fontSize: 28,
-    marginBottom: 4,
+    fontSize: 24,
   },
-  moodLabel: {
+  label: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
-  },
-  moodLabelSelected: {
-    color: colors.textInverse,
-    fontFamily: "SourceSerif4_600SemiBold",
+    color: colors.textTertiary,
+    textAlign: "center",
+    marginTop: 6,
   },
 });

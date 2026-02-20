@@ -1,7 +1,7 @@
 import type { MoodEntry } from "@emovo/shared";
 import { useEffect, useCallback } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MoodEntryCard } from "../../src/components/mood/MoodEntryCard";
 import { useMoodStore } from "../../src/stores/mood.store";
@@ -9,7 +9,6 @@ import { colors } from "../../src/theme/colors";
 import { spacing } from "../../src/theme/spacing";
 
 export default function HistoryScreen() {
-  const insets = useSafeAreaInsets();
   const entries = useMoodStore((s) => s.entries);
   const isLoading = useMoodStore((s) => s.isLoadingEntries);
   const nextCursor = useMoodStore((s) => s.nextCursor);
@@ -38,9 +37,9 @@ export default function HistoryScreen() {
     if (isLoading) return null;
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyEmoji}>🌱</Text>
+        <Text style={styles.emptyEmoji}>🌿</Text>
         <Text style={styles.emptyTitle}>No entries yet</Text>
-        <Text style={styles.emptySubtitle}>Start logging your moods to see your history here</Text>
+        <Text style={styles.emptySubtitle}>Start logging your mood to see your history here.</Text>
       </View>
     );
   };
@@ -54,9 +53,11 @@ export default function HistoryScreen() {
     );
   };
 
+  const renderSeparator = () => <View style={styles.separator} />;
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Text style={styles.title}>Mood History</Text>
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <Text style={styles.title}>History</Text>
       <FlatList
         data={entries}
         renderItem={renderItem}
@@ -67,6 +68,7 @@ export default function HistoryScreen() {
         onEndReachedThreshold={0.3}
         ListEmptyComponent={renderEmpty}
         ListFooterComponent={renderFooter}
+        ItemSeparatorComponent={renderSeparator}
         refreshControl={
           <RefreshControl
             refreshing={isLoading && entries.length > 0}
@@ -76,7 +78,7 @@ export default function HistoryScreen() {
           />
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -86,16 +88,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: "SourceSerif4_700Bold",
     color: colors.text,
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
   },
   listContent: {
-    padding: spacing.lg,
-    paddingTop: 0,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
     flexGrow: 1,
+  },
+  separator: {
+    height: 12,
   },
   emptyContainer: {
     flex: 1,
@@ -119,6 +125,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: "center",
     maxWidth: 260,
+    lineHeight: 20,
   },
   footer: {
     paddingVertical: spacing.lg,

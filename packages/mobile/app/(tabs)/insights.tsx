@@ -7,8 +7,9 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MoodBarChart } from "../../src/components/charts/MoodBarChart";
 import { MoodLineChart } from "../../src/components/charts/MoodLineChart";
@@ -20,8 +21,13 @@ import { spacing } from "../../src/theme/spacing";
 
 type Period = "week" | "month" | "year";
 
+const PERIOD_LABELS: Record<Period, string> = {
+  week: "this week",
+  month: "this month",
+  year: "this year",
+};
+
 export default function InsightsScreen() {
-  const insets = useSafeAreaInsets();
   const [period, setPeriod] = useState<Period>("week");
   const { summary, trend, triggers, isLoading, refresh } = useMoodStats(period);
 
@@ -29,82 +35,96 @@ export default function InsightsScreen() {
     return MOOD_SCALE.find((m) => m.score === Math.round(score)) || MOOD_SCALE[2];
   };
 
+  const hasData = summary && summary.entryCount > 0;
+
   return (
-    <ScrollView
-      style={[styles.container, { paddingTop: insets.top }]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={isLoading}
-          onRefresh={refresh}
-          tintColor={colors.primary}
-          colors={[colors.primary]}
-        />
-      }
-    >
-      <Text style={styles.title}>Insights</Text>
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
+        <Text style={styles.title}>Insights</Text>
 
-      <PeriodSelector value={period} onChange={setPeriod} />
+        <PeriodSelector value={period} onChange={setPeriod} />
 
-      {isLoading && !summary ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : summary && summary.entryCount > 0 ? (
-        <>
-          {/* Summary Cards */}
-          <View style={styles.cardRow}>
-            <View style={styles.card}>
-              <Text style={styles.cardValue}>{getMoodForScore(summary.avgMood).emoji}</Text>
-              <Text style={styles.cardLabel}>Avg Mood</Text>
-              <Text style={styles.cardSubvalue}>{summary.avgMood.toFixed(1)}/5</Text>
-            </View>
-            <View style={styles.card}>
-              <Text style={styles.cardValue}>{summary.entryCount}</Text>
-              <Text style={styles.cardLabel}>Entries</Text>
-              <Text style={styles.cardSubvalue}>this {period}</Text>
-            </View>
+        {isLoading && !summary ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
           </View>
-
-          {/* Charts */}
-          <MoodBarChart distribution={summary.moodDistribution} />
-
-          {trend && trend.dataPoints.length >= 2 && (
-            <MoodLineChart dataPoints={trend.dataPoints} period={period} />
-          )}
-
-          {triggers && triggers.length > 0 && <TriggerPieChart triggers={triggers} />}
-
-          {/* Top Triggers List */}
-          {summary.topTriggers.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Top Triggers</Text>
-              {summary.topTriggers.slice(0, 5).map((item, index) => (
-                <View key={item.trigger.name} style={styles.triggerRow}>
-                  <Text style={styles.triggerRank}>{index + 1}</Text>
-                  <Text style={styles.triggerName}>{item.trigger.name}</Text>
-                  <View style={styles.triggerMeta}>
-                    <Text style={styles.triggerCount}>{item.count}x</Text>
-                    <Text style={styles.triggerAvg}>
-                      {getMoodForScore(item.avgMood).emoji} {item.avgMood.toFixed(1)}
-                    </Text>
-                  </View>
-                </View>
-              ))}
+        ) : hasData ? (
+          <>
+            {/* Hero Card - Average Mood */}
+            <View style={styles.heroCard}>
+              <View style={styles.heroRow}>
+                <Text style={styles.heroScore}>{summary.avgMood.toFixed(1)}</Text>
+                <Text style={styles.heroEmoji}>{getMoodForScore(summary.avgMood).emoji}</Text>
+              </View>
+              <Text style={styles.heroLabel}>{getMoodForScore(summary.avgMood).label}</Text>
             </View>
-          )}
-        </>
-      ) : (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyEmoji}>📊</Text>
-          <Text style={styles.emptyTitle}>No data yet</Text>
-          <Text style={styles.emptySubtitle}>Log some moods to see your insights here</Text>
-        </View>
-      )}
-    </ScrollView>
+
+            {/* Stats Row */}
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>{summary.entryCount}</Text>
+                <Text style={styles.statLabel}>entries</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statValue}>{getMoodForScore(summary.avgMood).emoji}</Text>
+                <Text style={styles.statLabel}>{PERIOD_LABELS[period]}</Text>
+              </View>
+            </View>
+
+            {/* Mood Distribution Chart */}
+            <View style={styles.chartSection}>
+              <MoodBarChart distribution={summary.moodDistribution} />
+            </View>
+
+            {/* Mood Trend Chart */}
+            {trend && trend.dataPoints.length >= 2 && (
+              <View style={styles.chartSection}>
+                <MoodLineChart dataPoints={trend.dataPoints} period={period} />
+              </View>
+            )}
+
+            {/* Triggers Pie Chart */}
+            {triggers && triggers.length > 0 && (
+              <View style={styles.chartSection}>
+                <TriggerPieChart triggers={triggers} />
+              </View>
+            )}
+          </>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyEmoji}>📊</Text>
+            <Text style={styles.emptyTitle}>No data yet</Text>
+            <Text style={styles.emptySubtitle}>Log some moods to see your insights here.</Text>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 }
+
+const cardShadow = Platform.select({
+  ios: {
+    shadowColor: colors.cardShadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+  },
+  android: {
+    elevation: 2,
+  },
+  default: {},
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -112,94 +132,82 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: "SourceSerif4_700Bold",
     color: colors.text,
+    paddingTop: spacing.md,
     marginBottom: spacing.md,
   },
   loadingContainer: {
     paddingVertical: spacing.xxl * 2,
     alignItems: "center",
   },
-  cardRow: {
-    flexDirection: "row",
-    gap: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  card: {
-    flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
+
+  // Hero Card
+  heroCard: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 16,
+    padding: spacing.lg,
+    marginTop: spacing.md,
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    ...cardShadow,
   },
-  cardValue: {
-    fontSize: 32,
+  heroRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  heroScore: {
+    fontSize: 36,
     fontFamily: "SourceSerif4_700Bold",
     color: colors.text,
   },
-  cardLabel: {
+  heroEmoji: {
+    fontSize: 32,
+  },
+  heroLabel: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textSecondary,
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
-  cardSubvalue: {
-    fontSize: 12,
-    fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
-    marginTop: 2,
-  },
-  section: {
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  triggerRow: {
+
+  // Stats Row
+  statsRow: {
     flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: 10,
-    padding: spacing.md,
-    marginBottom: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    gap: 12,
+    marginTop: spacing.md,
   },
-  triggerRank: {
-    fontSize: 14,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textTertiary,
-    width: 24,
-  },
-  triggerName: {
+  statCard: {
     flex: 1,
-    fontSize: 16,
-    fontFamily: "SourceSerif4_400Regular",
+    backgroundColor: colors.cardBackground,
+    borderRadius: 14,
+    padding: spacing.md,
+    alignItems: "center",
+    ...cardShadow,
+  },
+  statValue: {
+    fontSize: 24,
+    fontFamily: "SourceSerif4_700Bold",
     color: colors.text,
   },
-  triggerMeta: {
-    alignItems: "flex-end",
-  },
-  triggerCount: {
-    fontSize: 14,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.primary,
-  },
-  triggerAvg: {
+  statLabel: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
+    color: colors.textTertiary,
+    marginTop: spacing.xs,
   },
+
+  // Chart Sections
+  chartSection: {
+    marginTop: spacing.md,
+  },
+
+  // Empty State
   emptyContainer: {
     alignItems: "center",
     paddingVertical: spacing.xxl * 2,
@@ -220,5 +228,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: "center",
     maxWidth: 260,
+    lineHeight: 20,
   },
 });

@@ -9,12 +9,12 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-  Image,
   TextInput,
   Modal,
   ActivityIndicator,
+  Platform,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { getSessionId } from "../../src/lib/secure-storage";
 import { exportData } from "../../src/services/export.api";
@@ -23,11 +23,7 @@ import { useAuthStore } from "../../src/stores/auth.store";
 import { colors } from "../../src/theme/colors";
 import { spacing } from "../../src/theme/spacing";
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const iconImage = require("../../assets/icon.png");
-
 export default function ProfileScreen() {
-  const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const logoutAll = useAuthStore((s) => s.logoutAll);
@@ -49,6 +45,8 @@ export default function ProfileScreen() {
 
   // Export state
   const [isExporting, setIsExporting] = useState(false);
+
+  const displayInitial = (user?.displayName || "U").charAt(0).toUpperCase();
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -167,9 +165,9 @@ export default function ProfileScreen() {
     Alert.alert(
       "Delete Account?",
       "This will permanently delete your account and all associated data:\n\n" +
-        "• All mood entries and notes\n" +
-        "• All custom triggers\n" +
-        "• All session data\n\n" +
+        "\u2022 All mood entries and notes\n" +
+        "\u2022 All custom triggers\n" +
+        "\u2022 All session data\n\n" +
         "This action cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
@@ -200,82 +198,80 @@ export default function ProfileScreen() {
 
   return (
     <>
-      <ScrollView
-        style={[styles.container, { paddingTop: insets.top }]}
-        contentContainerStyle={styles.content}
-      >
-        {/* Profile Header */}
-        <View style={styles.header}>
-          <Image source={iconImage} style={styles.avatar} resizeMode="contain" />
-          <Text style={styles.name}>{user?.displayName || "User"}</Text>
-          <Text style={styles.email}>{user?.email || ""}</Text>
-        </View>
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Profile Header */}
+          <View style={styles.header}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{displayInitial}</Text>
+            </View>
+            <Text style={styles.name}>{user?.displayName || "User"}</Text>
+            <Text style={styles.email}>{user?.email || ""}</Text>
+          </View>
 
-        {/* Account Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <SettingsRow
-            icon="user"
-            label="Display Name"
-            value={user?.displayName || ""}
-            onPress={() => openEdit("displayName")}
-          />
-          <SettingsRow icon="mail" label="Email" value={user?.email || ""} />
-          <SettingsRow
-            icon="globe"
-            label="Timezone"
-            value={user?.timezone || "UTC"}
-            onPress={() => openEdit("timezone")}
-          />
-        </View>
+          {/* ACCOUNT Section */}
+          <Text style={styles.sectionLabel}>ACCOUNT</Text>
+          <View style={styles.sectionCard}>
+            <SettingsRow
+              label="Display Name"
+              value={user?.displayName || ""}
+              onPress={() => openEdit("displayName")}
+              showDivider
+            />
+            <SettingsRow label="Email" value={user?.email || ""} showDivider />
+            <SettingsRow
+              label="Timezone"
+              value={user?.timezone || "UTC"}
+              onPress={() => openEdit("timezone")}
+            />
+          </View>
 
-        {/* Data Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Data</Text>
-          <SettingsRow
-            icon="download"
-            label="Export as JSON"
-            value={isExporting ? "Exporting..." : ""}
-            onPress={() => handleExport("json")}
-          />
-          <SettingsRow
-            icon="download"
-            label="Export as CSV"
-            value={isExporting ? "Exporting..." : ""}
-            onPress={() => handleExport("csv")}
-          />
-        </View>
+          {/* DATA Section */}
+          <Text style={styles.sectionLabel}>DATA</Text>
+          <View style={styles.sectionCard}>
+            <SettingsRow
+              label="Export as JSON"
+              value={isExporting ? "Exporting..." : undefined}
+              onPress={() => handleExport("json")}
+              showDivider
+            />
+            <SettingsRow
+              label="Export as CSV"
+              value={isExporting ? "Exporting..." : undefined}
+              onPress={() => handleExport("csv")}
+            />
+          </View>
 
-        {/* Security Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Security</Text>
-          <SettingsRow
-            icon="smartphone"
-            label="Active Sessions"
-            value={`${sessions.length || "View"}`}
-            onPress={handleOpenSessions}
-          />
-          <SettingsRow icon="shield" label="Log out all devices" onPress={handleLogoutAll} />
-        </View>
+          {/* SECURITY Section */}
+          <Text style={styles.sectionLabel}>SECURITY</Text>
+          <View style={styles.sectionCard}>
+            <SettingsRow label="Active Sessions" onPress={handleOpenSessions} showDivider />
+            <SettingsRow label="Log out all devices" onPress={handleLogoutAll} />
+          </View>
 
-        {/* Logout Button */}
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-          disabled={isLoggingOut}
-        >
-          <Feather name="log-out" size={18} color={colors.error} />
-          <Text style={styles.logoutText}>{isLoggingOut ? "Logging out..." : "Log Out"}</Text>
-        </TouchableOpacity>
+          {/* DANGER ZONE */}
+          <Text style={[styles.sectionLabel, { color: colors.error }]}>DANGER ZONE</Text>
 
-        {/* Delete Account */}
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
-          <Feather name="trash-2" size={16} color={colors.error} />
-          <Text style={styles.deleteText}>Delete Account</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+            disabled={isLoggingOut}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.logoutText}>{isLoggingOut ? "Logging out..." : "Log Out"}</Text>
+          </TouchableOpacity>
 
-        <Text style={styles.version}>Emovo v0.1.0</Text>
-      </ScrollView>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDeleteAccount}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.deleteText}>Delete Account</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.version}>v0.1.0</Text>
+        </ScrollView>
+      </SafeAreaView>
 
       {/* Edit Modal */}
       <Modal
@@ -381,66 +377,198 @@ export default function ProfileScreen() {
   );
 }
 
+// --- Settings Row Component ---
+
 function SettingsRow({
-  icon,
   label,
   value,
   onPress,
+  showDivider,
 }: {
-  icon: keyof typeof Feather.glyphMap;
   label: string;
   value?: string;
   onPress?: () => void;
+  showDivider?: boolean;
 }) {
   const Wrapper = onPress ? TouchableOpacity : View;
   return (
-    <Wrapper style={settingsStyles.row} onPress={onPress}>
-      <Feather name={icon} size={20} color={colors.primary} />
-      <View style={settingsStyles.textContainer}>
+    <>
+      <Wrapper
+        style={settingsStyles.row}
+        onPress={onPress}
+        {...(onPress ? { activeOpacity: 0.6 } : {})}
+      >
         <Text style={settingsStyles.label}>{label}</Text>
-        {value ? <Text style={settingsStyles.value}>{value}</Text> : null}
-      </View>
-      {onPress && <Feather name="chevron-right" size={18} color={colors.textTertiary} />}
-    </Wrapper>
+        <View style={settingsStyles.rightSide}>
+          {value ? <Text style={settingsStyles.value}>{value}</Text> : null}
+          {onPress && (
+            <Feather
+              name="chevron-right"
+              size={16}
+              color={colors.textTertiary}
+              style={{ marginLeft: spacing.sm }}
+            />
+          )}
+        </View>
+      </Wrapper>
+      {showDivider && <View style={settingsStyles.divider} />}
+    </>
   );
 }
 
-const sessionStyles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
-    gap: spacing.sm,
+// --- Styles ---
+
+const cardShadow = Platform.select({
+  ios: {
+    shadowColor: colors.cardShadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
   },
-  info: {
+  android: {
+    elevation: 2,
+  },
+  default: {},
+});
+
+const styles = StyleSheet.create({
+  safeArea: {
     flex: 1,
+    backgroundColor: colors.background,
   },
-  deviceName: {
-    fontSize: 14,
-    fontFamily: "SourceSerif4_600SemiBold",
+  content: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+
+  // Header
+  header: {
+    alignItems: "center",
+    paddingTop: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.md,
+  },
+  avatarText: {
+    fontSize: 24,
+    fontFamily: "SourceSerif4_700Bold",
+    color: colors.textInverse,
+  },
+  name: {
+    fontSize: 22,
+    fontFamily: "SourceSerif4_700Bold",
     color: colors.text,
   },
-  lastUsed: {
+  email: {
+    fontSize: 14,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
+
+  // Section
+  sectionLabel: {
+    fontSize: 11,
+    fontFamily: "SourceSerif4_600SemiBold",
+    letterSpacing: 1.5,
+    color: colors.sectionLabel,
+    textTransform: "uppercase",
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
+  },
+  sectionCard: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 14,
+    overflow: "hidden",
+    marginBottom: spacing.lg,
+    ...cardShadow,
+  },
+
+  // Destructive actions
+  logoutButton: {
+    height: 52,
+    backgroundColor: colors.errorLight,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  logoutText: {
+    fontSize: 15,
+    fontFamily: "SourceSerif4_600SemiBold",
+    color: colors.error,
+  },
+  deleteButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    paddingVertical: spacing.md,
+  },
+  deleteText: {
+    fontSize: 14,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.error,
+  },
+
+  // Version
+  version: {
+    textAlign: "center",
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textTertiary,
-    marginTop: 2,
+    marginTop: spacing.xl,
+  },
+});
+
+const settingsStyles = StyleSheet.create({
+  row: {
+    height: 52,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.md,
+  },
+  rightSide: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  label: {
+    fontSize: 15,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.text,
+  },
+  value: {
+    fontSize: 14,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.textTertiary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.divider,
+    marginLeft: spacing.md,
   },
 });
 
 const modalStyles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
+    backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "center",
+    alignItems: "center",
     padding: spacing.lg,
   },
   container: {
     backgroundColor: colors.surface,
-    borderRadius: 16,
+    borderRadius: 20,
     padding: spacing.lg,
+    width: "100%",
+    maxWidth: 340,
   },
   headerRow: {
     flexDirection: "row",
@@ -453,15 +581,14 @@ const modalStyles = StyleSheet.create({
     color: colors.text,
   },
   input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    padding: spacing.md,
+    height: 52,
+    borderRadius: 14,
+    paddingHorizontal: spacing.md,
     marginTop: spacing.md,
     fontSize: 16,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.text,
-    backgroundColor: colors.background,
+    backgroundColor: colors.inputBackground,
   },
   actions: {
     flexDirection: "row",
@@ -472,7 +599,7 @@ const modalStyles = StyleSheet.create({
   cancelBtn: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm + 2,
-    borderRadius: 10,
+    borderRadius: 14,
   },
   cancelText: {
     fontSize: 15,
@@ -483,7 +610,7 @@ const modalStyles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm + 2,
-    borderRadius: 10,
+    borderRadius: 14,
   },
   saveText: {
     fontSize: 15,
@@ -499,110 +626,27 @@ const modalStyles = StyleSheet.create({
   },
 });
 
-const settingsStyles = StyleSheet.create({
+const sessionStyles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
     padding: spacing.md,
-    borderRadius: 10,
-    marginBottom: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  textContainer: {
-    flex: 1,
-    marginLeft: spacing.sm,
-  },
-  label: {
-    fontSize: 14,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
-  },
-  value: {
-    fontSize: 13,
-    fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
-});
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: spacing.xl,
-    paddingVertical: spacing.lg,
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    marginBottom: spacing.md,
-  },
-  name: {
-    fontSize: 22,
-    fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
-  },
-  email: {
-    fontSize: 14,
-    fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  section: {
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
-    marginBottom: spacing.sm,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  logoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
     gap: spacing.sm,
-    paddingVertical: spacing.md,
-    borderWidth: 1.5,
-    borderColor: colors.error,
-    borderRadius: 12,
-    marginTop: spacing.md,
   },
-  logoutText: {
-    fontSize: 16,
+  info: {
+    flex: 1,
+  },
+  deviceName: {
+    fontSize: 14,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.error,
+    color: colors.text,
   },
-  deleteButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.md,
-    marginTop: spacing.sm,
-  },
-  deleteText: {
-    fontSize: 13,
-    fontFamily: "SourceSerif4_400Regular",
-    color: colors.error,
-  },
-  version: {
-    textAlign: "center",
+  lastUsed: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textTertiary,
-    marginTop: spacing.xl,
+    marginTop: 2,
   },
 });

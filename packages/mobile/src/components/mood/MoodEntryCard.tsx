@@ -17,99 +17,123 @@ export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
   const loggedDate = new Date(entry.loggedAt);
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={onPress ? 0.7 : 1}>
-      <View style={styles.header}>
-        <View style={[styles.moodBadge, { backgroundColor: mood.color }]}>
-          <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-        </View>
-        <View style={styles.headerText}>
-          <Text style={styles.moodLabel}>{mood.label}</Text>
-          <Text style={styles.date}>
-            {format(loggedDate, "MMM d, yyyy")} at {format(loggedDate, "h:mm a")}
-          </Text>
-        </View>
-        {onPress && <Feather name="chevron-right" size={20} color={colors.textTertiary} />}
-      </View>
-
-      {entry.note && (
-        <Text style={styles.note} numberOfLines={2}>
-          {entry.note}
-        </Text>
-      )}
-
-      {entry.triggers.length > 0 && (
-        <View style={styles.triggers}>
-          {entry.triggers.map((trigger) => (
-            <View key={trigger.id} style={styles.triggerChip}>
-              <Text style={styles.triggerText}>{trigger.name}</Text>
+    <TouchableOpacity
+      style={[styles.card, { borderLeftColor: mood.color }]}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
+      <View style={styles.content}>
+        <View style={styles.body}>
+          {/* Top row: emoji + label left, time right */}
+          <View style={styles.topRow}>
+            <View style={styles.moodInfo}>
+              <Text style={styles.emoji}>{mood.emoji}</Text>
+              <Text style={styles.moodLabel}>{mood.label}</Text>
             </View>
-          ))}
+            <Text style={styles.time}>{format(loggedDate, "h:mm a")}</Text>
+          </View>
+
+          {/* Note preview */}
+          {entry.note && (
+            <Text style={styles.note} numberOfLines={2}>
+              {entry.note}
+            </Text>
+          )}
+
+          {/* Trigger chips */}
+          {entry.triggers.length > 0 && (
+            <View style={styles.triggers}>
+              {entry.triggers.map((trigger) => (
+                <View key={trigger.id} style={styles.triggerChip}>
+                  <Text style={styles.triggerText}>{trigger.name}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
-      )}
+
+        {/* Chevron */}
+        {onPress && (
+          <View style={styles.chevronContainer}>
+            <Feather name="chevron-right" size={16} color={colors.textTertiary} />
+          </View>
+        )}
+      </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    backgroundColor: colors.cardBackground,
+    borderRadius: 14,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+    marginBottom: 12,
+    shadowColor: colors.cardShadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: "hidden",
   },
-  header: {
+  content: {
+    flexDirection: "row",
+    padding: spacing.md,
+  },
+  body: {
+    flex: 1,
+  },
+  topRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
   },
-  moodBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: "center",
+  moodInfo: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: 8,
   },
-  moodEmoji: {
-    fontSize: 22,
-  },
-  headerText: {
-    flex: 1,
-    marginLeft: spacing.sm,
+  emoji: {
+    fontSize: 28,
   },
   moodLabel: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
     color: colors.text,
   },
-  date: {
-    fontSize: 13,
+  time: {
+    fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textTertiary,
-    marginTop: 2,
   },
   note: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textSecondary,
-    marginTop: spacing.sm,
-    lineHeight: 20,
+    marginTop: 8,
+    lineHeight: 18,
   },
   triggers: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.xs,
-    marginTop: spacing.sm,
+    gap: 6,
+    marginTop: 10,
   },
   triggerChip: {
-    backgroundColor: colors.surfaceElevated,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
+    height: 24,
+    paddingHorizontal: 8,
     borderRadius: 12,
+    backgroundColor: colors.primaryMuted,
+    justifyContent: "center",
   },
   triggerText: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.primary,
+  },
+  chevronContainer: {
+    justifyContent: "center",
+    marginLeft: spacing.sm,
   },
 });

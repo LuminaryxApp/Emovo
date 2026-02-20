@@ -1,3 +1,4 @@
+import { Feather } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
@@ -57,48 +58,58 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.form}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="you@example.com"
-            placeholderTextColor={colors.textTertiary}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-          />
-
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.passwordContainer}>
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Email</Text>
             <TextInput
-              style={styles.passwordInput}
-              placeholder="Your password"
+              style={styles.input}
+              placeholder="you@example.com"
               placeholderTextColor={colors.textTertiary}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoComplete="password"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoComplete="email"
             />
-            <TouchableOpacity
-              style={styles.eyeButton}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Text style={styles.eyeIcon}>{showPassword ? "Hide" : "Show"}</Text>
-            </TouchableOpacity>
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Your password"
+                placeholderTextColor={colors.textTertiary}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoComplete="password"
+              />
+              <TouchableOpacity
+                style={styles.eyeButton}
+                onPress={() => setShowPassword(!showPassword)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Feather
+                  name={showPassword ? "eye-off" : "eye"}
+                  size={20}
+                  color={colors.textTertiary}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <TouchableOpacity
             style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
+            activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>{isLoading ? "Signing in..." : "Sign In"}</Text>
           </TouchableOpacity>
 
           <Link href="/(auth)/forgot-password" asChild>
-            <TouchableOpacity style={styles.linkButton}>
-              <Text style={styles.linkText}>Forgot password?</Text>
+            <TouchableOpacity style={styles.forgotButton} hitSlop={{ top: 8, bottom: 8 }}>
+              <Text style={styles.forgotText}>Forgot password?</Text>
             </TouchableOpacity>
           </Link>
 
@@ -109,7 +120,7 @@ export default function LoginScreen() {
           </View>
 
           <Link href="/(auth)/register" asChild>
-            <TouchableOpacity style={styles.secondaryButton}>
+            <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.7}>
               <Text style={styles.secondaryButtonText}>Create Account</Text>
             </TouchableOpacity>
           </Link>
@@ -127,15 +138,18 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    padding: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xxl,
   },
+
+  // --- Logo section ---
   header: {
     alignItems: "center",
-    marginBottom: spacing.xl,
+    marginBottom: 80,
   },
   logoImage: {
-    width: 80,
-    height: 80,
+    width: 72,
+    height: 72,
     marginBottom: spacing.sm,
   },
   logo: {
@@ -145,60 +159,73 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textSecondary,
     marginTop: spacing.xs,
   },
-  form: {
-    gap: spacing.sm,
+
+  // --- Form ---
+  form: {},
+  fieldGroup: {
+    marginBottom: spacing.lg,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
     color: colors.text,
-    marginTop: spacing.sm,
+    marginBottom: 6,
   },
   input: {
-    backgroundColor: colors.surface,
+    height: 52,
+    backgroundColor: colors.inputBackground,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.md,
+    borderColor: colors.borderLight,
+    borderRadius: 14,
+    paddingHorizontal: spacing.md,
     fontSize: 16,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.text,
   },
+
+  // --- Password field ---
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
+    height: 52,
+    backgroundColor: colors.inputBackground,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
+    borderColor: colors.borderLight,
+    borderRadius: 14,
   },
   passwordInput: {
     flex: 1,
-    padding: spacing.md,
+    height: "100%",
+    paddingHorizontal: spacing.md,
     fontSize: 16,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.text,
   },
   eyeButton: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  eyeIcon: {
-    fontSize: 13,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.accent,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    padding: spacing.md,
+    justifyContent: "center",
     alignItems: "center",
-    marginTop: spacing.md,
+    height: "100%",
+  },
+
+  // --- Primary button ---
+  button: {
+    height: 52,
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: spacing.sm,
+    shadowColor: colors.cardShadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -208,15 +235,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
   },
-  linkButton: {
+
+  // --- Forgot link ---
+  forgotButton: {
     alignItems: "center",
-    marginTop: spacing.sm,
+    justifyContent: "center",
+    minHeight: 44,
+    marginTop: spacing.xs,
   },
-  linkText: {
+  forgotText: {
     color: colors.accent,
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
   },
+
+  // --- Divider ---
   divider: {
     flexDirection: "row",
     alignItems: "center",
@@ -224,21 +257,23 @@ const styles = StyleSheet.create({
   },
   dividerLine: {
     flex: 1,
-    height: 1,
+    height: StyleSheet.hairlineWidth,
     backgroundColor: colors.border,
   },
   dividerText: {
     color: colors.textTertiary,
     paddingHorizontal: spacing.md,
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
   },
+
+  // --- Secondary button ---
   secondaryButton: {
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    borderRadius: 12,
-    padding: spacing.md,
+    height: 52,
+    backgroundColor: colors.primaryMuted,
+    borderRadius: 14,
     alignItems: "center",
+    justifyContent: "center",
   },
   secondaryButtonText: {
     color: colors.primary,

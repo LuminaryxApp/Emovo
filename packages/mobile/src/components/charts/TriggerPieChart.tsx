@@ -38,36 +38,38 @@ export function TriggerPieChart({ triggers }: TriggerPieChartProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Trigger Breakdown</Text>
-      <View style={styles.chartWrapper}>
-        <PieChart
-          data={pieData}
-          radius={80}
-          innerRadius={45}
-          textColor={colors.textInverse}
-          textSize={10}
-          showText
-          focusOnPress
-          innerCircleColor={colors.surface}
-          centerLabelComponent={() => (
-            <View style={styles.centerLabel}>
-              <Text style={styles.centerCount}>{total}</Text>
-              <Text style={styles.centerText}>total</Text>
-            </View>
-          )}
-        />
-        <View style={styles.legend}>
-          {triggers.slice(0, 8).map((item, i) => (
-            <View key={item.trigger.name} style={styles.legendRow}>
-              <View
-                style={[styles.legendDot, { backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }]}
-              />
-              <Text style={styles.legendName} numberOfLines={1}>
-                {item.trigger.name}
-              </Text>
-              <Text style={styles.legendCount}>{item.count}</Text>
-            </View>
-          ))}
+      <Text style={styles.sectionLabel}>TRIGGER BREAKDOWN</Text>
+      <View style={styles.card}>
+        <View style={styles.chartRow}>
+          <PieChart
+            data={pieData}
+            radius={72}
+            innerRadius={42}
+            textColor={colors.textInverse}
+            textSize={10}
+            showText
+            focusOnPress
+            innerCircleColor={colors.cardBackground}
+            centerLabelComponent={() => (
+              <View style={styles.centerLabel}>
+                <Text style={styles.centerCount}>{total}</Text>
+                <Text style={styles.centerText}>total</Text>
+              </View>
+            )}
+          />
+          <View style={styles.legend}>
+            {triggers.slice(0, 8).map((item, i) => (
+              <View key={item.trigger.name} style={styles.legendRow}>
+                <View
+                  style={[styles.legendDot, { backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }]}
+                />
+                <Text style={styles.legendName} numberOfLines={1}>
+                  {item.trigger.name}
+                </Text>
+                <Text style={styles.legendCount}>{item.count}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
     </View>
@@ -78,25 +80,34 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: spacing.lg,
   },
-  title: {
-    fontSize: 18,
+  sectionLabel: {
+    fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
-    marginBottom: spacing.md,
+    color: colors.sectionLabel,
+    letterSpacing: 1.5,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
   },
-  chartWrapper: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
+  card: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 16,
     padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
+    shadowColor: colors.cardShadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  chartRow: {
+    flexDirection: "row",
     alignItems: "center",
+    gap: spacing.md,
   },
   centerLabel: {
     alignItems: "center",
   },
   centerCount: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: "SourceSerif4_700Bold",
     color: colors.text,
   },
@@ -104,20 +115,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textTertiary,
+    marginTop: -2,
   },
   legend: {
-    width: "100%",
-    marginTop: spacing.md,
+    flex: 1,
   },
   legendRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 4,
+    paddingVertical: 5,
   },
   legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     marginRight: spacing.sm,
   },
   legendName: {
@@ -130,5 +141,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
     color: colors.textSecondary,
+    marginLeft: spacing.sm,
   },
 });

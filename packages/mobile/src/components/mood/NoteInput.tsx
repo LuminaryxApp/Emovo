@@ -2,7 +2,6 @@ import { MAX_NOTE_LENGTH } from "@emovo/shared";
 import { View, Text, TextInput, StyleSheet } from "react-native";
 
 import { colors } from "../../theme/colors";
-import { spacing } from "../../theme/spacing";
 
 interface NoteInputProps {
   value: string;
@@ -11,13 +10,12 @@ interface NoteInputProps {
 
 export function NoteInput({ value, onChangeText }: NoteInputProps) {
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Add a note (optional)</Text>
+    <View style={styles.card}>
       <TextInput
         style={styles.input}
         value={value}
         onChangeText={onChangeText}
-        placeholder="What's on your mind?"
+        placeholder="Add a note about how you're feeling..."
         placeholderTextColor={colors.textTertiary}
         multiline
         maxLength={MAX_NOTE_LENGTH}
@@ -31,32 +29,25 @@ export function NoteInput({ value, onChangeText }: NoteInputProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.lg,
-  },
-  label: {
-    fontSize: 18,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
-    marginBottom: spacing.md,
+  card: {
+    backgroundColor: colors.cardBackground,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    padding: 16,
   },
   input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 12,
-    padding: spacing.md,
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.text,
-    minHeight: 100,
-    maxHeight: 160,
+    minHeight: 80,
+    padding: 0,
   },
   charCount: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textTertiary,
     textAlign: "right",
-    marginTop: spacing.xs,
+    marginTop: 8,
   },
 });

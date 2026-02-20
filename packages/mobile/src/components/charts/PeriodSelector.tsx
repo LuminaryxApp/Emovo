@@ -19,13 +19,14 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
       {PERIODS.map((p) => (
         <TouchableOpacity
           key={p}
-          style={[styles.button, value === p && styles.active]}
+          style={[styles.segment, value === p && styles.segmentActive]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onChange(p);
           }}
+          activeOpacity={0.7}
         >
-          <Text style={[styles.text, value === p && styles.textActive]}>
+          <Text style={[styles.label, value === p && styles.labelActive]}>
             {p.charAt(0).toUpperCase() + p.slice(1)}
           </Text>
         </TouchableOpacity>
@@ -37,26 +38,32 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: colors.surface,
+    backgroundColor: colors.borderLight,
     borderRadius: 10,
-    padding: 4,
+    padding: 3,
     marginBottom: spacing.lg,
   },
-  button: {
+  segment: {
     flex: 1,
-    paddingVertical: spacing.sm,
+    height: 32,
     borderRadius: 8,
     alignItems: "center",
+    justifyContent: "center",
   },
-  active: {
-    backgroundColor: colors.primary,
+  segmentActive: {
+    backgroundColor: colors.surface,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  text: {
-    fontSize: 14,
+  label: {
+    fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
+    color: colors.textTertiary,
   },
-  textActive: {
-    color: colors.textInverse,
+  labelActive: {
+    color: colors.text,
   },
 });

@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,6 +22,7 @@ export default function HomeScreen() {
   }, [fetchTriggers, syncOffline]);
 
   const greeting = getGreeting();
+  const today = format(new Date(), "EEEE, MMM d");
 
   return (
     <KeyboardAvoidingView
@@ -28,22 +30,29 @@ export default function HomeScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
-        style={[styles.container, { paddingTop: insets.top + spacing.md }]}
+        style={[styles.container, { paddingTop: insets.top + spacing.lg }]}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.greeting}>{greeting},</Text>
-        <Text style={styles.name}>{user?.displayName || "there"}</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.date}>{today.toUpperCase()}</Text>
+          <Text style={styles.greeting}>{greeting},</Text>
+          <Text style={styles.name}>{user?.displayName || "there"}</Text>
+        </View>
 
+        {/* Offline Banner */}
         {offlineCount > 0 && (
           <View style={styles.offlineBanner}>
+            <Text style={styles.offlineIcon}>↑</Text>
             <Text style={styles.offlineText}>
               {offlineCount} mood{offlineCount > 1 ? "s" : ""} waiting to sync
             </Text>
           </View>
         )}
 
+        {/* Mood Form */}
         <View style={styles.formWrapper}>
           <MoodLogForm />
         </View>
@@ -69,32 +78,51 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   content: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xxl,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xxl + 32,
+  },
+  header: {
+    marginBottom: spacing.xl,
+  },
+  date: {
+    fontSize: 11,
+    fontFamily: "SourceSerif4_600SemiBold",
+    color: colors.sectionLabel,
+    letterSpacing: 1.5,
+    marginBottom: spacing.xs,
   },
   greeting: {
-    fontSize: 16,
-    fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
+    fontSize: 28,
+    fontFamily: "SourceSerif4_700Bold",
+    color: colors.text,
+    lineHeight: 34,
   },
   name: {
     fontSize: 28,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
-    marginBottom: spacing.xl,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.textSecondary,
+    lineHeight: 34,
   },
   offlineBanner: {
-    backgroundColor: colors.accent,
-    paddingVertical: spacing.sm,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(234, 179, 8, 0.1)",
+    paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
-    borderRadius: 8,
-    marginBottom: spacing.md,
+    borderRadius: 12,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: "rgba(234, 179, 8, 0.2)",
+  },
+  offlineIcon: {
+    fontSize: 14,
+    color: colors.warning,
+    marginRight: spacing.sm,
   },
   offlineText: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textInverse,
-    textAlign: "center",
+    color: colors.textSecondary,
   },
   formWrapper: {
     flex: 1,

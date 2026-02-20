@@ -68,17 +68,31 @@ export function MoodLogForm() {
 
   return (
     <View style={styles.container}>
+      {/* Mood Section */}
+      <Text style={styles.sectionLabel}>HOW ARE YOU FEELING?</Text>
       <MoodSelector selectedScore={moodScore} onSelect={setMoodScore} />
+
+      <View style={styles.sectionSpacer} />
+
+      {/* Triggers Section */}
+      <Text style={styles.sectionLabel}>WHAT'S ON YOUR MIND?</Text>
       <TriggerPicker
         triggers={triggers}
         selectedIds={selectedTriggerIds}
         onToggle={handleToggleTrigger}
         isLoading={isLoadingTriggers}
       />
+
+      <View style={styles.sectionSpacer} />
+
+      {/* Note Section */}
       <NoteInput value={note} onChangeText={setNote} />
 
+      <View style={styles.sectionSpacer} />
+
+      {/* Submit */}
       <TouchableOpacity
-        style={[styles.submitButton, !moodScore && styles.submitDisabled]}
+        style={[styles.submitButton, (!moodScore || isSubmitting) && styles.submitDisabled]}
         onPress={handleSubmit}
         disabled={!moodScore || isSubmitting}
         activeOpacity={0.8}
@@ -97,18 +111,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  sectionLabel: {
+    fontSize: 11,
+    fontFamily: "SourceSerif4_600SemiBold",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+    color: colors.sectionLabel,
+    marginBottom: spacing.md,
+  },
+  sectionSpacer: {
+    height: spacing.lg,
+  },
   submitButton: {
     backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: 12,
+    height: 52,
+    borderRadius: 14,
     alignItems: "center",
-    marginTop: spacing.sm,
+    justifyContent: "center",
+    shadowColor: colors.cardShadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   submitDisabled: {
     opacity: 0.5,
   },
   submitText: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
     color: colors.textInverse,
   },
