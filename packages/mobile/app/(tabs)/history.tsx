@@ -1,6 +1,7 @@
 import type { MoodEntry } from "@emovo/shared";
 import { useEffect, useCallback } from "react";
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MoodEntryCard } from "../../src/components/mood/MoodEntryCard";
@@ -38,8 +39,11 @@ export default function HistoryScreen() {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyEmoji}>🌿</Text>
-        <Text style={styles.emptyTitle}>No entries yet</Text>
-        <Text style={styles.emptySubtitle}>Start logging your mood to see your history here.</Text>
+        <Text style={styles.emptyTitle}>Your journal awaits</Text>
+        <Text style={styles.emptySubtitle}>
+          Once you log your first mood, your entries will appear here. Take a moment to check in
+          with yourself.
+        </Text>
       </View>
     );
   };
@@ -57,27 +61,29 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <Text style={styles.title}>History</Text>
-      <FlatList
-        data={entries}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.3}
-        ListEmptyComponent={renderEmpty}
-        ListFooterComponent={renderFooter}
-        ItemSeparatorComponent={renderSeparator}
-        refreshControl={
-          <RefreshControl
-            refreshing={isLoading && entries.length > 0}
-            onRefresh={handleRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-          />
-        }
-      />
+      <Animated.View entering={FadeIn.duration(400)} style={styles.inner}>
+        <Text style={styles.title}>History</Text>
+        <FlatList
+          data={entries}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          onEndReached={handleEndReached}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={renderEmpty}
+          ListFooterComponent={renderFooter}
+          ItemSeparatorComponent={renderSeparator}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading && entries.length > 0}
+              onRefresh={handleRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
+        />
+      </Animated.View>
     </SafeAreaView>
   );
 }
@@ -87,8 +93,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  inner: {
+    flex: 1,
+  },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontFamily: "SourceSerif4_700Bold",
     color: colors.text,
     paddingHorizontal: spacing.lg,
@@ -101,31 +110,33 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   separator: {
-    height: 12,
+    height: 14,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: spacing.xxl * 2,
+    paddingHorizontal: spacing.xl,
   },
   emptyEmoji: {
-    fontSize: 48,
-    marginBottom: spacing.md,
+    fontSize: 64,
+    marginBottom: spacing.lg,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: "SourceSerif4_600SemiBold",
     color: colors.text,
     marginBottom: spacing.sm,
+    textAlign: "center",
   },
   emptySubtitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textSecondary,
     textAlign: "center",
-    maxWidth: 260,
-    lineHeight: 20,
+    maxWidth: 280,
+    lineHeight: 22,
   },
   footer: {
     paddingVertical: spacing.lg,

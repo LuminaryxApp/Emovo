@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
@@ -12,11 +13,13 @@ import {
   ScrollView,
   Image,
 } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 
+import { GradientButton } from "../../src/components/ui/GradientButton";
 import { useAuthStore } from "../../src/stores/auth.store";
-import { colors } from "../../src/theme/colors";
-import { spacing } from "../../src/theme/spacing";
+import { colors, gradients, cardShadowStrong } from "../../src/theme/colors";
+import { spacing, radii } from "../../src/theme/spacing";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const iconImage = require("../../assets/icon.png");
@@ -46,94 +49,105 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <LinearGradient
+      colors={[...gradients.authHeader]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 0.6 }}
+      style={styles.gradient}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Image source={iconImage} style={styles.logoImage} resizeMode="contain" />
-          <Text style={styles.logo}>Emovo</Text>
-          <Text style={styles.subtitle}>Track your emotional well-being</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="you@example.com"
-              placeholderTextColor={colors.textTertiary}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <Image source={iconImage} style={styles.logoImage} resizeMode="contain" />
+            <Text style={styles.logo}>Emovo</Text>
+            <Text style={styles.subtitle}>Track your emotional well-being</Text>
           </View>
 
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.passwordContainer}>
+          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.card}>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Email</Text>
               <TextInput
-                style={styles.passwordInput}
-                placeholder="Your password"
+                style={styles.input}
+                placeholder="you@example.com"
                 placeholderTextColor={colors.textTertiary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoComplete="password"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
               />
-              <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Feather
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color={colors.textTertiary}
-                />
-              </TouchableOpacity>
             </View>
-          </View>
 
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>{isLoading ? "Signing in..." : "Sign In"}</Text>
-          </TouchableOpacity>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Your password"
+                  placeholderTextColor={colors.textTertiary}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  autoComplete="password"
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Feather
+                    name={showPassword ? "eye-off" : "eye"}
+                    size={20}
+                    color={colors.textTertiary}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-          <Link href="/(auth)/forgot-password" asChild>
-            <TouchableOpacity style={styles.forgotButton} hitSlop={{ top: 8, bottom: 8 }}>
-              <Text style={styles.forgotText}>Forgot password?</Text>
-            </TouchableOpacity>
-          </Link>
+            <GradientButton
+              title="Sign In"
+              onPress={handleLogin}
+              loading={isLoading}
+              disabled={isLoading}
+              style={styles.signInButton}
+            />
 
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
+            <Link href="/(auth)/forgot-password" asChild>
+              <TouchableOpacity style={styles.forgotButton} hitSlop={{ top: 8, bottom: 8 }}>
+                <Text style={styles.forgotText}>Forgot password?</Text>
+              </TouchableOpacity>
+            </Link>
 
-          <Link href="/(auth)/register" asChild>
-            <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.7}>
-              <Text style={styles.secondaryButtonText}>Create Account</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <Link href="/(auth)/register" asChild>
+              <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.7}>
+                <Text style={styles.secondaryButtonText}>Create Account</Text>
+              </TouchableOpacity>
+            </Link>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  gradient: {
     flex: 1,
-    backgroundColor: colors.background,
+  },
+  flex: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -142,10 +156,10 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxl,
   },
 
-  // --- Logo section ---
+  // --- Logo section (sits on gradient) ---
   header: {
     alignItems: "center",
-    marginBottom: 80,
+    marginBottom: spacing.xl,
   },
   logoImage: {
     width: 72,
@@ -155,18 +169,26 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 40,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
+    color: colors.textInverse,
     letterSpacing: -1,
   },
   subtitle: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
+    color: colors.textInverse,
     marginTop: spacing.xs,
+    opacity: 0.9,
   },
 
-  // --- Form ---
-  form: {},
+  // --- Floating form card ---
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.xxl,
+    padding: 24,
+    ...cardShadowStrong(),
+  },
+
+  // --- Form fields ---
   fieldGroup: {
     marginBottom: spacing.lg,
   },
@@ -177,11 +199,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   input: {
-    height: 52,
+    height: 56,
     backgroundColor: colors.inputBackground,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    borderRadius: 14,
+    borderRadius: radii.lg,
     paddingHorizontal: spacing.md,
     fontSize: 16,
     fontFamily: "SourceSerif4_400Regular",
@@ -192,11 +214,11 @@ const styles = StyleSheet.create({
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    height: 52,
+    height: 56,
     backgroundColor: colors.inputBackground,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    borderRadius: 14,
+    borderRadius: radii.lg,
   },
   passwordInput: {
     flex: 1,
@@ -213,27 +235,9 @@ const styles = StyleSheet.create({
     height: "100%",
   },
 
-  // --- Primary button ---
-  button: {
-    height: 52,
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
+  // --- Sign In button ---
+  signInButton: {
     marginTop: spacing.sm,
-    shadowColor: colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: colors.textInverse,
-    fontSize: 16,
-    fontFamily: "SourceSerif4_600SemiBold",
   },
 
   // --- Forgot link ---
@@ -267,11 +271,12 @@ const styles = StyleSheet.create({
     fontFamily: "SourceSerif4_400Regular",
   },
 
-  // --- Secondary button ---
+  // --- Secondary button (outlined) ---
   secondaryButton: {
-    height: 52,
-    backgroundColor: colors.primaryMuted,
-    borderRadius: 14,
+    height: 56,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    borderRadius: radii.lg,
     alignItems: "center",
     justifyContent: "center",
   },

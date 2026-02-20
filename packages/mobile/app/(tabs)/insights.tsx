@@ -1,4 +1,5 @@
 import { MOOD_SCALE } from "@emovo/shared";
+import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
 import {
   View,
@@ -7,8 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
-  Platform,
 } from "react-native";
+import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { MoodBarChart } from "../../src/components/charts/MoodBarChart";
@@ -16,8 +17,8 @@ import { MoodLineChart } from "../../src/components/charts/MoodLineChart";
 import { PeriodSelector } from "../../src/components/charts/PeriodSelector";
 import { TriggerPieChart } from "../../src/components/charts/TriggerPieChart";
 import { useMoodStats } from "../../src/hooks/useMoodStats";
-import { colors } from "../../src/theme/colors";
-import { spacing } from "../../src/theme/spacing";
+import { colors, gradients, cardShadow, cardShadowStrong } from "../../src/theme/colors";
+import { spacing, radii } from "../../src/theme/spacing";
 
 type Period = "week" | "month" | "year";
 
@@ -51,9 +52,13 @@ export default function InsightsScreen() {
           />
         }
       >
-        <Text style={styles.title}>Insights</Text>
+        <Animated.Text entering={FadeIn.duration(400)} style={styles.title}>
+          Insights
+        </Animated.Text>
 
-        <PeriodSelector value={period} onChange={setPeriod} />
+        <Animated.View entering={FadeInDown.delay(100).springify()}>
+          <PeriodSelector value={period} onChange={setPeriod} />
+        </Animated.View>
 
         {isLoading && !summary ? (
           <View style={styles.loadingContainer}>
@@ -62,69 +67,79 @@ export default function InsightsScreen() {
         ) : hasData ? (
           <>
             {/* Hero Card - Average Mood */}
-            <View style={styles.heroCard}>
-              <View style={styles.heroRow}>
-                <Text style={styles.heroScore}>{summary.avgMood.toFixed(1)}</Text>
+            <Animated.View entering={FadeInDown.delay(200).springify()}>
+              <LinearGradient
+                colors={[...gradients.heroCard]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.heroCard}
+              >
+                <View style={styles.heroRow}>
+                  <Text style={styles.heroScore}>{summary.avgMood.toFixed(1)}</Text>
+                </View>
                 <Text style={styles.heroEmoji}>{getMoodForScore(summary.avgMood).emoji}</Text>
-              </View>
-              <Text style={styles.heroLabel}>{getMoodForScore(summary.avgMood).label}</Text>
-            </View>
+                <Text style={styles.heroLabel}>{getMoodForScore(summary.avgMood).label}</Text>
+              </LinearGradient>
+            </Animated.View>
 
             {/* Stats Row */}
-            <View style={styles.statsRow}>
-              <View style={styles.statCard}>
+            <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.statsRow}>
+              <LinearGradient
+                colors={[...gradients.warmSurface]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={styles.statCard}
+              >
                 <Text style={styles.statValue}>{summary.entryCount}</Text>
                 <Text style={styles.statLabel}>entries</Text>
-              </View>
-              <View style={styles.statCard}>
+              </LinearGradient>
+              <LinearGradient
+                colors={[...gradients.warmSurface]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+                style={styles.statCard}
+              >
                 <Text style={styles.statValue}>{getMoodForScore(summary.avgMood).emoji}</Text>
                 <Text style={styles.statLabel}>{PERIOD_LABELS[period]}</Text>
-              </View>
-            </View>
+              </LinearGradient>
+            </Animated.View>
 
             {/* Mood Distribution Chart */}
-            <View style={styles.chartSection}>
+            <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.chartSection}>
               <MoodBarChart distribution={summary.moodDistribution} />
-            </View>
+            </Animated.View>
 
             {/* Mood Trend Chart */}
             {trend && trend.dataPoints.length >= 2 && (
-              <View style={styles.chartSection}>
+              <Animated.View
+                entering={FadeInDown.delay(500).springify()}
+                style={styles.chartSection}
+              >
                 <MoodLineChart dataPoints={trend.dataPoints} period={period} />
-              </View>
+              </Animated.View>
             )}
 
             {/* Triggers Pie Chart */}
             {triggers && triggers.length > 0 && (
-              <View style={styles.chartSection}>
+              <Animated.View
+                entering={FadeInDown.delay(600).springify()}
+                style={styles.chartSection}
+              >
                 <TriggerPieChart triggers={triggers} />
-              </View>
+              </Animated.View>
             )}
           </>
         ) : (
-          <View style={styles.emptyContainer}>
+          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>📊</Text>
             <Text style={styles.emptyTitle}>No data yet</Text>
             <Text style={styles.emptySubtitle}>Log some moods to see your insights here.</Text>
-          </View>
+          </Animated.View>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const cardShadow = Platform.select({
-  ios: {
-    shadowColor: colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-  },
-  android: {
-    elevation: 2,
-  },
-  default: {},
-});
 
 const styles = StyleSheet.create({
   container: {
@@ -149,12 +164,11 @@ const styles = StyleSheet.create({
 
   // Hero Card
   heroCard: {
-    backgroundColor: colors.cardBackground,
-    borderRadius: 16,
-    padding: spacing.lg,
+    borderRadius: radii.xxl,
+    padding: 24,
     marginTop: spacing.md,
     alignItems: "center",
-    ...cardShadow,
+    ...cardShadowStrong(),
   },
   heroRow: {
     flexDirection: "row",
@@ -162,17 +176,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   heroScore: {
-    fontSize: 36,
+    fontSize: 56,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
+    color: colors.textInverse,
   },
   heroEmoji: {
-    fontSize: 32,
+    fontSize: 40,
+    marginTop: spacing.xs,
   },
   heroLabel: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
+    color: "rgba(255, 255, 255, 0.8)",
     marginTop: spacing.xs,
   },
 
@@ -184,11 +199,10 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: colors.cardBackground,
-    borderRadius: 14,
+    borderRadius: radii.lg,
     padding: spacing.md,
     alignItems: "center",
-    ...cardShadow,
+    ...cardShadow(),
   },
   statValue: {
     fontSize: 24,
@@ -204,7 +218,7 @@ const styles = StyleSheet.create({
 
   // Chart Sections
   chartSection: {
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
   },
 
   // Empty State

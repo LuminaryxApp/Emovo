@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 
-import { colors } from "../../theme/colors";
-import { spacing } from "../../theme/spacing";
+import { colors, cardShadow } from "../../theme/colors";
+import { spacing, radii } from "../../theme/spacing";
 
 interface DataPoint {
   date: string;
@@ -41,9 +41,9 @@ export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
           <LineChart
             data={lineData}
             color={colors.primary}
-            thickness={2.5}
+            thickness={3}
             dataPointsColor={colors.primary}
-            dataPointsRadius={4}
+            dataPointsRadius={5}
             noOfSections={4}
             maxValue={5}
             yAxisThickness={0}
@@ -57,7 +57,7 @@ export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
             textColor={colors.textSecondary}
             textFontSize={10}
             startFillColor={colors.primaryLight}
-            startOpacity={0.25}
+            startOpacity={0.35}
             endOpacity={0}
             areaChart
             xAxisLabelTextStyle={styles.xLabel}
@@ -83,13 +83,9 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.cardBackground,
-    borderRadius: 16,
+    borderRadius: radii.xl,
     padding: spacing.md,
-    shadowColor: colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 3,
+    ...cardShadow(),
   },
   chartWrapper: {
     alignItems: "center",

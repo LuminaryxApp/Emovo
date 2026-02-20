@@ -1,12 +1,14 @@
 import { randomUUID } from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import { useState, useCallback } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 
 import { useMoodStore } from "../../stores/mood.store";
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
+import { GradientButton } from "../ui/GradientButton";
 
 import { MoodSelector } from "./MoodSelector";
 import { NoteInput } from "./NoteInput";
@@ -52,7 +54,11 @@ export function MoodLogForm() {
         });
       } else {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        Toast.show({ type: "info", text1: "Saved offline", text2: "Will sync when back online" });
+        Toast.show({
+          type: "info",
+          text1: "Saved offline",
+          text2: "Will sync when back online",
+        });
       }
 
       // Reset form
@@ -60,7 +66,11 @@ export function MoodLogForm() {
       setSelectedTriggerIds([]);
       setNote("");
     } catch {
-      Toast.show({ type: "error", text1: "Failed to log mood", text2: "Please try again" });
+      Toast.show({
+        type: "error",
+        text1: "Failed to log mood",
+        text2: "Please try again",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -69,40 +79,42 @@ export function MoodLogForm() {
   return (
     <View style={styles.container}>
       {/* Mood Section */}
-      <Text style={styles.sectionLabel}>HOW ARE YOU FEELING?</Text>
-      <MoodSelector selectedScore={moodScore} onSelect={setMoodScore} />
+      <Animated.View entering={FadeInDown.delay(0).springify()}>
+        <Text style={styles.sectionLabel}>HOW ARE YOU FEELING?</Text>
+        <MoodSelector selectedScore={moodScore} onSelect={setMoodScore} />
+      </Animated.View>
 
       <View style={styles.sectionSpacer} />
 
       {/* Triggers Section */}
-      <Text style={styles.sectionLabel}>WHAT'S ON YOUR MIND?</Text>
-      <TriggerPicker
-        triggers={triggers}
-        selectedIds={selectedTriggerIds}
-        onToggle={handleToggleTrigger}
-        isLoading={isLoadingTriggers}
-      />
+      <Animated.View entering={FadeInDown.delay(100).springify()}>
+        <Text style={styles.sectionLabel}>WHAT'S ON YOUR MIND?</Text>
+        <TriggerPicker
+          triggers={triggers}
+          selectedIds={selectedTriggerIds}
+          onToggle={handleToggleTrigger}
+          isLoading={isLoadingTriggers}
+        />
+      </Animated.View>
 
       <View style={styles.sectionSpacer} />
 
       {/* Note Section */}
-      <NoteInput value={note} onChangeText={setNote} />
+      <Animated.View entering={FadeInDown.delay(200).springify()}>
+        <NoteInput value={note} onChangeText={setNote} />
+      </Animated.View>
 
       <View style={styles.sectionSpacer} />
 
       {/* Submit */}
-      <TouchableOpacity
-        style={[styles.submitButton, (!moodScore || isSubmitting) && styles.submitDisabled]}
-        onPress={handleSubmit}
-        disabled={!moodScore || isSubmitting}
-        activeOpacity={0.8}
-      >
-        {isSubmitting ? (
-          <ActivityIndicator color={colors.textInverse} />
-        ) : (
-          <Text style={styles.submitText}>Log Mood</Text>
-        )}
-      </TouchableOpacity>
+      <Animated.View entering={FadeInDown.delay(300).springify()}>
+        <GradientButton
+          title="Log Mood"
+          onPress={handleSubmit}
+          loading={isSubmitting}
+          disabled={!moodScore}
+        />
+      </Animated.View>
     </View>
   );
 }
@@ -120,26 +132,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   sectionSpacer: {
-    height: spacing.lg,
-  },
-  submitButton: {
-    backgroundColor: colors.primary,
-    height: 52,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  submitDisabled: {
-    opacity: 0.5,
-  },
-  submitText: {
-    fontSize: 16,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textInverse,
+    height: 32,
   },
 });

@@ -1,4 +1,16 @@
 export const typography = {
+  display: {
+    fontSize: 48,
+    fontWeight: "700" as const,
+    fontFamily: "SourceSerif4_700Bold",
+    letterSpacing: -1,
+  },
+  heroScore: {
+    fontSize: 56,
+    fontWeight: "700" as const,
+    fontFamily: "SourceSerif4_700Bold",
+    letterSpacing: -2,
+  },
   h1: {
     fontSize: 32,
     fontWeight: "700" as const,
@@ -39,6 +51,11 @@ export const typography = {
     fontWeight: "600" as const,
     fontFamily: "SourceSerif4_600SemiBold",
     letterSpacing: 1.5,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: "600" as const,
+    fontFamily: "SourceSerif4_600SemiBold",
   },
   statLarge: {
     fontSize: 36,

@@ -1,8 +1,8 @@
 import * as Haptics from "expo-haptics";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 
 import { colors } from "../../theme/colors";
-import { spacing } from "../../theme/spacing";
+import { spacing, radii } from "../../theme/spacing";
 
 type Period = "week" | "month" | "year";
 
@@ -35,28 +35,37 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
   );
 }
 
+const activeShadow = Platform.select({
+  ios: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  android: {
+    elevation: 3,
+  },
+  default: {},
+});
+
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     backgroundColor: colors.borderLight,
-    borderRadius: 10,
+    borderRadius: radii.pill,
     padding: 3,
+    height: 44,
     marginBottom: spacing.lg,
   },
   segment: {
     flex: 1,
-    height: 32,
-    borderRadius: 8,
+    borderRadius: radii.pill,
     alignItems: "center",
     justifyContent: "center",
   },
   segmentActive: {
     backgroundColor: colors.surface,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    ...activeShadow,
   },
   label: {
     fontSize: 13,
@@ -64,6 +73,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
   labelActive: {
-    color: colors.text,
+    fontWeight: "700",
+    color: colors.primary,
   },
 });

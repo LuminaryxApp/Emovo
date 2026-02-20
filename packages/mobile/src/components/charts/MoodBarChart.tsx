@@ -2,8 +2,8 @@ import { MOOD_SCALE } from "@emovo/shared";
 import { View, Text, StyleSheet } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 
-import { colors } from "../../theme/colors";
-import { spacing } from "../../theme/spacing";
+import { colors, cardShadow } from "../../theme/colors";
+import { spacing, radii } from "../../theme/spacing";
 
 interface MoodBarChartProps {
   distribution: Record<number, number>;
@@ -26,7 +26,7 @@ export function MoodBarChart({ distribution }: MoodBarChartProps) {
         <View style={styles.chartWrapper}>
           <BarChart
             data={barData}
-            barWidth={36}
+            barWidth={40}
             spacing={18}
             roundedTop
             roundedBottom
@@ -59,13 +59,9 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.cardBackground,
-    borderRadius: 16,
-    padding: spacing.md,
-    shadowColor: colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 3,
+    borderRadius: radii.xl,
+    padding: 20,
+    ...cardShadow(),
   },
   chartWrapper: {
     alignItems: "center",

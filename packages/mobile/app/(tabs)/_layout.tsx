@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { Tabs, router } from "expo-router";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 
 import { useAuthStore } from "../../src/stores/auth.store";
 import { colors } from "../../src/theme/colors";
@@ -22,17 +23,24 @@ export default function TabsLayout() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopWidth: 0,
-          elevation: 0,
-          shadowColor: colors.cardShadow,
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 1,
-          shadowRadius: 12,
-          paddingTop: 8,
+          paddingTop: 10,
           paddingBottom: 8,
-          height: 64,
+          ...Platform.select({
+            ios: {
+              height: 84,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: -2 },
+              shadowOpacity: 0.08,
+              shadowRadius: 16,
+            },
+            android: {
+              height: 68,
+              elevation: 8,
+            },
+          }),
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontFamily: "SourceSerif4_600SemiBold",
           marginTop: 2,
         },

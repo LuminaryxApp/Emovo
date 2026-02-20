@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
@@ -11,11 +12,13 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 
+import { GradientButton } from "../../src/components/ui/GradientButton";
 import { useAuthStore } from "../../src/stores/auth.store";
-import { colors } from "../../src/theme/colors";
-import { spacing } from "../../src/theme/spacing";
+import { colors, gradients, cardShadowStrong } from "../../src/theme/colors";
+import { spacing, radii } from "../../src/theme/spacing";
 
 export default function RegisterScreen() {
   const [displayName, setDisplayName] = useState("");
@@ -60,125 +63,134 @@ export default function RegisterScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <LinearGradient
+      colors={[...gradients.authHeader]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 0.6 }}
+      style={styles.gradient}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Start tracking your emotional journey</Text>
-        </View>
-
-        <View style={styles.form}>
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Display Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Your name"
-              placeholderTextColor={colors.textTertiary}
-              value={displayName}
-              onChangeText={setDisplayName}
-              autoCapitalize="words"
-              autoComplete="name"
-            />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>Start tracking your emotional journey</Text>
           </View>
 
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="you@example.com"
-              placeholderTextColor={colors.textTertiary}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-          </View>
-
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.passwordContainer}>
+          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.card}>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Display Name</Text>
               <TextInput
-                style={styles.passwordInput}
-                placeholder="Min. 8 characters"
+                style={styles.input}
+                placeholder="Your name"
                 placeholderTextColor={colors.textTertiary}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoComplete="new-password"
+                value={displayName}
+                onChangeText={setDisplayName}
+                autoCapitalize="words"
+                autoComplete="name"
               />
-              <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowPassword(!showPassword)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Feather
-                  name={showPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color={colors.textTertiary}
-                />
-              </TouchableOpacity>
             </View>
-          </View>
 
-          <View style={styles.fieldGroup}>
-            <Text style={styles.label}>Confirm Password</Text>
-            <View style={styles.passwordContainer}>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Email</Text>
               <TextInput
-                style={styles.passwordInput}
-                placeholder="Re-enter your password"
+                style={styles.input}
+                placeholder="you@example.com"
                 placeholderTextColor={colors.textTertiary}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry={!showConfirmPassword}
-                autoComplete="new-password"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
               />
-              <TouchableOpacity
-                style={styles.eyeButton}
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Feather
-                  name={showConfirmPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color={colors.textTertiary}
-                />
-              </TouchableOpacity>
             </View>
-          </View>
 
-          <TouchableOpacity
-            style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleRegister}
-            disabled={isLoading}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>
-              {isLoading ? "Creating account..." : "Create Account"}
-            </Text>
-          </TouchableOpacity>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Min. 8 characters"
+                  placeholderTextColor={colors.textTertiary}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  autoComplete="new-password"
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowPassword(!showPassword)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Feather
+                    name={showPassword ? "eye-off" : "eye"}
+                    size={20}
+                    color={colors.textTertiary}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
 
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
-            <Link href="/(auth)/login" asChild>
-              <TouchableOpacity style={styles.footerLink} hitSlop={{ top: 8, bottom: 8 }}>
-                <Text style={styles.linkText}>Sign in</Text>
-              </TouchableOpacity>
-            </Link>
-          </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Re-enter your password"
+                  placeholderTextColor={colors.textTertiary}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirmPassword}
+                  autoComplete="new-password"
+                />
+                <TouchableOpacity
+                  style={styles.eyeButton}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Feather
+                    name={showConfirmPassword ? "eye-off" : "eye"}
+                    size={20}
+                    color={colors.textTertiary}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <GradientButton
+              title={isLoading ? "Creating account..." : "Create Account"}
+              onPress={handleRegister}
+              loading={isLoading}
+              disabled={isLoading}
+              style={styles.createButton}
+            />
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Already have an account? </Text>
+              <Link href="/(auth)/login" asChild>
+                <TouchableOpacity style={styles.footerLink} hitSlop={{ top: 8, bottom: 8 }}>
+                  <Text style={styles.linkText}>Sign in</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  gradient: {
     flex: 1,
-    backgroundColor: colors.background,
+  },
+  flex: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -187,25 +199,34 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxl,
   },
 
-  // --- Header ---
+  // --- Header (sits on gradient, white text) ---
   header: {
-    marginBottom: 80,
+    marginBottom: spacing.xl,
+    paddingHorizontal: spacing.xs,
   },
   title: {
     fontSize: 32,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
+    color: colors.textInverse,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
+    color: colors.textInverse,
     marginTop: spacing.xs,
+    opacity: 0.9,
   },
 
-  // --- Form ---
-  form: {},
+  // --- Floating form card ---
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.xxl,
+    padding: 24,
+    ...cardShadowStrong(),
+  },
+
+  // --- Form fields ---
   fieldGroup: {
     marginBottom: spacing.lg,
   },
@@ -216,11 +237,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   input: {
-    height: 52,
+    height: 56,
     backgroundColor: colors.inputBackground,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    borderRadius: 14,
+    borderRadius: radii.lg,
     paddingHorizontal: spacing.md,
     fontSize: 16,
     fontFamily: "SourceSerif4_400Regular",
@@ -231,11 +252,11 @@ const styles = StyleSheet.create({
   passwordContainer: {
     flexDirection: "row",
     alignItems: "center",
-    height: 52,
+    height: 56,
     backgroundColor: colors.inputBackground,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    borderRadius: 14,
+    borderRadius: radii.lg,
   },
   passwordInput: {
     flex: 1,
@@ -252,27 +273,9 @@ const styles = StyleSheet.create({
     height: "100%",
   },
 
-  // --- Primary button ---
-  button: {
-    height: 52,
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
+  // --- Create Account button ---
+  createButton: {
     marginTop: spacing.sm,
-    shadowColor: colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: colors.textInverse,
-    fontSize: 16,
-    fontFamily: "SourceSerif4_600SemiBold",
   },
 
   // --- Footer ---

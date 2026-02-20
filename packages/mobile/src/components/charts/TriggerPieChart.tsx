@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet } from "react-native";
 import { PieChart } from "react-native-gifted-charts";
 
-import { colors } from "../../theme/colors";
-import { spacing } from "../../theme/spacing";
+import { colors, cardShadow } from "../../theme/colors";
+import { spacing, radii } from "../../theme/spacing";
 
 interface TriggerData {
   trigger: { name: string };
@@ -43,8 +43,8 @@ export function TriggerPieChart({ triggers }: TriggerPieChartProps) {
         <View style={styles.chartRow}>
           <PieChart
             data={pieData}
-            radius={72}
-            innerRadius={42}
+            radius={80}
+            innerRadius={50}
             textColor={colors.textInverse}
             textSize={10}
             showText
@@ -90,13 +90,9 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: colors.cardBackground,
-    borderRadius: 16,
+    borderRadius: radii.xl,
     padding: spacing.md,
-    shadowColor: colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 3,
+    ...cardShadow(),
   },
   chartRow: {
     flexDirection: "row",
@@ -107,7 +103,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   centerCount: {
-    fontSize: 22,
+    fontSize: 36,
     fontFamily: "SourceSerif4_700Bold",
     color: colors.text,
   },

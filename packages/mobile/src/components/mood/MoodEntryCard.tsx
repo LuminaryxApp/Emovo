@@ -2,10 +2,12 @@ import { MOOD_SCALE } from "@emovo/shared";
 import type { MoodEntry } from "@emovo/shared";
 import { Feather } from "@expo/vector-icons";
 import { format } from "date-fns";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { View, Text, StyleSheet } from "react-native";
 
-import { colors } from "../../theme/colors";
-import { spacing } from "../../theme/spacing";
+import { colors, cardShadow } from "../../theme/colors";
+import { spacing, radii } from "../../theme/spacing";
+import { AnimatedPressable } from "../ui/AnimatedPressable";
 
 interface MoodEntryCardProps {
   entry: MoodEntry;
@@ -17,11 +19,20 @@ export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
   const loggedDate = new Date(entry.loggedAt);
 
   return (
-    <TouchableOpacity
-      style={[styles.card, { borderLeftColor: mood.color }]}
+    <AnimatedPressable
       onPress={onPress}
-      activeOpacity={onPress ? 0.7 : 1}
+      scaleDown={0.98}
+      disabled={!onPress}
+      style={[styles.card, { ...cardShadow() }]}
     >
+      {/* Gradient left strip */}
+      <LinearGradient
+        colors={[mood.color, mood.color + "80"]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={styles.leftStrip}
+      />
+
       <View style={styles.content}>
         <View style={styles.body}>
           {/* Top row: emoji + label left, time right */}
@@ -44,8 +55,25 @@ export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
           {entry.triggers.length > 0 && (
             <View style={styles.triggers}>
               {entry.triggers.map((trigger) => (
-                <View key={trigger.id} style={styles.triggerChip}>
-                  <Text style={styles.triggerText}>{trigger.name}</Text>
+                <View
+                  key={trigger.id}
+                  style={[
+                    styles.triggerChip,
+                    {
+                      backgroundColor: colors.moodMuted[entry.moodScore] || colors.primaryMuted,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.triggerText,
+                      {
+                        color: colors.mood[entry.moodScore] || colors.primary,
+                      },
+                    ]}
+                  >
+                    {trigger.name}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -59,27 +87,28 @@ export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
           </View>
         )}
       </View>
-    </TouchableOpacity>
+    </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.cardBackground,
-    borderRadius: 14,
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
-    marginBottom: 12,
-    shadowColor: colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 2,
+    borderRadius: radii.lg,
     overflow: "hidden",
+    position: "relative",
+  },
+  leftStrip: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 5,
   },
   content: {
     flexDirection: "row",
     padding: spacing.md,
+    paddingLeft: spacing.md + 5,
   },
   body: {
     flex: 1,
@@ -124,13 +153,11 @@ const styles = StyleSheet.create({
     height: 24,
     paddingHorizontal: 8,
     borderRadius: 12,
-    backgroundColor: colors.primaryMuted,
     justifyContent: "center",
   },
   triggerText: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.primary,
   },
   chevronContainer: {
     justifyContent: "center",

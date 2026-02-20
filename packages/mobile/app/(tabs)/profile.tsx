@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState, useCallback } from "react";
 import {
@@ -12,16 +13,16 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { GradientButton } from "../../src/components/ui/GradientButton";
 import { getSessionId } from "../../src/lib/secure-storage";
 import { exportData } from "../../src/services/export.api";
 import { getSessionsApi, deleteSessionApi, type Session } from "../../src/services/user.api";
 import { useAuthStore } from "../../src/stores/auth.store";
-import { colors } from "../../src/theme/colors";
-import { spacing } from "../../src/theme/spacing";
+import { colors, gradients, cardShadow, cardShadowStrong } from "../../src/theme/colors";
+import { spacing, radii } from "../../src/theme/spacing";
 
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
@@ -200,26 +201,33 @@ export default function ProfileScreen() {
     <>
       <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Profile Header */}
-          <View style={styles.header}>
-            <View style={styles.avatar}>
+          {/* Profile Header with Gradient */}
+          <LinearGradient
+            colors={[...gradients.greetingCard]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerGradient}
+          >
+            <View style={styles.avatarCircle}>
               <Text style={styles.avatarText}>{displayInitial}</Text>
             </View>
             <Text style={styles.name}>{user?.displayName || "User"}</Text>
             <Text style={styles.email}>{user?.email || ""}</Text>
-          </View>
+          </LinearGradient>
 
           {/* ACCOUNT Section */}
           <Text style={styles.sectionLabel}>ACCOUNT</Text>
           <View style={styles.sectionCard}>
             <SettingsRow
+              icon="user"
               label="Display Name"
               value={user?.displayName || ""}
               onPress={() => openEdit("displayName")}
               showDivider
             />
-            <SettingsRow label="Email" value={user?.email || ""} showDivider />
+            <SettingsRow icon="mail" label="Email" value={user?.email || ""} showDivider />
             <SettingsRow
+              icon="globe"
               label="Timezone"
               value={user?.timezone || "UTC"}
               onPress={() => openEdit("timezone")}
@@ -230,12 +238,14 @@ export default function ProfileScreen() {
           <Text style={styles.sectionLabel}>DATA</Text>
           <View style={styles.sectionCard}>
             <SettingsRow
+              icon="download"
               label="Export as JSON"
               value={isExporting ? "Exporting..." : undefined}
               onPress={() => handleExport("json")}
               showDivider
             />
             <SettingsRow
+              icon="download"
               label="Export as CSV"
               value={isExporting ? "Exporting..." : undefined}
               onPress={() => handleExport("csv")}
@@ -245,21 +255,24 @@ export default function ProfileScreen() {
           {/* SECURITY Section */}
           <Text style={styles.sectionLabel}>SECURITY</Text>
           <View style={styles.sectionCard}>
-            <SettingsRow label="Active Sessions" onPress={handleOpenSessions} showDivider />
-            <SettingsRow label="Log out all devices" onPress={handleLogoutAll} />
+            <SettingsRow
+              icon="smartphone"
+              label="Active Sessions"
+              onPress={handleOpenSessions}
+              showDivider
+            />
+            <SettingsRow icon="log-out" label="Log out all devices" onPress={handleLogoutAll} />
           </View>
 
           {/* DANGER ZONE */}
           <Text style={[styles.sectionLabel, { color: colors.error }]}>DANGER ZONE</Text>
 
-          <TouchableOpacity
-            style={styles.logoutButton}
+          <GradientButton
             onPress={handleLogout}
-            disabled={isLoggingOut}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.logoutText}>{isLoggingOut ? "Logging out..." : "Log Out"}</Text>
-          </TouchableOpacity>
+            title={isLoggingOut ? "Logging out..." : "Log Out"}
+            loading={isLoggingOut}
+            variant="danger"
+          />
 
           <TouchableOpacity
             style={styles.deleteButton}
@@ -380,11 +393,13 @@ export default function ProfileScreen() {
 // --- Settings Row Component ---
 
 function SettingsRow({
+  icon,
   label,
   value,
   onPress,
   showDivider,
 }: {
+  icon: keyof typeof Feather.glyphMap;
   label: string;
   value?: string;
   onPress?: () => void;
@@ -398,7 +413,10 @@ function SettingsRow({
         onPress={onPress}
         {...(onPress ? { activeOpacity: 0.6 } : {})}
       >
-        <Text style={settingsStyles.label}>{label}</Text>
+        <View style={settingsStyles.leftSide}>
+          <Feather name={icon} size={18} color={colors.textSecondary} style={settingsStyles.icon} />
+          <Text style={settingsStyles.label}>{label}</Text>
+        </View>
         <View style={settingsStyles.rightSide}>
           {value ? <Text style={settingsStyles.value}>{value}</Text> : null}
           {onPress && (
@@ -418,58 +436,47 @@ function SettingsRow({
 
 // --- Styles ---
 
-const cardShadow = Platform.select({
-  ios: {
-    shadowColor: colors.cardShadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
-  },
-  android: {
-    elevation: 2,
-  },
-  default: {},
-});
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: colors.background,
   },
   content: {
-    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.xxl,
   },
 
-  // Header
-  header: {
+  // Gradient Header
+  headerGradient: {
     alignItems: "center",
     paddingTop: spacing.lg,
+    paddingBottom: spacing.xl,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
     marginBottom: spacing.xl,
   },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primary,
+  avatarCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.md,
   },
   avatarText: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: "SourceSerif4_700Bold",
     color: colors.textInverse,
   },
   name: {
     fontSize: 22,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
+    color: colors.textInverse,
   },
   email: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
+    color: "rgba(255, 255, 255, 0.8)",
     marginTop: spacing.xs,
   },
 
@@ -481,34 +488,25 @@ const styles = StyleSheet.create({
     color: colors.sectionLabel,
     textTransform: "uppercase",
     marginBottom: spacing.sm,
-    marginLeft: spacing.xs,
+    marginLeft: spacing.lg + spacing.xs,
+    marginRight: spacing.lg,
   },
   sectionCard: {
     backgroundColor: colors.cardBackground,
-    borderRadius: 14,
+    borderRadius: radii.lg,
     overflow: "hidden",
     marginBottom: spacing.lg,
-    ...cardShadow,
+    marginHorizontal: spacing.lg,
+    ...cardShadow(),
   },
 
   // Destructive actions
-  logoutButton: {
-    height: 52,
-    backgroundColor: colors.errorLight,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoutText: {
-    fontSize: 15,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.error,
-  },
   deleteButton: {
     alignItems: "center",
     justifyContent: "center",
     marginTop: 12,
     paddingVertical: spacing.md,
+    marginHorizontal: spacing.lg,
   },
   deleteText: {
     fontSize: 14,
@@ -528,11 +526,18 @@ const styles = StyleSheet.create({
 
 const settingsStyles = StyleSheet.create({
   row: {
-    height: 52,
+    height: 56,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: spacing.md,
+  },
+  leftSide: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  icon: {
+    marginRight: spacing.sm + 4,
   },
   rightSide: {
     flexDirection: "row",
@@ -551,7 +556,7 @@ const settingsStyles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: colors.divider,
-    marginLeft: spacing.md,
+    marginLeft: spacing.md + 18 + spacing.sm + 4,
   },
 });
 
@@ -565,10 +570,11 @@ const modalStyles = StyleSheet.create({
   },
   container: {
     backgroundColor: colors.surface,
-    borderRadius: 20,
+    borderRadius: radii.xxl,
     padding: spacing.lg,
     width: "100%",
     maxWidth: 340,
+    ...cardShadowStrong(),
   },
   headerRow: {
     flexDirection: "row",
