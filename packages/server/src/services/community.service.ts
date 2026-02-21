@@ -4,7 +4,7 @@ import type {
   CreateGroupInput,
   SendMessageInput,
 } from "@emovo/shared";
-import { eq, and, sql, desc, ne, ilike, notInArray } from "drizzle-orm";
+import { eq, and, sql, desc, ne, ilike, notInArray, inArray } from "drizzle-orm";
 
 import { db } from "../config/database.js";
 import { comments } from "../db/schema/comments.js";
@@ -130,7 +130,7 @@ export class CommunityService {
       ? await db
           .select({ postId: postLikes.postId })
           .from(postLikes)
-          .where(and(eq(postLikes.userId, userId), sql`${postLikes.postId} = ANY(${postIds})`))
+          .where(and(eq(postLikes.userId, userId), inArray(postLikes.postId, postIds)))
       : [];
     const likedSet = new Set(likedRows.map((r) => r.postId));
 
@@ -622,7 +622,7 @@ export class CommunityService {
     const convRows = await db
       .select()
       .from(conversations)
-      .where(sql`${conversations.id} = ANY(${convIds})`)
+      .where(inArray(conversations.id, convIds))
       .orderBy(desc(conversations.updatedAt));
 
     // Get the other participants (for direct conversations)
@@ -636,7 +636,7 @@ export class CommunityService {
       .innerJoin(users, eq(conversationParticipants.userId, users.id))
       .where(
         and(
-          sql`${conversationParticipants.conversationId} = ANY(${convIds})`,
+          inArray(conversationParticipants.conversationId, convIds),
           ne(conversationParticipants.userId, userId),
         ),
       );
@@ -652,12 +652,13 @@ export class CommunityService {
       });
     }
 
-    // Get last message per conversation
+    // Get last message per conversation — use raw ARRAY literal for raw SQL
+    const convIdsPgArr = sql.raw(`'{${convIds.join(",")}}'::uuid[]`);
     const lastMessages = await db.execute(sql`
       SELECT DISTINCT ON (conversation_id)
         id, conversation_id, sender_id, content, type, created_at
       FROM messages
-      WHERE conversation_id = ANY(${convIds})
+      WHERE conversation_id = ANY(${convIdsPgArr})
       ORDER BY conversation_id, created_at DESC
     `);
 
@@ -688,7 +689,7 @@ export class CommunityService {
       FROM messages m
       INNER JOIN conversation_participants cp
         ON cp.conversation_id = m.conversation_id AND cp.user_id = ${userId}
-      WHERE m.conversation_id = ANY(${convIds})
+      WHERE m.conversation_id = ANY(${convIdsPgArr})
         AND m.sender_id != ${userId}
         AND (cp.last_read_at IS NULL OR m.created_at > cp.last_read_at)
       GROUP BY m.conversation_id

@@ -16,12 +16,7 @@ function TabIcon({ name, label, focused }: { name: TabIconName; label: string; f
   return (
     <View style={tabStyles.tabItem}>
       <Ionicons name={iconName} size={24} color={focused ? colors.primary : colors.textTertiary} />
-      <Text
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.8}
-        style={[tabStyles.label, focused && tabStyles.labelActive]}
-      >
+      <Text numberOfLines={1} style={[tabStyles.label, focused && tabStyles.labelActive]}>
         {label}
       </Text>
       {focused && <View style={tabStyles.activeIndicator} />}
@@ -69,6 +64,9 @@ export default function TabsLayout() {
           }),
         },
         tabBarShowLabel: false,
+        tabBarItemStyle: {
+          flex: 1,
+        },
         headerShown: false,
       }}
     >
@@ -127,8 +125,6 @@ const tabStyles = StyleSheet.create({
     justifyContent: "center",
     paddingTop: 10,
     position: "relative",
-    minWidth: 0,
-    width: "100%",
   },
   activeIndicator: {
     width: 28,
