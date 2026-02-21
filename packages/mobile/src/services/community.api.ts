@@ -47,6 +47,10 @@ export async function createCommentApi(postId: string, input: { content: string 
   return data.data as Comment;
 }
 
+export async function deleteCommentApi(commentId: string) {
+  await api.delete(`/community/comments/${commentId}`);
+}
+
 // ── Groups ────────────────────────────────────────────────────
 
 export async function createGroupApi(input: {

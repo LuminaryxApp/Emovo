@@ -499,7 +499,19 @@ export default function ProfileScreen() {
             <SettingsRow
               icon="person-outline"
               label={t("profile.editProfile")}
-              onPress={() => openEdit("displayName")}
+              onPress={() => {
+                Alert.alert(t("profile.editProfile"), undefined, [
+                  {
+                    text: t("profile.displayName"),
+                    onPress: () => openEdit("displayName"),
+                  },
+                  {
+                    text: t("profile.timezone"),
+                    onPress: () => openEdit("timezone"),
+                  },
+                  { text: t("common.cancel"), style: "cancel" },
+                ]);
+              }}
             />
             <Divider spacing={0} />
             <SettingsRow
@@ -626,12 +638,12 @@ export default function ProfileScreen() {
                 const body = encodeURIComponent(
                   "Hi Emovo Team,\n\nI need help with...\n\n---\nApp Version: v0.0.1",
                 );
-                const url = `mailto:support@luminaryx.app?subject=${subject}&body=${body}`;
+                const url = `mailto:support@emovo.app?subject=${subject}&body=${body}`;
                 const canOpen = await Linking.canOpenURL(url);
                 if (canOpen) {
                   Linking.openURL(url);
                 } else {
-                  Alert.alert(t("profile.contactUs"), "support@luminaryx.app");
+                  Alert.alert(t("profile.contactUs"), "support@emovo.app");
                 }
               }}
             />

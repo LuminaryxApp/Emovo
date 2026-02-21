@@ -18,6 +18,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Avatar, Badge, Card } from "../../src/components/ui";
+import { useAuthStore } from "../../src/stores/auth.store";
 import { useCommunityStore } from "../../src/stores/community.store";
 import { moodEmojis } from "../../src/theme";
 import { colors, type MoodLevel } from "../../src/theme/colors";
@@ -65,9 +66,12 @@ export default function PostDetailScreen() {
   const insets = useSafeAreaInsets();
 
   // Store
+  const user = useAuthStore((s) => s.user);
   const posts = useCommunityStore((s) => s.posts);
   const fetchComments = useCommunityStore((s) => s.fetchComments);
   const createComment = useCommunityStore((s) => s.createComment);
+  const deleteComment = useCommunityStore((s) => s.deleteComment);
+  const deletePost = useCommunityStore((s) => s.deletePost);
   const toggleLike = useCommunityStore((s) => s.toggleLike);
 
   // Find the post from the store
@@ -135,6 +139,47 @@ export default function PostDetailScreen() {
     if (id) toggleLike(id);
   }, [id, toggleLike]);
 
+  const handleDeleteComment = useCallback(
+    (commentId: string) => {
+      Alert.alert(t("community.deleteCommentTitle"), t("community.deleteCommentMessage"), [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("community.delete"),
+          style: "destructive",
+          onPress: async () => {
+            if (!id) return;
+            try {
+              await deleteComment(id, commentId);
+              setComments((prev) => prev.filter((c) => c.id !== commentId));
+            } catch {
+              Alert.alert(t("common.error"), t("community.deleteCommentError"));
+            }
+          },
+        },
+      ]);
+    },
+    [id, deleteComment, t],
+  );
+
+  const handleDeletePost = useCallback(() => {
+    if (!id) return;
+    Alert.alert(t("community.deletePostTitle"), t("community.deletePostMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
+      {
+        text: t("community.delete"),
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deletePost(id);
+            router.back();
+          } catch {
+            Alert.alert(t("common.error"), t("community.deletePostError"));
+          }
+        },
+      },
+    ]);
+  }, [id, deletePost, router, t]);
+
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
@@ -166,7 +211,13 @@ export default function PostDetailScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>{t("community.comments")}</Text>
-        <View style={{ width: 40 }} />
+        {post && user?.id === post.author.id ? (
+          <Pressable onPress={handleDeletePost} style={styles.backButton}>
+            <Ionicons name="trash-outline" size={20} color={colors.error} />
+          </Pressable>
+        ) : (
+          <View style={{ width: 40 }} />
+        )}
       </View>
 
       <ScrollView
@@ -232,7 +283,20 @@ export default function PostDetailScreen() {
                 <View style={styles.commentContent}>
                   <View style={styles.commentHeader}>
                     <Text style={styles.commentAuthor}>{comment.author.displayName}</Text>
-                    <Text style={styles.commentTime}>{formatRelativeTime(comment.createdAt)}</Text>
+                    <View style={styles.commentHeaderRight}>
+                      <Text style={styles.commentTime}>
+                        {formatRelativeTime(comment.createdAt)}
+                      </Text>
+                      {user?.id === comment.author.id && (
+                        <Pressable
+                          onPress={() => handleDeleteComment(comment.id)}
+                          hitSlop={8}
+                          style={styles.commentDeleteBtn}
+                        >
+                          <Ionicons name="trash-outline" size={14} color={colors.textTertiary} />
+                        </Pressable>
+                      )}
+                    </View>
                   </View>
                   <Text style={styles.commentText}>{comment.content}</Text>
                 </View>
@@ -395,6 +459,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 4,
+  },
+  commentHeaderRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+  },
+  commentDeleteBtn: {
+    padding: 2,
   },
   commentAuthor: {
     fontSize: 13,

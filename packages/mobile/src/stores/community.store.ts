@@ -14,6 +14,7 @@ import {
   unlikePostApi,
   listCommentsApi,
   createCommentApi,
+  deleteCommentApi,
   createGroupApi,
   listMyGroupsApi,
   discoverGroupsApi,
@@ -56,6 +57,7 @@ interface CommunityState {
     cursor?: string,
   ) => Promise<{ comments: Comment[]; cursor: string | null }>;
   createComment: (postId: string, content: string) => Promise<Comment>;
+  deleteComment: (postId: string, commentId: string) => Promise<void>;
 
   // Group actions
   fetchMyGroups: () => Promise<void>;
@@ -181,6 +183,16 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       ),
     }));
     return comment;
+  },
+
+  deleteComment: async (postId, commentId) => {
+    await deleteCommentApi(commentId);
+    // Decrement comment count on the post
+    set((state) => ({
+      posts: state.posts.map((p) =>
+        p.id === postId ? { ...p, commentCount: Math.max(0, p.commentCount - 1) } : p,
+      ),
+    }));
   },
 
   // ── Groups ──────────────────────────────────────────────────

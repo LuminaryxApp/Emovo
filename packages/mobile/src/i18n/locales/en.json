@@ -216,7 +216,19 @@
     "noComments": "No comments yet",
     "beFirstToComment": "Be the first to share your thoughts!",
     "commentError": "Failed to post comment. Please try again.",
-    "send": "Send"
+    "send": "Send",
+    "delete": "Delete",
+    "deletePostTitle": "Delete Post?",
+    "deletePostMessage": "This will permanently delete your post and all its comments.",
+    "deletePostError": "Failed to delete post. Please try again.",
+    "deleteCommentTitle": "Delete Comment?",
+    "deleteCommentMessage": "This will permanently delete your comment.",
+    "deleteCommentError": "Failed to delete comment. Please try again.",
+    "leaveGroupTitle": "Leave Group?",
+    "leaveGroupMessage": "You will no longer see posts from this group.",
+    "leaveGroup": "Leave",
+    "leaveGroupError": "Failed to leave group. Please try again.",
+    "leave": "Leave"
   },
   "charts": {
     "moodDistribution": "MOOD DISTRIBUTION",

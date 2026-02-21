@@ -104,6 +104,9 @@ export default function CommunityScreen() {
   const fetchDiscoverGroups = useCommunityStore((s) => s.fetchDiscoverGroups);
   const joinGroup = useCommunityStore((s) => s.joinGroup);
 
+  const deletePost = useCommunityStore((s) => s.deletePost);
+  const leaveGroup = useCommunityStore((s) => s.leaveGroup);
+
   const createPost = useCommunityStore((s) => s.createPost);
   const createGroup = useCommunityStore((s) => s.createGroup);
 
@@ -251,6 +254,46 @@ export default function CommunityScreen() {
     }
   }, [groupName, groupDescription, groupIcon, createGroup, t]);
 
+  const handleDeletePost = useCallback(
+    (postId: string) => {
+      Alert.alert(t("community.deletePostTitle"), t("community.deletePostMessage"), [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("community.delete"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deletePost(postId);
+            } catch {
+              Alert.alert(t("common.error"), t("community.deletePostError"));
+            }
+          },
+        },
+      ]);
+    },
+    [deletePost, t],
+  );
+
+  const handleLeaveGroup = useCallback(
+    (groupId: string) => {
+      Alert.alert(t("community.leaveGroupTitle"), t("community.leaveGroupMessage"), [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("community.leaveGroup"),
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await leaveGroup(groupId);
+            } catch {
+              Alert.alert(t("common.error"), t("community.leaveGroupError"));
+            }
+          },
+        },
+      ]);
+    },
+    [leaveGroup, t],
+  );
+
   const showComingSoon = useCallback(() => {
     Alert.alert(t("community.comingSoon"), t("community.comingSoonMessage"));
   }, [t]);
@@ -354,59 +397,72 @@ export default function CommunityScreen() {
     </Animated.View>
   );
 
-  const renderPostCard = (post: (typeof posts)[0], index: number) => (
-    <Animated.View key={post.id} entering={FadeInDown.delay(150 + index * 60).duration(400)}>
-      <Card variant="elevated" padding="md" style={styles.postCard}>
-        {/* Author row */}
-        <View style={styles.postAuthorRow}>
-          <Avatar name={post.author.displayName} size="md" />
-          <View style={styles.postAuthorInfo}>
-            <Text style={styles.postAuthorName}>{post.author.displayName}</Text>
-            <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
+  const renderPostCard = (post: (typeof posts)[0], index: number) => {
+    const isOwnPost = user?.id === post.author.id;
+
+    return (
+      <Animated.View key={post.id} entering={FadeInDown.delay(150 + index * 60).duration(400)}>
+        <Card variant="elevated" padding="md" style={styles.postCard}>
+          {/* Author row */}
+          <View style={styles.postAuthorRow}>
+            <Avatar name={post.author.displayName} size="md" />
+            <View style={styles.postAuthorInfo}>
+              <Text style={styles.postAuthorName}>{post.author.displayName}</Text>
+              <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
+            </View>
+            {post.moodScore != null && (
+              <Badge variant={getMoodBadgeVariant(post.moodScore)} size="sm">
+                {`${moodEmojis[post.moodScore as MoodLevel] ?? ""} ${post.moodScore}/5`}
+              </Badge>
+            )}
+            {isOwnPost && (
+              <Pressable
+                onPress={() => handleDeletePost(post.id)}
+                hitSlop={8}
+                style={styles.postMenuBtn}
+              >
+                <Ionicons name="trash-outline" size={iconSizes.xs} color={colors.textTertiary} />
+              </Pressable>
+            )}
           </View>
-          {post.moodScore != null && (
-            <Badge variant={getMoodBadgeVariant(post.moodScore)} size="sm">
-              {`${moodEmojis[post.moodScore as MoodLevel] ?? ""} ${post.moodScore}/5`}
-            </Badge>
-          )}
-        </View>
 
-        {/* Content */}
-        <Text style={styles.postContent}>{post.content}</Text>
+          {/* Content */}
+          <Text style={styles.postContent}>{post.content}</Text>
 
-        {/* Actions row */}
-        <View style={styles.postActionsRow}>
-          <Pressable onPress={() => handleToggleLike(post.id)} style={styles.postAction}>
-            <Ionicons
-              name={post.isLiked ? "heart" : "heart-outline"}
-              size={iconSizes.sm}
-              color={post.isLiked ? colors.error : colors.textTertiary}
-            />
-            <Text style={[styles.postActionCount, post.isLiked && { color: colors.error }]}>
-              {post.likeCount > 0 ? post.likeCount : ""}
-            </Text>
-          </Pressable>
+          {/* Actions row */}
+          <View style={styles.postActionsRow}>
+            <Pressable onPress={() => handleToggleLike(post.id)} style={styles.postAction}>
+              <Ionicons
+                name={post.isLiked ? "heart" : "heart-outline"}
+                size={iconSizes.sm}
+                color={post.isLiked ? colors.error : colors.textTertiary}
+              />
+              <Text style={[styles.postActionCount, post.isLiked && { color: colors.error }]}>
+                {post.likeCount > 0 ? post.likeCount : ""}
+              </Text>
+            </Pressable>
 
-          <Pressable onPress={() => handleOpenComments(post.id)} style={styles.postAction}>
-            <Ionicons name="chatbubble-outline" size={iconSizes.sm} color={colors.textTertiary} />
-            <Text style={styles.postActionCount}>
-              {post.commentCount > 0 ? post.commentCount : ""}
-            </Text>
-          </Pressable>
+            <Pressable onPress={() => handleOpenComments(post.id)} style={styles.postAction}>
+              <Ionicons name="chatbubble-outline" size={iconSizes.sm} color={colors.textTertiary} />
+              <Text style={styles.postActionCount}>
+                {post.commentCount > 0 ? post.commentCount : ""}
+              </Text>
+            </Pressable>
 
-          <Pressable onPress={showComingSoon} style={styles.postAction}>
-            <Ionicons name="share-outline" size={iconSizes.sm} color={colors.textTertiary} />
-          </Pressable>
+            <Pressable onPress={showComingSoon} style={styles.postAction}>
+              <Ionicons name="share-outline" size={iconSizes.sm} color={colors.textTertiary} />
+            </Pressable>
 
-          <View style={styles.postActionSpacer} />
+            <View style={styles.postActionSpacer} />
 
-          <Pressable onPress={showComingSoon} style={styles.postAction}>
-            <Ionicons name="bookmark-outline" size={iconSizes.sm} color={colors.textTertiary} />
-          </Pressable>
-        </View>
-      </Card>
-    </Animated.View>
-  );
+            <Pressable onPress={showComingSoon} style={styles.postAction}>
+              <Ionicons name="bookmark-outline" size={iconSizes.sm} color={colors.textTertiary} />
+            </Pressable>
+          </View>
+        </Card>
+      </Animated.View>
+    );
+  };
 
   const renderFeedTab = () => {
     if (isLoadingFeed && posts.length === 0) {
@@ -509,9 +565,9 @@ export default function CommunityScreen() {
                 <Text style={styles.joinButtonText}>{t("community.join")}</Text>
               </Pressable>
             ) : (
-              <Badge variant="primary" size="sm">
-                Joined
-              </Badge>
+              <Pressable onPress={() => handleLeaveGroup(group.id)} style={styles.leaveButton}>
+                <Text style={styles.leaveButtonText}>{t("community.leave")}</Text>
+              </Pressable>
             )}
           </View>
         </Card>
@@ -1100,6 +1156,10 @@ const styles = StyleSheet.create({
   postActionSpacer: {
     flex: 1,
   },
+  postMenuBtn: {
+    padding: spacing.xs,
+    marginLeft: spacing.xs,
+  },
 
   // ── Section headers ─────────────────────────────────────────
   sectionHeader: {
@@ -1207,6 +1267,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
     color: colors.textInverse,
+  },
+  leaveButton: {
+    borderWidth: 1,
+    borderColor: colors.error,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+  },
+  leaveButtonText: {
+    fontSize: 13,
+    fontFamily: "SourceSerif4_600SemiBold",
+    color: colors.error,
   },
 
   // ── Messages: Search ────────────────────────────────────────
