@@ -16,7 +16,9 @@ function TabIcon({ name, label, focused }: { name: TabIconName; label: string; f
   return (
     <View style={tabStyles.tabItem}>
       <Ionicons name={iconName} size={24} color={focused ? colors.primary : colors.textTertiary} />
-      <Text style={[tabStyles.label, focused && tabStyles.labelActive]}>{label}</Text>
+      <Text numberOfLines={1} style={[tabStyles.label, focused && tabStyles.labelActive]}>
+        {label}
+      </Text>
       {focused && <View style={tabStyles.activeIndicator} />}
     </View>
   );
@@ -130,7 +132,7 @@ const tabStyles = StyleSheet.create({
     marginTop: 4,
   },
   label: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: "SourceSerif4_600SemiBold",
     color: colors.textTertiary,
     marginTop: 4,

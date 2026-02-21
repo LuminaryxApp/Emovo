@@ -13,7 +13,7 @@ export async function sessionsRoutes(fastify: FastifyInstance) {
    * GET /sessions
    * Returns device_name, last_used_at, created_at, current (no ip_hash exposed).
    */
-  fastify.get("/sessions", async (request, reply) => {
+  fastify.get("/", async (request, reply) => {
     const sessions = await authService.getActiveSessions(request.userId);
 
     // Determine "current" session from the authorization token's JTI or from a header
@@ -35,7 +35,7 @@ export async function sessionsRoutes(fastify: FastifyInstance) {
   /**
    * DELETE /sessions/:id
    */
-  fastify.delete<{ Params: { id: string } }>("/sessions/:id", async (request, reply) => {
+  fastify.delete<{ Params: { id: string } }>("/:id", async (request, reply) => {
     const revoked = await authService.revokeSession(request.userId, request.params.id);
     if (!revoked) {
       throw new NotFoundError("Session not found");

@@ -126,20 +126,32 @@ export class StatsService {
     const startIso = start.toISOString();
     const endIso = end.toISOString();
 
-    const truncUnit = period === "year" ? "month" : "day";
-
-    const dataPoints = await client`
-      SELECT
-        date_trunc(${truncUnit}, logged_at)::text AS date,
-        COALESCE(AVG(mood_score)::numeric(3,2), 0) AS avg_mood,
-        COUNT(*)::int AS count
-      FROM mood_entries
-      WHERE user_id = ${userId}
-        AND logged_at >= ${startIso}::timestamptz
-        AND logged_at < ${endIso}::timestamptz
-      GROUP BY date_trunc(${truncUnit}, logged_at)
-      ORDER BY date_trunc(${truncUnit}, logged_at)
-    `;
+    const dataPoints =
+      period === "year"
+        ? await client`
+            SELECT
+              date_trunc('month', logged_at)::text AS date,
+              COALESCE(AVG(mood_score)::numeric(3,2), 0) AS avg_mood,
+              COUNT(*)::int AS count
+            FROM mood_entries
+            WHERE user_id = ${userId}
+              AND logged_at >= ${startIso}::timestamptz
+              AND logged_at < ${endIso}::timestamptz
+            GROUP BY 1
+            ORDER BY 1
+          `
+        : await client`
+            SELECT
+              date_trunc('day', logged_at)::text AS date,
+              COALESCE(AVG(mood_score)::numeric(3,2), 0) AS avg_mood,
+              COUNT(*)::int AS count
+            FROM mood_entries
+            WHERE user_id = ${userId}
+              AND logged_at >= ${startIso}::timestamptz
+              AND logged_at < ${endIso}::timestamptz
+            GROUP BY 1
+            ORDER BY 1
+          `;
 
     return {
       dataPoints: dataPoints.map((dp: Record<string, unknown>) => ({
@@ -204,8 +216,8 @@ export class StatsService {
       SELECT DATE(logged_at AT TIME ZONE ${tz})::text AS date
       FROM mood_entries
       WHERE user_id = ${userId}
-      GROUP BY DATE(logged_at AT TIME ZONE ${tz})
-      ORDER BY DATE(logged_at AT TIME ZONE ${tz}) DESC
+      GROUP BY 1
+      ORDER BY 1 DESC
     `;
 
     if (rows.length === 0) {
@@ -280,8 +292,8 @@ export class StatsService {
       WHERE user_id = ${userId}
         AND DATE(logged_at AT TIME ZONE ${tz}) >= ${monthStart}::date
         AND DATE(logged_at AT TIME ZONE ${tz}) < (${monthStart}::date + interval '1 month')::date
-      GROUP BY DATE(logged_at AT TIME ZONE ${tz})
-      ORDER BY DATE(logged_at AT TIME ZONE ${tz}) ASC
+      GROUP BY 1
+      ORDER BY 1 ASC
     `;
 
     const calendar: Record<string, number> = {};
