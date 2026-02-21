@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, boolean, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, boolean, integer, timestamp, text } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -19,6 +19,9 @@ export const users = pgTable("users", {
   timezone: varchar("timezone", { length: 50 }).default("UTC").notNull(),
   notificationsEnabled: boolean("notifications_enabled").default(true).notNull(),
   preferredLanguage: varchar("preferred_language", { length: 5 }).default("en").notNull(),
+  avatarBase64: text("avatar_base64"),
+  reminderTime: varchar("reminder_time", { length: 5 }),
+  themePreference: varchar("theme_preference", { length: 10 }).default("system").notNull(),
   failedLoginAttempts: integer("failed_login_attempts").default(0).notNull(),
   lockedUntil: timestamp("locked_until", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

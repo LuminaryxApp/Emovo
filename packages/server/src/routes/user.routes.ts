@@ -26,6 +26,9 @@ export async function userRoutes(fastify: FastifyInstance) {
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
         preferredLanguage: users.preferredLanguage,
+        avatarBase64: users.avatarBase64,
+        reminderTime: users.reminderTime,
+        themePreference: users.themePreference,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -44,6 +47,9 @@ export async function userRoutes(fastify: FastifyInstance) {
         timezone: user.timezone,
         notificationsEnabled: user.notificationsEnabled,
         preferredLanguage: user.preferredLanguage,
+        avatarBase64: user.avatarBase64,
+        reminderTime: user.reminderTime,
+        themePreference: user.themePreference,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
       },
@@ -62,6 +68,9 @@ export async function userRoutes(fastify: FastifyInstance) {
     if (body.notificationsEnabled !== undefined)
       updateData.notificationsEnabled = body.notificationsEnabled;
     if (body.preferredLanguage !== undefined) updateData.preferredLanguage = body.preferredLanguage;
+    if (body.avatarBase64 !== undefined) updateData.avatarBase64 = body.avatarBase64;
+    if (body.reminderTime !== undefined) updateData.reminderTime = body.reminderTime;
+    if (body.themePreference !== undefined) updateData.themePreference = body.themePreference;
 
     // Email change triggers re-verification
     if (body.email !== undefined) {
@@ -81,6 +90,9 @@ export async function userRoutes(fastify: FastifyInstance) {
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
         preferredLanguage: users.preferredLanguage,
+        avatarBase64: users.avatarBase64,
+        reminderTime: users.reminderTime,
+        themePreference: users.themePreference,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       });
@@ -102,6 +114,9 @@ export async function userRoutes(fastify: FastifyInstance) {
         timezone: updated.timezone,
         notificationsEnabled: updated.notificationsEnabled,
         preferredLanguage: updated.preferredLanguage,
+        avatarBase64: updated.avatarBase64,
+        reminderTime: updated.reminderTime,
+        themePreference: updated.themePreference,
         createdAt: updated.createdAt.toISOString(),
         updatedAt: updated.updatedAt.toISOString(),
       },

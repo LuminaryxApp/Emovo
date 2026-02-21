@@ -6,6 +6,9 @@ export interface User {
   timezone: string;
   notificationsEnabled: boolean;
   preferredLanguage: string;
+  avatarBase64: string | null;
+  reminderTime: string | null;
+  themePreference: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -16,4 +19,7 @@ export interface UserProfile {
   notificationsEnabled?: boolean;
   email?: string;
   preferredLanguage?: string;
+  avatarBase64?: string | null;
+  reminderTime?: string | null;
+  themePreference?: string;
 }

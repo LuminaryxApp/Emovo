@@ -34,6 +34,7 @@ export type {
   ConversationPreview,
   Message,
 } from "./types/community.js";
+export type { Notification } from "./types/notification.js";
 
 // Schemas
 export {

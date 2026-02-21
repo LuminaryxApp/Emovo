@@ -54,19 +54,11 @@ function getCalendarDays(month: Date): CalendarDay[] {
 
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  // Pad to exactly 42 cells (6 rows x 7 cols)
-  const calendarDays: CalendarDay[] = days.map((date) => ({
-    date,
+  // Only fill the natural number of rows (no forced 42 cells)
+  return days.map((date) => ({
+    date: isSameMonth(date, month) ? date : null,
     isCurrentMonth: isSameMonth(date, month),
   }));
-
-  while (calendarDays.length < 42) {
-    const lastDate = calendarDays[calendarDays.length - 1].date;
-    const nextDate = lastDate ? new Date(lastDate.getTime() + 86400000) : new Date();
-    calendarDays.push({ date: nextDate, isCurrentMonth: false });
-  }
-
-  return calendarDays.slice(0, 42);
 }
 
 function getDayOfWeekHeaders(locale: ReturnType<typeof getDateLocale>): string[] {
@@ -173,13 +165,8 @@ export default function HistoryScreen() {
     setCurrentMonth((prev) => subMonths(prev, 1));
   }, []);
 
-  const isCurrentMonth = isSameMonth(currentMonth, new Date());
-
   const goToNextMonth = useCallback(() => {
-    setCurrentMonth((prev) => {
-      const next = addMonths(prev, 1);
-      return next > startOfMonth(new Date()) ? prev : next;
-    });
+    setCurrentMonth((prev) => addMonths(prev, 1));
   }, []);
 
   const handleDayPress = useCallback((date: Date) => {
@@ -222,7 +209,6 @@ export default function HistoryScreen() {
                 onPress={goToNextMonth}
                 variant="ghost"
                 size="sm"
-                disabled={isCurrentMonth}
               />
             </View>
 

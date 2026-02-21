@@ -1,7 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
+import * as Linking from "expo-linking";
 import { router } from "expo-router";
+import * as StoreReview from "expo-store-review";
 import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,6 +19,7 @@ import {
   Modal,
   ActivityIndicator,
   FlatList,
+  Switch,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -26,11 +30,17 @@ import {
   getCurrentLanguage,
   type SupportedLanguage,
 } from "../../src/i18n/config";
+import {
+  requestNotificationPermissions,
+  scheduleDailyReminder,
+  cancelDailyReminder,
+} from "../../src/lib/notifications";
 import { getSessionId } from "../../src/lib/secure-storage";
 import { exportData } from "../../src/services/export.api";
 import { getStreakApi, getStatsSummaryApi } from "../../src/services/stats.api";
 import { getSessionsApi, deleteSessionApi, type Session } from "../../src/services/user.api";
 import { useAuthStore } from "../../src/stores/auth.store";
+import { useTheme, type ThemeMode } from "../../src/theme/ThemeContext";
 import { colors, gradients, cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii, screenPadding, iconSizes } from "../../src/theme/spacing";
 
@@ -48,8 +58,15 @@ interface StreakInfo {
 // Screen
 // ---------------------------------------------------------------------------
 
+const THEME_LABELS: Record<ThemeMode, string> = {
+  light: "Light",
+  dark: "Dark",
+  system: "System",
+};
+
 export default function ProfileScreen() {
   const { t } = useTranslation();
+  const { mode: themeMode, setMode: setThemeMode } = useTheme();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const logoutAll = useAuthStore((s) => s.logoutAll);
@@ -295,6 +312,130 @@ export default function ProfileScreen() {
   };
 
   // -------------------------------------------------------------------------
+  // Theme
+  // -------------------------------------------------------------------------
+
+  const handleThemeChange = useCallback(
+    async (newMode: ThemeMode) => {
+      setThemeMode(newMode);
+      try {
+        await updateProfile({ themePreference: newMode });
+      } catch {
+        // Theme changed locally even if server update fails
+      }
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    },
+    [setThemeMode, updateProfile],
+  );
+
+  // -------------------------------------------------------------------------
+  // Avatar
+  // -------------------------------------------------------------------------
+
+  const handleChangeAvatar = useCallback(async () => {
+    const options: string[] = [t("profile.changePhoto")];
+    if (user?.avatarBase64) {
+      options.push(t("profile.removePhoto"));
+    }
+    options.push(t("common.cancel"));
+
+    Alert.alert(undefined as unknown as string, undefined as unknown as string, [
+      {
+        text: t("profile.changePhoto"),
+        onPress: async () => {
+          try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ["images"],
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.5,
+              base64: true,
+            });
+            if (!result.canceled && result.assets[0].base64) {
+              await updateProfile({ avatarBase64: result.assets[0].base64 });
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+          } catch {
+            Alert.alert(t("common.error"), t("profile.failedUpdateProfile"));
+          }
+        },
+      },
+      ...(user?.avatarBase64
+        ? [
+            {
+              text: t("profile.removePhoto"),
+              style: "destructive" as const,
+              onPress: async () => {
+                try {
+                  await updateProfile({ avatarBase64: null });
+                  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                } catch {
+                  Alert.alert(t("common.error"), t("profile.failedUpdateProfile"));
+                }
+              },
+            },
+          ]
+        : []),
+      { text: t("common.cancel"), style: "cancel" as const },
+    ]);
+  }, [t, user?.avatarBase64, updateProfile]);
+
+  // -------------------------------------------------------------------------
+  // Reminders
+  // -------------------------------------------------------------------------
+
+  const saveReminder = useCallback(
+    async (time: string) => {
+      try {
+        const hasPermission = await requestNotificationPermissions();
+        if (!hasPermission) {
+          Alert.alert(t("profile.reminders"), t("profile.reminderPermissionDenied"));
+          return;
+        }
+        const [h, m] = time.split(":").map(Number);
+        await scheduleDailyReminder(h, m);
+        await updateProfile({ reminderTime: time });
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } catch {
+        Alert.alert(t("common.error"), t("profile.failedUpdateProfile"));
+      }
+    },
+    [t, updateProfile],
+  );
+
+  const handleReminderPress = useCallback(() => {
+    const options: {
+      text: string;
+      onPress?: () => void;
+      style?: "cancel" | "destructive" | "default";
+    }[] = [
+      { text: "8:00 AM", onPress: () => saveReminder("08:00") },
+      { text: "12:00 PM", onPress: () => saveReminder("12:00") },
+      { text: "8:00 PM", onPress: () => saveReminder("20:00") },
+    ];
+
+    if (user?.reminderTime) {
+      options.push({
+        text: t("profile.off"),
+        style: "destructive",
+        onPress: () => {
+          cancelDailyReminder();
+          updateProfile({ reminderTime: null })
+            .then(() => {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            })
+            .catch(() => {
+              Alert.alert(t("common.error"), t("profile.failedUpdateProfile"));
+            });
+        },
+      });
+    }
+    options.push({ text: t("common.cancel"), style: "cancel" });
+
+    Alert.alert(t("profile.reminders"), t("profile.reminderPickTime"), options);
+  }, [user?.reminderTime, t, updateProfile, saveReminder]);
+
+  // -------------------------------------------------------------------------
   // Render
   // -------------------------------------------------------------------------
 
@@ -309,7 +450,17 @@ export default function ProfileScreen() {
             end={{ x: 1, y: 1 }}
             style={styles.headerGradient}
           >
-            <Avatar name={user?.displayName || "User"} size="xl" style={styles.avatar} />
+            <Pressable onPress={handleChangeAvatar} style={styles.avatarContainer}>
+              <Avatar
+                name={user?.displayName || "User"}
+                size="xl"
+                uri={user?.avatarBase64 ? `data:image/jpeg;base64,${user.avatarBase64}` : undefined}
+                style={styles.avatar}
+              />
+              <View style={styles.avatarCameraOverlay}>
+                <Ionicons name="camera" size={16} color={colors.textInverse} />
+              </View>
+            </Pressable>
             <Text style={styles.name}>{user?.displayName || "User"}</Text>
             <Text style={styles.email}>{user?.email || ""}</Text>
             {joinDate ? (
@@ -354,7 +505,21 @@ export default function ProfileScreen() {
             <SettingsRow
               icon="notifications-outline"
               label={t("profile.notifications")}
-              badge={t("profile.soon")}
+              trailing={
+                <Switch
+                  value={user?.notificationsEnabled ?? false}
+                  onValueChange={async (val) => {
+                    try {
+                      await updateProfile({ notificationsEnabled: val });
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    } catch {
+                      Alert.alert(t("common.error"), t("profile.failedUpdateProfile"));
+                    }
+                  }}
+                  trackColor={{ false: colors.border, true: colors.primary }}
+                  thumbColor={colors.surface}
+                />
+              }
             />
             <Divider spacing={0} />
             <SettingsRow
@@ -370,7 +535,15 @@ export default function ProfileScreen() {
             <SettingsRow
               icon="moon-outline"
               label={t("profile.darkMode")}
-              badge={t("profile.soon")}
+              value={THEME_LABELS[themeMode]}
+              onPress={() => {
+                Alert.alert(t("profile.darkMode"), t("profile.themePickMessage"), [
+                  { text: "Light", onPress: () => handleThemeChange("light") },
+                  { text: "Dark", onPress: () => handleThemeChange("dark") },
+                  { text: "System", onPress: () => handleThemeChange("system") },
+                  { text: t("common.cancel"), style: "cancel" },
+                ]);
+              }}
             />
             <Divider spacing={0} />
             <SettingsRow
@@ -383,7 +556,8 @@ export default function ProfileScreen() {
             <SettingsRow
               icon="alarm-outline"
               label={t("profile.reminders")}
-              badge={t("profile.soon")}
+              value={user?.reminderTime ?? t("profile.off")}
+              onPress={handleReminderPress}
             />
           </Card>
 
@@ -431,7 +605,7 @@ export default function ProfileScreen() {
             <SettingsRow
               icon="cloud-upload-outline"
               label={t("profile.backupSync")}
-              badge={t("profile.soon")}
+              onPress={() => router.push("/backup-sync")}
             />
           </Card>
 
@@ -441,19 +615,33 @@ export default function ProfileScreen() {
             <SettingsRow
               icon="help-circle-outline"
               label={t("profile.helpFaq")}
-              badge={t("profile.soon")}
+              onPress={() => router.push("/faq")}
             />
             <Divider spacing={0} />
             <SettingsRow
               icon="chatbubble-ellipses-outline"
               label={t("profile.contactUs")}
-              badge={t("profile.soon")}
+              onPress={() => {
+                const subject = encodeURIComponent("Emovo Support Request");
+                const body = encodeURIComponent(
+                  "Hi Emovo Team,\n\nI need help with...\n\n---\nApp Version: v0.0.1",
+                );
+                Linking.openURL(`mailto:support@luminaryx.app?subject=${subject}&body=${body}`);
+              }}
             />
             <Divider spacing={0} />
             <SettingsRow
               icon="star-outline"
               label={t("profile.rateApp")}
-              badge={t("profile.soon")}
+              onPress={async () => {
+                try {
+                  if (await StoreReview.hasAction()) {
+                    await StoreReview.requestReview();
+                  }
+                } catch {
+                  // Silently fail — store review not available
+                }
+              }}
             />
           </Card>
 
@@ -693,13 +881,16 @@ function SettingsRow({
   value,
   badge,
   onPress,
+  trailing,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value?: string;
   badge?: string;
   onPress?: () => void;
+  trailing?: React.ReactNode;
 }) {
+  const _isInteractive = onPress || trailing;
   const Wrapper = onPress ? Pressable : View;
   return (
     <Wrapper
@@ -719,7 +910,8 @@ function SettingsRow({
           {badge}
         </Badge>
       ) : null}
-      {onPress ? (
+      {trailing || null}
+      {!trailing && onPress ? (
         <Ionicons name="chevron-forward" size={iconSizes.xs} color={colors.textTertiary} />
       ) : null}
     </Wrapper>
@@ -747,10 +939,26 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
   },
-  avatar: {
+  avatarContainer: {
+    position: "relative",
     marginBottom: spacing.md,
+  },
+  avatar: {
     borderWidth: 3,
     borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  avatarCameraOverlay: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.9)",
   },
   name: {
     fontSize: 24,

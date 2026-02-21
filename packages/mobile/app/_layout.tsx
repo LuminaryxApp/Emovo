@@ -14,6 +14,7 @@ import { ErrorBoundary } from "../src/components/ui/ErrorBoundary";
 import { toastConfig } from "../src/components/ui/ToastConfig";
 import { initI18n } from "../src/i18n/config";
 import { useAuthStore } from "../src/stores/auth.store";
+import { ThemeProvider, useTheme } from "../src/theme/ThemeContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -44,7 +45,20 @@ export default function RootLayout() {
 
   return (
     <ErrorBoundary>
-      <StatusBar style="dark" />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+      <Toast config={toastConfig} />
+    </ErrorBoundary>
+  );
+}
+
+function AppContent() {
+  const { isDark } = useTheme();
+
+  return (
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding/index" options={{ animation: "fade" }} />
@@ -54,8 +68,11 @@ export default function RootLayout() {
           name="log-mood"
           options={{ presentation: "modal", animation: "slide_from_bottom" }}
         />
+        <Stack.Screen name="faq" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="post/[id]" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="backup-sync" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="notifications" options={{ animation: "slide_from_right" }} />
       </Stack>
-      <Toast config={toastConfig} />
-    </ErrorBoundary>
+    </>
   );
 }

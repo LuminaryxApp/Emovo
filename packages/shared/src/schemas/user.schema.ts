@@ -69,6 +69,13 @@ export const updateProfileSchema = z.object({
   preferredLanguage: z
     .enum(["en", "es", "fr", "de", "pt", "ja", "zh", "ar", "hi", "ru"])
     .optional(),
+  avatarBase64: z.string().max(500_000).nullable().optional(),
+  reminderTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, "Must be HH:MM format")
+    .nullable()
+    .optional(),
+  themePreference: z.enum(["light", "dark", "system"]).optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

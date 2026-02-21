@@ -288,7 +288,55 @@
     "helpFaq": "Help & FAQ",
     "contactUs": "Contact Us",
     "rateApp": "Rate the App",
-    "soon": "Soon"
+    "soon": "Soon",
+    "themeLight": "Light",
+    "off": "Off",
+    "darkModeComingSoon": "Dark mode is coming in a future update. Stay tuned!",
+    "remindersComingSoon": "Daily reminders are coming in a future update.",
+    "backupSyncComingSoon": "Backup & sync is coming in a future update.",
+    "changePhoto": "Change Photo",
+    "removePhoto": "Remove Photo",
+    "reminderPickTime": "Choose a time for your daily mood reminder.",
+    "reminderPermissionDenied": "Please enable notifications in your device settings to use reminders.",
+    "themePickMessage": "Choose your preferred appearance."
+  },
+  "faq": {
+    "title": "Help & FAQ",
+    "items": {
+      "q1": "How do I log my mood?",
+      "a1": "Tap the \"+\" button on the home screen, select your mood level (1\u20135), add optional notes and triggers, then tap \"Log Mood\" to save.",
+      "q2": "What are triggers?",
+      "a2": "Triggers are activities or events that may affect your mood. You can select from default triggers (Work, Sleep, Exercise, etc.) or create custom ones that are personal to you.",
+      "q3": "How do I view my mood history?",
+      "a3": "Go to the History tab to see a calendar view of your moods. Tap any day to see your entries for that date.",
+      "q4": "Can I export my data?",
+      "a4": "Yes! Go to Profile \u2192 Export Data. You can export as JSON or CSV format, which will be saved to your device.",
+      "q5": "How are insights calculated?",
+      "a5": "Insights are based on your mood entries over time. We analyze your average mood, distribution, and trigger patterns to show you meaningful trends.",
+      "q6": "Is my data private?",
+      "a6": "Absolutely. Your mood notes are encrypted end-to-end. We never share your personal data with third parties.",
+      "q7": "How do I delete my account?",
+      "a7": "Go to Profile, scroll to the bottom, and tap \"Delete Account\". This will permanently remove all your data and cannot be undone.",
+      "q8": "What is the community feature?",
+      "a8": "The community lets you share mood updates anonymously, join support groups, and connect with others on their emotional wellness journey."
+    }
+  },
+  "backupSync": {
+    "title": "Backup & Sync",
+    "allSynced": "Everything is synced",
+    "lastSync": "Last synced: {{date}}",
+    "never": "Never",
+    "encrypted": "End-to-end encrypted",
+    "encryptedDesc": "Your mood notes are encrypted with AES-256-GCM before leaving your device. Only you can read them.",
+    "automatic": "Automatic sync",
+    "automaticDesc": "Your data syncs automatically whenever you have an internet connection. No action needed.",
+    "crossDevice": "Cross-device access",
+    "crossDeviceDesc": "Sign in on any device to access your mood history and settings instantly."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "emptySubtitle": "When someone likes or comments on your posts, you'll see it here."
   },
   "errors": {
     "somethingWrong": "Something went wrong",

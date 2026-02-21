@@ -22,6 +22,7 @@ interface AvatarProps {
   name: string;
   size?: AvatarSize;
   source?: ImageSourcePropType;
+  uri?: string | null;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -87,7 +88,7 @@ function getGradientForName(name: string): readonly [string, string] {
 // Component
 // ---------------------------------------------------------------------------
 
-export function Avatar({ name, size = "md", source, style, testID }: AvatarProps) {
+export function Avatar({ name, size = "md", source, uri, style, testID }: AvatarProps) {
   const dimension = SIZE_MAP[size];
   const fontSize = FONT_SIZE_MAP[size];
   const borderRadius = dimension / 2;
@@ -95,7 +96,25 @@ export function Avatar({ name, size = "md", source, style, testID }: AvatarProps
   const gradientColors = useMemo(() => getGradientForName(name), [name]);
   const initials = useMemo(() => getInitials(name), [name]);
 
-  // Image avatar
+  // URI-based avatar (base64 or remote URL)
+  if (uri) {
+    return (
+      <Image
+        source={{ uri }}
+        style={[
+          {
+            width: dimension,
+            height: dimension,
+            borderRadius,
+          },
+          style as StyleProp<ImageStyle>,
+        ]}
+        testID={testID}
+      />
+    );
+  }
+
+  // Image avatar (static source)
   if (source) {
     return (
       <Image
