@@ -147,7 +147,7 @@ export class AuthService {
           ${existing.device_name},
           ${ip ? hashIp(ip) : existing.ip_hash || null},
           ${userAgent ? hashUserAgent(userAgent) : existing.user_agent_hash || null},
-          ${newExpiresAt},
+          ${newExpiresAt.toISOString()},
           now()
         )
       `;
