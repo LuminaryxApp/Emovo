@@ -59,8 +59,8 @@ export class StatsService {
       .where(
         and(
           eq(moodEntries.userId, userId),
-          sql`${moodEntries.loggedAt} >= ${start.toISOString()}::timestamptz`,
-          sql`${moodEntries.loggedAt} < ${end.toISOString()}::timestamptz`,
+          sql`"mood_entries"."logged_at" >= ${start.toISOString()}::timestamptz`,
+          sql`"mood_entries"."logged_at" < ${end.toISOString()}::timestamptz`,
         ),
       );
 
@@ -74,8 +74,8 @@ export class StatsService {
       .where(
         and(
           eq(moodEntries.userId, userId),
-          sql`${moodEntries.loggedAt} >= ${start.toISOString()}::timestamptz`,
-          sql`${moodEntries.loggedAt} < ${end.toISOString()}::timestamptz`,
+          sql`"mood_entries"."logged_at" >= ${start.toISOString()}::timestamptz`,
+          sql`"mood_entries"."logged_at" < ${end.toISOString()}::timestamptz`,
         ),
       )
       .groupBy(moodEntries.moodScore)
@@ -102,8 +102,8 @@ export class StatsService {
       .where(
         and(
           eq(moodEntries.userId, userId),
-          sql`${moodEntries.loggedAt} >= ${start.toISOString()}::timestamptz`,
-          sql`${moodEntries.loggedAt} < ${end.toISOString()}::timestamptz`,
+          sql`"mood_entries"."logged_at" >= ${start.toISOString()}::timestamptz`,
+          sql`"mood_entries"."logged_at" < ${end.toISOString()}::timestamptz`,
         ),
       )
       .groupBy(triggers.id, triggers.name, triggers.icon, triggers.isDefault)
@@ -156,8 +156,8 @@ export class StatsService {
       .where(
         and(
           eq(moodEntries.userId, userId),
-          sql`${moodEntries.loggedAt} >= ${start.toISOString()}::timestamptz`,
-          sql`${moodEntries.loggedAt} < ${end.toISOString()}::timestamptz`,
+          sql`"mood_entries"."logged_at" >= ${start.toISOString()}::timestamptz`,
+          sql`"mood_entries"."logged_at" < ${end.toISOString()}::timestamptz`,
         ),
       )
       .groupBy(truncExpr)
@@ -201,8 +201,8 @@ export class StatsService {
       .where(
         and(
           eq(moodEntries.userId, userId),
-          sql`${moodEntries.loggedAt} >= ${start.toISOString()}::timestamptz`,
-          sql`${moodEntries.loggedAt} < ${end.toISOString()}::timestamptz`,
+          sql`"mood_entries"."logged_at" >= ${start.toISOString()}::timestamptz`,
+          sql`"mood_entries"."logged_at" < ${end.toISOString()}::timestamptz`,
         ),
       )
       .groupBy(triggers.id, triggers.name, triggers.icon, triggers.isDefault)
