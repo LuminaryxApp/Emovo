@@ -621,12 +621,18 @@ export default function ProfileScreen() {
             <SettingsRow
               icon="chatbubble-ellipses-outline"
               label={t("profile.contactUs")}
-              onPress={() => {
+              onPress={async () => {
                 const subject = encodeURIComponent("Emovo Support Request");
                 const body = encodeURIComponent(
                   "Hi Emovo Team,\n\nI need help with...\n\n---\nApp Version: v0.0.1",
                 );
-                Linking.openURL(`mailto:support@luminaryx.app?subject=${subject}&body=${body}`);
+                const url = `mailto:support@luminaryx.app?subject=${subject}&body=${body}`;
+                const canOpen = await Linking.canOpenURL(url);
+                if (canOpen) {
+                  Linking.openURL(url);
+                } else {
+                  Alert.alert(t("profile.contactUs"), "support@luminaryx.app");
+                }
               }}
             />
             <Divider spacing={0} />
