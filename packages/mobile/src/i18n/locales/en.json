@@ -10,6 +10,7 @@
     "confirm": "Confirm"
   },
   "tabs": {
+    "home": "Home",
     "log": "Log",
     "history": "History",
     "insights": "Insights",

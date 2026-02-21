@@ -313,9 +313,9 @@ export default function ProfileScreen() {
             <Text style={styles.name}>{user?.displayName || "User"}</Text>
             <Text style={styles.email}>{user?.email || ""}</Text>
             {joinDate ? (
-              <Badge variant="secondary" style={styles.memberBadge}>
-                {`Member since ${joinDate}`}
-              </Badge>
+              <View style={styles.memberBadge}>
+                <Text style={styles.memberBadgeText}>{`Member since ${joinDate}`}</Text>
+              </View>
             ) : null}
           </LinearGradient>
 
@@ -766,6 +766,15 @@ const styles = StyleSheet.create({
   memberBadge: {
     marginTop: spacing.sm,
     alignSelf: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.20)",
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.pill,
+  },
+  memberBadgeText: {
+    fontSize: 13,
+    fontFamily: "SourceSerif4_600SemiBold",
+    color: "rgba(255, 255, 255, 0.90)",
   },
 
   // ---- Stats Card ----
