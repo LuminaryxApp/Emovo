@@ -1,0 +1,44 @@
+{
+  "email": {
+    "verification": {
+      "subject": "Verifica tu cuenta de Emovo",
+      "heading": "Bienvenido a Emovo",
+      "body": "Estás a un paso de hacer seguimiento de tu bienestar emocional. Verifica tu correo electrónico para comenzar.",
+      "button": "Verificar mi correo",
+      "fallback": "Si el botón no funciona, copia y pega este enlace en tu navegador:",
+      "footer": "Este enlace caduca en 24 horas. Si no creaste una cuenta en Emovo, puedes ignorar este correo."
+    },
+    "passwordReset": {
+      "subject": "Restablece tu contraseña de Emovo",
+      "heading": "Restablece tu contraseña",
+      "body": "Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón de abajo para elegir una nueva.",
+      "button": "Restablecer contraseña",
+      "fallback": "Si el botón no funciona, copia y pega este enlace en tu navegador:",
+      "footer": "Este enlace caduca en 1 hora. Si no solicitaste restablecer tu contraseña, puedes ignorar este correo."
+    },
+    "footer": {
+      "tagline": "Emovo — Haz seguimiento de tu bienestar emocional",
+      "reason": "Recibiste este correo porque te registraste en Emovo."
+    }
+  },
+  "verification": {
+    "success": {
+      "title": "Correo verificado",
+      "message": "Tu correo electrónico ha sido verificado correctamente. Ya puedes iniciar sesión en Emovo."
+    },
+    "failure": {
+      "title": "Verificación fallida",
+      "message": "Este enlace no es válido o ha caducado. Solicita un nuevo correo de verificación desde la aplicación."
+    },
+    "missingToken": {
+      "title": "Token faltante",
+      "message": "No se proporcionó un token de verificación."
+    },
+    "closePage": "Puedes cerrar esta página y volver a la aplicación Emovo."
+  },
+  "api": {
+    "emailSent": "Si ese correo es válido, se ha enviado un correo de verificación.",
+    "resendSent": "Si ese correo está registrado y no verificado, se ha enviado un correo de verificación.",
+    "resetSent": "Si ese correo está registrado, se ha enviado un correo para restablecer la contraseña."
+  }
+}

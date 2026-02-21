@@ -1,0 +1,44 @@
+{
+  "email": {
+    "verification": {
+      "subject": "验证您的 Emovo 账户",
+      "heading": "欢迎使用 Emovo",
+      "body": "您距离追踪情绪健康仅一步之遥。验证您的邮箱即可开始使用。",
+      "button": "验证我的邮箱",
+      "fallback": "如果按钮无法使用，请复制以下链接并粘贴到浏览器中：",
+      "footer": "此链接将在24小时后失效。如果您没有创建 Emovo 账户，请忽略此邮件。"
+    },
+    "passwordReset": {
+      "subject": "重置您的 Emovo 密码",
+      "heading": "重置您的密码",
+      "body": "我们收到了重置您密码的请求。请点击下方按钮设置新密码。",
+      "button": "重置密码",
+      "fallback": "如果按钮无法使用，请复制以下链接并粘贴到浏览器中：",
+      "footer": "此链接将在1小时后失效。如果您没有请求重置密码，请忽略此邮件。"
+    },
+    "footer": {
+      "tagline": "Emovo — 追踪您的情绪健康",
+      "reason": "您收到此邮件是因为您注册了 Emovo。"
+    }
+  },
+  "verification": {
+    "success": {
+      "title": "邮箱验证成功！",
+      "message": "您的邮箱已成功验证。您现在可以登录 Emovo。"
+    },
+    "failure": {
+      "title": "验证失败",
+      "message": "此链接无效或已过期。请在应用中重新请求验证邮件。"
+    },
+    "missingToken": {
+      "title": "缺少令牌",
+      "message": "未提供验证令牌。"
+    },
+    "closePage": "您可以关闭此页面并返回 Emovo 应用。"
+  },
+  "api": {
+    "emailSent": "如果该邮箱有效，验证邮件已发送。",
+    "resendSent": "如果该邮箱已注册且未验证，验证邮件已发送。",
+    "resetSent": "如果该邮箱已注册，密码重置邮件已发送。"
+  }
+}

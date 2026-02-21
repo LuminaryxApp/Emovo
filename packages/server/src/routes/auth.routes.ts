@@ -15,6 +15,7 @@ import type { FastifyInstance } from "fastify";
 
 import { db } from "../config/database.js";
 import { users } from "../db/schema/users.js";
+import { getT } from "../i18n/config.js";
 import { AuthService } from "../services/auth.service.js";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../services/email.service.js";
 import { UnauthorizedError } from "../utils/errors.js";
@@ -38,6 +39,8 @@ export async function authRoutes(fastify: FastifyInstance) {
    */
   fastify.post("/auth/register", authRateLimit, async (request, reply) => {
     const body = registerSchema.parse(request.body);
+    const lang = body.preferredLanguage || "en";
+    const t = getT(lang);
 
     // Check if user already exists
     const [existingUser] = await db
@@ -51,11 +54,11 @@ export async function authRoutes(fastify: FastifyInstance) {
         const canSend = await authService.canSendVerificationEmail(existingUser.id);
         if (canSend) {
           const token = await authService.createVerificationToken(existingUser.id);
-          await sendVerificationEmail(body.email, token);
+          await sendVerificationEmail(body.email, token, lang);
         }
       }
       return reply.send({
-        data: { message: "If that email is valid, a verification email has been sent." },
+        data: { message: t("api.emailSent") },
       });
     }
 
@@ -66,14 +69,15 @@ export async function authRoutes(fastify: FastifyInstance) {
         email: body.email,
         passwordHash,
         displayName: body.displayName,
+        preferredLanguage: lang,
       })
       .returning({ id: users.id });
 
     const token = await authService.createVerificationToken(newUser.id);
-    await sendVerificationEmail(body.email, token);
+    await sendVerificationEmail(body.email, token, lang);
 
     return reply.status(201).send({
-      data: { message: "If that email is valid, a verification email has been sent." },
+      data: { message: t("api.emailSent") },
     });
   });
 
@@ -93,6 +97,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         displayName: users.displayName,
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
+        preferredLanguage: users.preferredLanguage,
         tokenVersion: users.tokenVersion,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
@@ -117,6 +122,7 @@ export async function authRoutes(fastify: FastifyInstance) {
           displayName: user.displayName,
           timezone: user.timezone,
           notificationsEnabled: user.notificationsEnabled,
+          preferredLanguage: user.preferredLanguage,
           createdAt: user.createdAt.toISOString(),
           updatedAt: user.updatedAt.toISOString(),
         },
@@ -133,9 +139,32 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.get("/auth/verify-email", async (request, reply) => {
     const { token } = request.query as { token?: string };
 
-    const htmlPage = (title: string, message: string, success: boolean) => `
+    // Try to get user's language for the HTML page
+    const getLangForPage = async (userId?: string): Promise<string> => {
+      if (!userId) return "en";
+      try {
+        const [user] = await db
+          .select({ preferredLanguage: users.preferredLanguage })
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1);
+        return user?.preferredLanguage || "en";
+      } catch {
+        return "en";
+      }
+    };
+
+    const htmlPage = (
+      title: string,
+      message: string,
+      success: boolean,
+      closePage: string,
+      lang: string,
+    ) => {
+      const dir = lang === "ar" ? "rtl" : "ltr";
+      return `
       <!DOCTYPE html>
-      <html lang="en">
+      <html lang="${lang}" dir="${dir}">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -155,39 +184,56 @@ export async function authRoutes(fastify: FastifyInstance) {
           <div class="icon">${success ? "\u2705" : "\u274C"}</div>
           <h1>${title}</h1>
           <p>${message}</p>
-          <p class="subtitle">You can close this page and return to the Emovo app.</p>
+          <p class="subtitle">${closePage}</p>
         </div>
       </body>
       </html>
     `;
+    };
 
     if (!token) {
+      const t = getT("en");
       return reply
         .type("text/html")
         .status(400)
-        .send(htmlPage("Missing Token", "No verification token was provided.", false));
+        .send(
+          htmlPage(
+            t("verification.missingToken.title"),
+            t("verification.missingToken.message"),
+            false,
+            t("verification.closePage"),
+            "en",
+          ),
+        );
     }
 
     try {
-      await authService.verifyEmailToken(token);
+      const userId = await authService.verifyEmailToken(token);
+      const lang = await getLangForPage(userId);
+      const t = getT(lang);
       return reply
         .type("text/html")
         .send(
           htmlPage(
-            "Email Verified!",
-            "Your email has been verified successfully. You can now sign in to Emovo.",
+            t("verification.success.title"),
+            t("verification.success.message"),
             true,
+            t("verification.closePage"),
+            lang,
           ),
         );
     } catch {
+      const t = getT("en");
       return reply
         .type("text/html")
         .status(400)
         .send(
           htmlPage(
-            "Verification Failed",
-            "This link is invalid or has expired. Please request a new verification email from the app.",
+            t("verification.failure.title"),
+            t("verification.failure.message"),
             false,
+            t("verification.closePage"),
+            "en",
           ),
         );
     }
@@ -201,7 +247,11 @@ export async function authRoutes(fastify: FastifyInstance) {
     const { email } = resendVerificationSchema.parse(request.body);
 
     const [user] = await db
-      .select({ id: users.id, emailVerified: users.emailVerified })
+      .select({
+        id: users.id,
+        emailVerified: users.emailVerified,
+        preferredLanguage: users.preferredLanguage,
+      })
       .from(users)
       .where(eq(users.email, email))
       .limit(1);
@@ -210,13 +260,14 @@ export async function authRoutes(fastify: FastifyInstance) {
       const canSend = await authService.canSendVerificationEmail(user.id);
       if (canSend) {
         const verifyToken = await authService.createVerificationToken(user.id);
-        await sendVerificationEmail(email, verifyToken);
+        await sendVerificationEmail(email, verifyToken, user.preferredLanguage);
       }
     }
 
+    const t = getT("en");
     return reply.send({
       data: {
-        message: "If that email is registered and unverified, a verification email has been sent.",
+        message: t("api.resendSent"),
       },
     });
   });
@@ -239,6 +290,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         displayName: users.displayName,
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
+        preferredLanguage: users.preferredLanguage,
         tokenVersion: users.tokenVersion,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
@@ -291,6 +343,7 @@ export async function authRoutes(fastify: FastifyInstance) {
           displayName: user.displayName,
           timezone: user.timezone,
           notificationsEnabled: user.notificationsEnabled,
+          preferredLanguage: user.preferredLanguage,
           createdAt: user.createdAt.toISOString(),
           updatedAt: user.updatedAt.toISOString(),
         },
@@ -326,16 +379,26 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.post("/auth/forgot-password", authRateLimit, async (request, reply) => {
     const { email } = forgotPasswordSchema.parse(request.body);
 
+    // Look up user to get their language preference
+    const [user] = await db
+      .select({ preferredLanguage: users.preferredLanguage })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+
+    const lang = user?.preferredLanguage || "en";
+
     const canSend = await authService.canSendResetEmail(email);
     if (canSend) {
       const result = await authService.createPasswordResetToken(email);
       if (result) {
-        await sendPasswordResetEmail(email, result.token);
+        await sendPasswordResetEmail(email, result.token, lang);
       }
     }
 
+    const t = getT("en");
     return reply.send({
-      data: { message: "If that email is registered, a password reset email has been sent." },
+      data: { message: t("api.resetSent") },
     });
   });
 

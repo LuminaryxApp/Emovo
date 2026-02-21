@@ -1,4 +1,5 @@
 import { MOOD_SCALE } from "@emovo/shared";
+import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 
@@ -10,6 +11,8 @@ interface MoodBarChartProps {
 }
 
 export function MoodBarChart({ distribution }: MoodBarChartProps) {
+  const { t } = useTranslation();
+
   const barData = MOOD_SCALE.map((mood) => ({
     value: distribution[mood.score] || 0,
     label: mood.emoji,
@@ -21,7 +24,7 @@ export function MoodBarChart({ distribution }: MoodBarChartProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionLabel}>MOOD DISTRIBUTION</Text>
+      <Text style={styles.sectionLabel}>{t("charts.moodDistribution")}</Text>
       <View style={styles.card}>
         <View style={styles.chartWrapper}>
           <BarChart

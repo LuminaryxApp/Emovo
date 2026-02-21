@@ -1,33 +1,27 @@
-import { Feather } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from "react-native";
+import { useTranslation } from "react-i18next";
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 
-import { GradientButton } from "../../src/components/ui/GradientButton";
+import { Button } from "../../src/components/ui/Button";
+import { Input } from "../../src/components/ui/Input";
 import { forgotPasswordApi } from "../../src/services/auth.api";
 import { colors, gradients, cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii } from "../../src/theme/spacing";
 
 export default function ForgotPasswordScreen() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
   const handleSubmit = async () => {
     if (!email.trim()) {
-      Toast.show({ type: "error", text1: "Please enter your email" });
+      Toast.show({ type: "error", text1: t("auth.forgotPassword.enterEmail") });
       return;
     }
 
@@ -63,18 +57,19 @@ export default function ForgotPasswordScreen() {
                 end={{ x: 1, y: 1 }}
                 style={styles.iconCircle}
               >
-                <Feather name="mail" size={28} color={colors.textInverse} />
+                <Ionicons name="mail-outline" size={28} color={colors.textInverse} />
               </LinearGradient>
-              <Text style={styles.sentTitle}>Check your email</Text>
+              <Text style={styles.sentTitle}>{t("auth.forgotPassword.checkEmail")}</Text>
               <Text style={styles.sentDescription}>
-                If an account exists for {email}, we've sent password reset instructions.
+                {t("auth.forgotPassword.emailSentDescription", { email })}
               </Text>
             </View>
 
-            <GradientButton
-              title="Back to Sign In"
+            <Button
+              title={t("auth.forgotPassword.backToSignIn")}
               onPress={() => router.replace("/(auth)/login")}
-              style={styles.submitButton}
+              size="lg"
+              fullWidth
             />
           </Animated.View>
         </ScrollView>
@@ -98,42 +93,43 @@ export default function ForgotPasswordScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.title}>Forgot Password</Text>
-            <Text style={styles.subtitle}>
-              Enter your email address and we'll send you instructions to reset your password.
-            </Text>
+            <Text style={styles.title}>{t("auth.forgotPassword.title")}</Text>
+            <Text style={styles.subtitle}>{t("auth.forgotPassword.description")}</Text>
           </View>
 
           <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.card}>
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="you@example.com"
-                placeholderTextColor={colors.textTertiary}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-            </View>
+            <Input
+              label={t("auth.forgotPassword.email")}
+              value={email}
+              onChangeText={setEmail}
+              placeholder={t("auth.forgotPassword.emailPlaceholder")}
+              leftIcon="mail-outline"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
 
-            <GradientButton
-              title={isLoading ? "Sending..." : "Send Reset Link"}
+            <Button
+              title={
+                isLoading
+                  ? t("auth.forgotPassword.sending")
+                  : t("auth.forgotPassword.sendResetLink")
+              }
               onPress={handleSubmit}
               loading={isLoading}
               disabled={isLoading}
+              size="lg"
+              fullWidth
               style={styles.submitButton}
             />
 
-            <TouchableOpacity
-              style={styles.backButton}
+            <Button
+              title={t("auth.forgotPassword.backToSignIn")}
               onPress={() => router.back()}
-              hitSlop={{ top: 8, bottom: 8 }}
-            >
-              <Text style={styles.backText}>Back to Sign In</Text>
-            </TouchableOpacity>
+              variant="ghost"
+              size="md"
+              fullWidth
+              style={styles.backButton}
+            />
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -154,8 +150,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xxl,
   },
-
-  // --- Header (sits on gradient, white text) ---
   header: {
     marginBottom: spacing.xl,
     paddingHorizontal: spacing.xs,
@@ -174,56 +168,18 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     opacity: 0.9,
   },
-
-  // --- Floating form card ---
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.xxl,
     padding: 24,
     ...cardShadowStrong(),
   },
-
-  // --- Form fields ---
-  fieldGroup: {
-    marginBottom: spacing.lg,
-  },
-  label: {
-    fontSize: 13,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
-    marginBottom: 6,
-  },
-  input: {
-    height: 56,
-    backgroundColor: colors.inputBackground,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    borderRadius: radii.lg,
-    paddingHorizontal: spacing.md,
-    fontSize: 16,
-    fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
-  },
-
-  // --- Submit button ---
   submitButton: {
+    marginTop: spacing.xs,
+  },
+  backButton: {
     marginTop: spacing.sm,
   },
-
-  // --- Back link ---
-  backButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
-    marginTop: spacing.md,
-  },
-  backText: {
-    color: colors.accent,
-    fontSize: 14,
-    fontFamily: "SourceSerif4_400Regular",
-  },
-
-  // --- Sent state ---
   sentContent: {
     alignItems: "center",
     marginBottom: spacing.xl,

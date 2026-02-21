@@ -1,4 +1,5 @@
 import * as Haptics from "expo-haptics";
+import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 
 import { colors } from "../../theme/colors";
@@ -14,6 +15,8 @@ interface PeriodSelectorProps {
 const PERIODS: Period[] = ["week", "month", "year"];
 
 export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.container}>
       {PERIODS.map((p) => (
@@ -27,7 +30,7 @@ export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
           activeOpacity={0.7}
         >
           <Text style={[styles.label, value === p && styles.labelActive]}>
-            {p.charAt(0).toUpperCase() + p.slice(1)}
+            {t(`insights.periods.${p}`)}
           </Text>
         </TouchableOpacity>
       ))}

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 
@@ -24,6 +25,8 @@ function formatLabel(dateStr: string, period: string): string {
 }
 
 export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
+  const { t } = useTranslation();
+
   if (dataPoints.length < 2) return null;
 
   const lineData = dataPoints.map((dp, i) => ({
@@ -35,7 +38,7 @@ export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionLabel}>MOOD TREND</Text>
+      <Text style={styles.sectionLabel}>{t("charts.moodTrend")}</Text>
       <View style={styles.card}>
         <View style={styles.chartWrapper}>
           <LineChart

@@ -1,0 +1,44 @@
+{
+  "email": {
+    "verification": {
+      "subject": "Verify your Emovo account",
+      "heading": "Welcome to Emovo",
+      "body": "You're one step away from tracking your emotional well-being. Verify your email to get started.",
+      "button": "Verify My Email",
+      "fallback": "If the button doesn't work, copy and paste this link into your browser:",
+      "footer": "This link expires in 24 hours. If you didn't create an Emovo account, you can safely ignore this email."
+    },
+    "passwordReset": {
+      "subject": "Reset your Emovo password",
+      "heading": "Reset Your Password",
+      "body": "We received a request to reset your password. Click the button below to choose a new one.",
+      "button": "Reset Password",
+      "fallback": "If the button doesn't work, copy and paste this link into your browser:",
+      "footer": "This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email."
+    },
+    "footer": {
+      "tagline": "Emovo — Track your emotional well-being",
+      "reason": "You received this email because you signed up for Emovo."
+    }
+  },
+  "verification": {
+    "success": {
+      "title": "Email Verified!",
+      "message": "Your email has been verified successfully. You can now sign in to Emovo."
+    },
+    "failure": {
+      "title": "Verification Failed",
+      "message": "This link is invalid or has expired. Please request a new verification email from the app."
+    },
+    "missingToken": {
+      "title": "Missing Token",
+      "message": "No verification token was provided."
+    },
+    "closePage": "You can close this page and return to the Emovo app."
+  },
+  "api": {
+    "emailSent": "If that email is valid, a verification email has been sent.",
+    "resendSent": "If that email is registered and unverified, a verification email has been sent.",
+    "resetSent": "If that email is registered, a password reset email has been sent."
+  }
+}

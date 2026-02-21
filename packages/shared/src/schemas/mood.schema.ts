@@ -33,6 +33,10 @@ export const statsQuerySchema = z.object({
   date: z.string().datetime().optional(),
 });
 
+export const calendarQuerySchema = z.object({
+  month: z.string().regex(/^\d{4}-(?:0[1-9]|1[0-2])$/, "Must be YYYY-MM format"),
+});
+
 export type CreateMoodInput = z.infer<typeof createMoodSchema>;
 export type UpdateMoodInput = z.infer<typeof updateMoodSchema>;
 export type CreateTriggerInput = z.infer<typeof createTriggerSchema>;

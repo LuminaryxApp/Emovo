@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet } from "react-native";
 import { PieChart } from "react-native-gifted-charts";
 
@@ -26,6 +27,8 @@ const PIE_COLORS = [
 ];
 
 export function TriggerPieChart({ triggers }: TriggerPieChartProps) {
+  const { t } = useTranslation();
+
   if (triggers.length === 0) return null;
 
   const total = triggers.reduce((sum, t) => sum + t.count, 0);
@@ -38,7 +41,7 @@ export function TriggerPieChart({ triggers }: TriggerPieChartProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionLabel}>TRIGGER BREAKDOWN</Text>
+      <Text style={styles.sectionLabel}>{t("charts.triggerBreakdown")}</Text>
       <View style={styles.card}>
         <View style={styles.chartRow}>
           <PieChart
@@ -53,7 +56,7 @@ export function TriggerPieChart({ triggers }: TriggerPieChartProps) {
             centerLabelComponent={() => (
               <View style={styles.centerLabel}>
                 <Text style={styles.centerCount}>{total}</Text>
-                <Text style={styles.centerText}>total</Text>
+                <Text style={styles.centerText}>{t("charts.total")}</Text>
               </View>
             )}
           />

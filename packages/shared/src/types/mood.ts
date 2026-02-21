@@ -31,3 +31,13 @@ export interface MoodTrend {
 export interface TriggerBreakdown {
   triggerBreakdown: Array<{ trigger: Trigger; count: number; avgMood: number }>;
 }
+
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastLogDate: string | null;
+}
+
+export interface MoodCalendar {
+  [date: string]: number;
+}

@@ -222,4 +222,127 @@ export class StatsService {
       period: { start: start.toISOString(), end: end.toISOString() },
     };
   }
+
+  /**
+   * Streak data: current streak (consecutive days from today backward) and longest streak ever.
+   */
+  async getStreak(userId: string) {
+    // Get user timezone
+    const [user] = await db
+      .select({ timezone: users.timezone })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const tz = user?.timezone || "UTC";
+
+    // Get distinct dates (in user's timezone) with mood entries, ordered descending
+    const rows = await db
+      .select({
+        date: sql<string>`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz})::text`,
+      })
+      .from(moodEntries)
+      .where(eq(moodEntries.userId, userId))
+      .groupBy(sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz})`)
+      .orderBy(sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz}) DESC`);
+
+    if (rows.length === 0) {
+      return { currentStreak: 0, longestStreak: 0, lastLogDate: null };
+    }
+
+    const dates = rows.map((r) => r.date);
+    const lastLogDate = dates[0];
+
+    // Calculate current streak: starting from today, count consecutive days backward
+    const now = new Date();
+    // Get today's date string in user's timezone using Intl
+    const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(now);
+
+    let currentStreak = 0;
+    let checkDate = new Date(todayStr + "T00:00:00Z");
+
+    for (const dateStr of dates) {
+      const entryDate = new Date(dateStr + "T00:00:00Z");
+      const diffDays = Math.round(
+        (checkDate.getTime() - entryDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      if (diffDays === 0) {
+        currentStreak++;
+        checkDate = new Date(checkDate.getTime() - 1000 * 60 * 60 * 24);
+      } else if (diffDays === 1 && currentStreak === 0) {
+        // Yesterday counts if today hasn't been logged yet
+        currentStreak++;
+        checkDate = new Date(entryDate.getTime() - 1000 * 60 * 60 * 24);
+      } else {
+        break;
+      }
+    }
+
+    // Calculate longest streak: iterate all dates in ascending order
+    const sortedDates = [...dates].reverse();
+    let longestStreak = 1;
+    let runLength = 1;
+
+    for (let i = 1; i < sortedDates.length; i++) {
+      const prev = new Date(sortedDates[i - 1] + "T00:00:00Z");
+      const curr = new Date(sortedDates[i] + "T00:00:00Z");
+      const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
+        runLength++;
+        longestStreak = Math.max(longestStreak, runLength);
+      } else {
+        runLength = 1;
+      }
+    }
+
+    // Current streak might also be the longest
+    longestStreak = Math.max(longestStreak, currentStreak);
+
+    return { currentStreak, longestStreak, lastLogDate };
+  }
+
+  /**
+   * Mood calendar: average mood per day for a given month (YYYY-MM).
+   */
+  async getMoodCalendar(userId: string, month: string) {
+    // Get user timezone
+    const [user] = await db
+      .select({ timezone: users.timezone })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const tz = user?.timezone || "UTC";
+
+    // Parse month boundaries in user's timezone
+    const [yearStr, monthStr] = month.split("-");
+    const year = parseInt(yearStr, 10);
+
+    // Start of month and start of next month in user's timezone
+    // We use SQL to handle timezone conversion properly
+    const rows = await db
+      .select({
+        date: sql<string>`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz})::text`,
+        avgMood: sql<number>`ROUND(AVG(${moodEntries.moodScore}))::int`,
+      })
+      .from(moodEntries)
+      .where(
+        and(
+          eq(moodEntries.userId, userId),
+          sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz}) >= ${`${year}-${monthStr}-01`}::date`,
+          sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz}) < (${`${year}-${monthStr}-01`}::date + interval '1 month')::date`,
+        ),
+      )
+      .groupBy(sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz})`)
+      .orderBy(sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz}) ASC`);
+
+    const calendar: Record<string, number> = {};
+    for (const row of rows) {
+      calendar[row.date] = Number(row.avgMood);
+    }
+
+    return calendar;
+  }
 }

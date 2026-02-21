@@ -14,7 +14,12 @@ interface AuthState {
   error: string | null;
 
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName: string) => Promise<string>;
+  register: (
+    email: string,
+    password: string,
+    displayName: string,
+    preferredLanguage?: string,
+  ) => Promise<string>;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
   updateProfile: (updates: UserProfile) => Promise<void>;
@@ -57,10 +62,15 @@ export const useAuthStore = create<AuthState>((set, _get) => ({
     }
   },
 
-  register: async (email: string, password: string, displayName: string) => {
+  register: async (
+    email: string,
+    password: string,
+    displayName: string,
+    preferredLanguage?: string,
+  ) => {
     set({ isLoading: true, error: null });
     try {
-      const result = await registerApi(email, password, displayName);
+      const result = await registerApi(email, password, displayName, preferredLanguage);
       set({ isLoading: false });
       return result.message;
     } catch (err: unknown) {

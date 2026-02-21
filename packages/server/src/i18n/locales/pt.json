@@ -1,0 +1,44 @@
+{
+  "email": {
+    "verification": {
+      "subject": "Verifique sua conta Emovo",
+      "heading": "Bem-vindo ao Emovo",
+      "body": "Você está a um passo de acompanhar seu bem-estar emocional. Verifique seu e-mail para começar.",
+      "button": "Verificar meu e-mail",
+      "fallback": "Se o botão não funcionar, copie e cole este link no seu navegador:",
+      "footer": "Este link expira em 24 horas. Se você não criou uma conta no Emovo, pode ignorar este e-mail."
+    },
+    "passwordReset": {
+      "subject": "Redefina sua senha do Emovo",
+      "heading": "Redefinir sua senha",
+      "body": "Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para escolher uma nova.",
+      "button": "Redefinir senha",
+      "fallback": "Se o botão não funcionar, copie e cole este link no seu navegador:",
+      "footer": "Este link expira em 1 hora. Se você não solicitou a redefinição de senha, pode ignorar este e-mail."
+    },
+    "footer": {
+      "tagline": "Emovo — Acompanhe seu bem-estar emocional",
+      "reason": "Você recebeu este e-mail porque se cadastrou no Emovo."
+    }
+  },
+  "verification": {
+    "success": {
+      "title": "E-mail verificado!",
+      "message": "Seu e-mail foi verificado com sucesso. Agora você pode entrar no Emovo."
+    },
+    "failure": {
+      "title": "Verificação falhou",
+      "message": "Este link é inválido ou expirou. Solicite um novo e-mail de verificação pelo aplicativo."
+    },
+    "missingToken": {
+      "title": "Token ausente",
+      "message": "Nenhum token de verificação foi fornecido."
+    },
+    "closePage": "Você pode fechar esta página e voltar ao aplicativo Emovo."
+  },
+  "api": {
+    "emailSent": "Se esse e-mail for válido, um e-mail de verificação foi enviado.",
+    "resendSent": "Se esse e-mail estiver cadastrado e não verificado, um e-mail de verificação foi enviado.",
+    "resetSent": "Se esse e-mail estiver cadastrado, um e-mail de redefinição de senha foi enviado."
+  }
+}

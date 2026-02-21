@@ -1,10 +1,17 @@
-import { createMoodSchema, updateMoodSchema, moodQuerySchema } from "@emovo/shared";
+import {
+  createMoodSchema,
+  updateMoodSchema,
+  moodQuerySchema,
+  calendarQuerySchema,
+} from "@emovo/shared";
 import type { FastifyInstance } from "fastify";
 
 import { MoodService } from "../services/mood.service.js";
+import { StatsService } from "../services/stats.service.js";
 
 export async function moodRoutes(fastify: FastifyInstance) {
   const moodService = new MoodService();
+  const statsService = new StatsService();
 
   // All mood routes require authentication
   fastify.addHook("preHandler", fastify.authenticate);
@@ -37,6 +44,16 @@ export async function moodRoutes(fastify: FastifyInstance) {
       data: result.entries,
       meta: { cursor: result.nextCursor },
     });
+  });
+
+  /**
+   * GET /moods/calendar?month=YYYY-MM
+   * Returns average mood per day for the given month.
+   */
+  fastify.get("/moods/calendar", async (request, reply) => {
+    const query = calendarQuerySchema.parse(request.query);
+    const result = await statsService.getMoodCalendar(request.userId, query.month);
+    return reply.send({ data: result });
   });
 
   /**

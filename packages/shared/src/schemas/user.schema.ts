@@ -8,6 +8,10 @@ export const registerSchema = z.object({
     .transform((e) => e.trim().toLowerCase()),
   password: z.string().min(8).max(128),
   displayName: z.string().min(1).max(100).trim(),
+  preferredLanguage: z
+    .enum(["en", "es", "fr", "de", "pt", "ja", "zh", "ar", "hi", "ru"])
+    .optional()
+    .default("en"),
 });
 
 export const loginSchema = z.object({
@@ -61,6 +65,9 @@ export const updateProfileSchema = z.object({
     .email()
     .max(255)
     .transform((e) => e.trim().toLowerCase())
+    .optional(),
+  preferredLanguage: z
+    .enum(["en", "es", "fr", "de", "pt", "ja", "zh", "ar", "hi", "ru"])
     .optional(),
 });
 

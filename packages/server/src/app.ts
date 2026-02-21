@@ -10,6 +10,7 @@ import { env } from "./config/env.js";
 import authPlugin from "./plugins/auth.plugin.js";
 import requestIdPlugin from "./plugins/request-id.plugin.js";
 import { authRoutes } from "./routes/auth.routes.js";
+import { communityRoutes } from "./routes/community.routes.js";
 import { exportRoutes } from "./routes/export.routes.js";
 import { healthRoutes } from "./routes/health.routes.js";
 import { moodRoutes } from "./routes/mood.routes.js";
@@ -170,6 +171,7 @@ export async function buildApp() {
   await fastify.register(triggerRoutes, { prefix: "/api/v1" });
   await fastify.register(statsRoutes, { prefix: "/api/v1" });
   await fastify.register(exportRoutes, { prefix: "/api/v1" });
+  await fastify.register(communityRoutes, { prefix: "/api/v1" });
 
   return fastify;
 }

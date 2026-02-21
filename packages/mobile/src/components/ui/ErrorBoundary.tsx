@@ -1,9 +1,30 @@
-import { Feather } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import React, { Component, type ErrorInfo, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 import { colors } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
+
+interface ErrorFallbackProps {
+  onRetry: () => void;
+}
+
+function ErrorFallback({ onRetry }: ErrorFallbackProps) {
+  const { t } = useTranslation();
+
+  return (
+    <View style={styles.container}>
+      <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
+      <Text style={styles.title}>{t("errors.somethingWrong")}</Text>
+      <Text style={styles.message}>{t("errors.unexpectedError")}</Text>
+      <TouchableOpacity style={styles.button} onPress={onRetry}>
+        <Ionicons name="refresh-outline" size={16} color={colors.textInverse} />
+        <Text style={styles.buttonText}>{t("common.tryAgain")}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 interface Props {
   children: ReactNode;
@@ -36,17 +57,7 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      return (
-        <View style={styles.container}>
-          <Feather name="alert-circle" size={48} color={colors.error} />
-          <Text style={styles.title}>Something went wrong</Text>
-          <Text style={styles.message}>An unexpected error occurred. Please try again.</Text>
-          <TouchableOpacity style={styles.button} onPress={this.handleRetry}>
-            <Feather name="refresh-cw" size={16} color={colors.textInverse} />
-            <Text style={styles.buttonText}>Try Again</Text>
-          </TouchableOpacity>
-        </View>
-      );
+      return <ErrorFallback onRetry={this.handleRetry} />;
     }
 
     return this.props.children;

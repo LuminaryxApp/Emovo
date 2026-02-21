@@ -1,11 +1,10 @@
-import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, router } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   KeyboardAvoidingView,
@@ -16,7 +15,9 @@ import {
 import Animated, { FadeInDown } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 
-import { GradientButton } from "../../src/components/ui/GradientButton";
+import { Button } from "../../src/components/ui/Button";
+import { Divider } from "../../src/components/ui/Divider";
+import { Input } from "../../src/components/ui/Input";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { colors, gradients, cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii } from "../../src/theme/spacing";
@@ -25,6 +26,7 @@ import { spacing, radii } from "../../src/theme/spacing";
 const iconImage = require("../../assets/icon.png");
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +35,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
-      Toast.show({ type: "error", text1: "Please fill in all fields" });
+      Toast.show({ type: "error", text1: t("auth.login.fillAllFields") });
       return;
     }
 
@@ -43,7 +45,7 @@ export default function LoginScreen() {
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
-          ?.message || "Login failed. Please try again.";
+          ?.message || t("auth.login.loginFailed");
       Toast.show({ type: "error", text1: message });
     }
   };
@@ -66,75 +68,56 @@ export default function LoginScreen() {
           <View style={styles.header}>
             <Image source={iconImage} style={styles.logoImage} resizeMode="contain" />
             <Text style={styles.logo}>Emovo</Text>
-            <Text style={styles.subtitle}>Track your emotional well-being</Text>
+            <Text style={styles.subtitle}>{t("auth.login.subtitle")}</Text>
           </View>
 
           <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.card}>
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="you@example.com"
-                placeholderTextColor={colors.textTertiary}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoComplete="email"
-              />
-            </View>
+            <Input
+              label={t("auth.login.email")}
+              value={email}
+              onChangeText={setEmail}
+              placeholder={t("auth.login.emailPlaceholder")}
+              leftIcon="mail-outline"
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
 
-            <View style={styles.fieldGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={styles.passwordInput}
-                  placeholder="Your password"
-                  placeholderTextColor={colors.textTertiary}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  autoComplete="password"
-                />
-                <TouchableOpacity
-                  style={styles.eyeButton}
-                  onPress={() => setShowPassword(!showPassword)}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Feather
-                    name={showPassword ? "eye-off" : "eye"}
-                    size={20}
-                    color={colors.textTertiary}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
+            <Input
+              label={t("auth.login.password")}
+              value={password}
+              onChangeText={setPassword}
+              placeholder={t("auth.login.passwordPlaceholder")}
+              leftIcon="lock-closed-outline"
+              secureTextEntry={!showPassword}
+              rightIcon={showPassword ? "eye-off-outline" : "eye-outline"}
+              onRightIconPress={() => setShowPassword(!showPassword)}
+            />
 
-            <GradientButton
-              title="Sign In"
+            <Button
+              title={t("auth.login.signIn")}
               onPress={handleLogin}
               loading={isLoading}
               disabled={isLoading}
+              size="lg"
+              fullWidth
               style={styles.signInButton}
             />
 
             <Link href="/(auth)/forgot-password" asChild>
               <TouchableOpacity style={styles.forgotButton} hitSlop={{ top: 8, bottom: 8 }}>
-                <Text style={styles.forgotText}>Forgot password?</Text>
+                <Text style={styles.forgotText}>{t("auth.login.forgotPassword")}</Text>
               </TouchableOpacity>
             </Link>
 
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
+            <Divider label={t("common.or")} spacing={spacing.md} />
 
-            <Link href="/(auth)/register" asChild>
-              <TouchableOpacity style={styles.secondaryButton} activeOpacity={0.7}>
-                <Text style={styles.secondaryButtonText}>Create Account</Text>
-              </TouchableOpacity>
-            </Link>
+            <Button
+              title={t("auth.login.createAccount")}
+              onPress={() => router.push("/(auth)/register")}
+              variant="secondary"
+              size="lg"
+              fullWidth
+            />
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -155,8 +138,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xxl,
   },
-
-  // --- Logo section (sits on gradient) ---
   header: {
     alignItems: "center",
     marginBottom: spacing.xl,
@@ -179,68 +160,15 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     opacity: 0.9,
   },
-
-  // --- Floating form card ---
   card: {
     backgroundColor: colors.surface,
     borderRadius: radii.xxl,
     padding: 24,
     ...cardShadowStrong(),
   },
-
-  // --- Form fields ---
-  fieldGroup: {
-    marginBottom: spacing.lg,
-  },
-  label: {
-    fontSize: 13,
-    fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
-    marginBottom: 6,
-  },
-  input: {
-    height: 56,
-    backgroundColor: colors.inputBackground,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    borderRadius: radii.lg,
-    paddingHorizontal: spacing.md,
-    fontSize: 16,
-    fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
-  },
-
-  // --- Password field ---
-  passwordContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    height: 56,
-    backgroundColor: colors.inputBackground,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    borderRadius: radii.lg,
-  },
-  passwordInput: {
-    flex: 1,
-    height: "100%",
-    paddingHorizontal: spacing.md,
-    fontSize: 16,
-    fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
-  },
-  eyeButton: {
-    paddingHorizontal: spacing.md,
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100%",
-  },
-
-  // --- Sign In button ---
   signInButton: {
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
-
-  // --- Forgot link ---
   forgotButton: {
     alignItems: "center",
     justifyContent: "center",
@@ -251,38 +179,5 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-  },
-
-  // --- Divider ---
-  divider: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginVertical: spacing.lg,
-  },
-  dividerLine: {
-    flex: 1,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    color: colors.textTertiary,
-    paddingHorizontal: spacing.md,
-    fontSize: 13,
-    fontFamily: "SourceSerif4_400Regular",
-  },
-
-  // --- Secondary button (outlined) ---
-  secondaryButton: {
-    height: 56,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    borderRadius: radii.lg,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  secondaryButtonText: {
-    color: colors.primary,
-    fontSize: 16,
-    fontFamily: "SourceSerif4_600SemiBold",
   },
 });

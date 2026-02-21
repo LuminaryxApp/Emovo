@@ -1,4 +1,4 @@
-import type { CreateMoodInput, UpdateMoodInput } from "@emovo/shared";
+import type { CreateMoodInput, UpdateMoodInput, ApiResponse, MoodCalendar } from "@emovo/shared";
 
 import { api } from "./api";
 
@@ -29,4 +29,11 @@ export async function updateMoodApi(id: string, input: UpdateMoodInput) {
 
 export async function deleteMoodApi(id: string) {
   await api.delete(`/moods/${id}`);
+}
+
+export async function getMoodCalendarApi(month: string) {
+  const { data } = await api.get<ApiResponse<MoodCalendar>>("/moods/calendar", {
+    params: { month },
+  });
+  return data.data;
 }

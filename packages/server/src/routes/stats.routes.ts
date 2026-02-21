@@ -34,4 +34,12 @@ export async function statsRoutes(fastify: FastifyInstance) {
     const result = await statsService.getTriggerBreakdown(request.userId, query.period, query.date);
     return reply.send({ data: result });
   });
+
+  /**
+   * GET /stats/streak
+   */
+  fastify.get("/stats/streak", async (request, reply) => {
+    const result = await statsService.getStreak(request.userId);
+    return reply.send({ data: result });
+  });
 }

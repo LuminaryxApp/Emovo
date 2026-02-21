@@ -1,48 +1,80 @@
-import { MAX_NOTE_LENGTH } from "@emovo/shared";
-import { useState } from "react";
-import { View, Text, TextInput, StyleSheet } from "react-native";
+import { Text, TextInput, StyleSheet } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolateColor,
+} from "react-native-reanimated";
 
 import { colors, cardShadow } from "../../theme/colors";
+import { spacing, radii } from "../../theme/spacing";
+
+const DEFAULT_MAX_LENGTH = 500;
+const WARNING_THRESHOLD = 0.8;
 
 interface NoteInputProps {
   value: string;
-  onChangeText: (text: string) => void;
+  onChange: (text: string) => void;
+  placeholder?: string;
+  maxLength?: number;
 }
 
-export function NoteInput({ value, onChangeText }: NoteInputProps) {
-  const [isFocused, setIsFocused] = useState(false);
+export function NoteInput({
+  value,
+  onChange,
+  placeholder = "Write about how you're feeling...",
+  maxLength = DEFAULT_MAX_LENGTH,
+}: NoteInputProps) {
+  const borderProgress = useSharedValue(0);
+  const charRatio = value.length / maxLength;
+  const isNearLimit = charRatio > WARNING_THRESHOLD;
+
+  const handleFocus = () => {
+    borderProgress.value = withTiming(1, { duration: 200 });
+  };
+
+  const handleBlur = () => {
+    borderProgress.value = withTiming(0, { duration: 150 });
+  };
+
+  const animatedCardStyle = useAnimatedStyle(() => ({
+    borderColor: interpolateColor(
+      borderProgress.value,
+      [0, 1],
+      [colors.borderLight, colors.accent],
+    ),
+  }));
 
   return (
-    <View style={[styles.card, { borderColor: isFocused ? colors.accent : colors.borderLight }]}>
+    <Animated.View style={[styles.card, cardShadow(), animatedCardStyle]}>
       <TextInput
         style={styles.input}
         value={value}
-        onChangeText={onChangeText}
-        placeholder="Add a note about how you're feeling..."
+        onChangeText={onChange}
+        placeholder={placeholder}
         placeholderTextColor={colors.textTertiary}
         multiline
-        maxLength={MAX_NOTE_LENGTH}
+        maxLength={maxLength}
         textAlignVertical="top"
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
       />
       {value.length > 0 && (
-        <Text style={styles.charCount}>
-          {value.length}/{MAX_NOTE_LENGTH}
+        <Text style={[styles.charCount, isNearLimit && styles.charCountWarning]}>
+          {value.length}/{maxLength}
         </Text>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.cardBackground,
-    borderRadius: 20,
+    borderRadius: radii.xl,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    padding: 16,
-    ...cardShadow(),
+    padding: spacing.md,
   },
   input: {
     fontSize: 15,
@@ -50,12 +82,17 @@ const styles = StyleSheet.create({
     color: colors.text,
     minHeight: 100,
     padding: 0,
+    lineHeight: 22,
   },
   charCount: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textTertiary,
     textAlign: "right",
-    marginTop: 8,
+    marginTop: spacing.sm,
+  },
+  charCountWarning: {
+    color: colors.warning,
+    fontFamily: "SourceSerif4_600SemiBold",
   },
 });

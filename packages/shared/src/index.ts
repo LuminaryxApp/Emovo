@@ -5,7 +5,15 @@ export { DEFAULT_TRIGGERS } from "./constants/triggers.js";
 
 // Types
 export type { User, UserProfile } from "./types/user.js";
-export type { MoodEntry, Trigger, MoodStats, MoodTrend, TriggerBreakdown } from "./types/mood.js";
+export type {
+  MoodEntry,
+  Trigger,
+  MoodStats,
+  MoodTrend,
+  TriggerBreakdown,
+  StreakData,
+  MoodCalendar,
+} from "./types/mood.js";
 export type {
   ApiResponse,
   ApiError,
@@ -15,6 +23,17 @@ export type {
   PaginationParams,
   StatsPeriod,
 } from "./types/api.js";
+export type {
+  Post,
+  PostWithAuthor,
+  Comment,
+  Group,
+  GroupWithMembership,
+  GroupMember,
+  Conversation,
+  ConversationPreview,
+  Message,
+} from "./types/community.js";
 
 // Schemas
 export {
@@ -36,9 +55,28 @@ export {
   createTriggerSchema,
   moodQuerySchema,
   statsQuerySchema,
+  calendarQuerySchema,
 } from "./schemas/mood.schema.js";
 export type {
   CreateMoodInput,
   UpdateMoodInput,
   CreateTriggerInput,
 } from "./schemas/mood.schema.js";
+
+export {
+  createPostSchema,
+  createCommentSchema,
+  createGroupSchema,
+  sendMessageSchema,
+  createConversationSchema,
+  feedQuerySchema,
+  groupQuerySchema,
+  messageQuerySchema,
+} from "./schemas/community.schema.js";
+export type {
+  CreatePostInput,
+  CreateCommentInput,
+  CreateGroupInput,
+  SendMessageInput,
+  CreateConversationInput,
+} from "./schemas/community.schema.js";

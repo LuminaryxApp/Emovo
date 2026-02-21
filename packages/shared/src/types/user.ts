@@ -5,6 +5,7 @@ export interface User {
   displayName: string;
   timezone: string;
   notificationsEnabled: boolean;
+  preferredLanguage: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -14,4 +15,5 @@ export interface UserProfile {
   timezone?: string;
   notificationsEnabled?: boolean;
   email?: string;
+  preferredLanguage?: string;
 }

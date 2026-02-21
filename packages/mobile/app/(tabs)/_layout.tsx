@@ -1,12 +1,14 @@
-import { Feather } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs, router } from "expo-router";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Platform } from "react-native";
 
 import { useAuthStore } from "../../src/stores/auth.store";
 import { colors } from "../../src/theme/colors";
 
 export default function TabsLayout() {
+  const { t } = useTranslation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
@@ -61,29 +63,46 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Log",
-          tabBarIcon: ({ color, size }) => <Feather name="plus-circle" size={size} color={color} />,
+          title: t("tabs.home"),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="history"
         options={{
-          title: "History",
-          tabBarIcon: ({ color, size }) => <Feather name="clock" size={size} color={color} />,
+          title: t("tabs.history"),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="calendar-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="community"
+        options={{
+          title: t("tabs.community"),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="people-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="insights"
         options={{
-          title: "Insights",
-          tabBarIcon: ({ color, size }) => <Feather name="bar-chart-2" size={size} color={color} />,
+          title: t("tabs.insights"),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="stats-chart-outline" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
-          tabBarIcon: ({ color, size }) => <Feather name="user" size={size} color={color} />,
+          title: t("tabs.profile"),
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>

@@ -1,33 +1,80 @@
-import { MOOD_SCALE } from "@emovo/shared";
-import type { MoodEntry } from "@emovo/shared";
-import { Feather } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { LinearGradient } from "expo-linear-gradient";
 import { View, Text, StyleSheet } from "react-native";
 
-import { colors, cardShadow } from "../../theme/colors";
+import { colors, type MoodLevel, cardShadow } from "../../theme/colors";
 import { spacing, radii } from "../../theme/spacing";
 import { AnimatedPressable } from "../ui/AnimatedPressable";
 
+const MOOD_INFO: Record<
+  MoodLevel,
+  { emoji: string; label: string; color: string; colorFaded: string }
+> = {
+  1: {
+    emoji: "\u{1F622}",
+    label: "Very Low",
+    color: colors.mood[1],
+    colorFaded: colors.mood[1] + "80",
+  },
+  2: { emoji: "\u{1F61F}", label: "Low", color: colors.mood[2], colorFaded: colors.mood[2] + "80" },
+  3: {
+    emoji: "\u{1F610}",
+    label: "Neutral",
+    color: colors.mood[3],
+    colorFaded: colors.mood[3] + "80",
+  },
+  4: {
+    emoji: "\u{1F60A}",
+    label: "Good",
+    color: colors.mood[4],
+    colorFaded: colors.mood[4] + "80",
+  },
+  5: {
+    emoji: "\u{1F604}",
+    label: "Great",
+    color: colors.mood[5],
+    colorFaded: colors.mood[5] + "80",
+  },
+};
+
+interface Trigger {
+  id: string;
+  name: string;
+  icon: string | null;
+  isDefault: boolean;
+}
+
+interface MoodEntryCardEntry {
+  id: string;
+  moodScore: MoodLevel;
+  note?: string | null;
+  triggers?: Trigger[];
+  loggedAt: string;
+}
+
 interface MoodEntryCardProps {
-  entry: MoodEntry;
+  entry: MoodEntryCardEntry;
   onPress?: () => void;
 }
 
 export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
-  const mood = MOOD_SCALE.find((m) => m.score === entry.moodScore) || MOOD_SCALE[2];
+  const mood = MOOD_INFO[entry.moodScore as MoodLevel] ?? MOOD_INFO[3];
   const loggedDate = new Date(entry.loggedAt);
+  const triggers = entry.triggers ?? [];
+  const visibleTriggers = triggers.slice(0, 3);
+  const extraCount = triggers.length - 3;
 
   return (
     <AnimatedPressable
       onPress={onPress}
       scaleDown={0.98}
       disabled={!onPress}
-      style={[styles.card, { ...cardShadow() }]}
+      style={[styles.card, cardShadow()]}
     >
-      {/* Gradient left strip */}
+      {/* Left gradient strip */}
       <LinearGradient
-        colors={[mood.color, mood.color + "80"]}
+        colors={[mood.color, mood.colorFaded]}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 1 }}
         style={styles.leftStrip}
@@ -35,7 +82,7 @@ export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
 
       <View style={styles.content}>
         <View style={styles.body}>
-          {/* Top row: emoji + label left, time right */}
+          {/* Top row: emoji + label (left), time (right) */}
           <View style={styles.topRow}>
             <View style={styles.moodInfo}>
               <Text style={styles.emoji}>{mood.emoji}</Text>
@@ -45,37 +92,30 @@ export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
           </View>
 
           {/* Note preview */}
-          {entry.note && (
+          {entry.note ? (
             <Text style={styles.note} numberOfLines={2}>
               {entry.note}
             </Text>
-          )}
+          ) : null}
 
           {/* Trigger chips */}
-          {entry.triggers.length > 0 && (
+          {visibleTriggers.length > 0 && (
             <View style={styles.triggers}>
-              {entry.triggers.map((trigger) => (
+              {visibleTriggers.map((trigger) => (
                 <View
                   key={trigger.id}
-                  style={[
-                    styles.triggerChip,
-                    {
-                      backgroundColor: colors.moodMuted[entry.moodScore] || colors.primaryMuted,
-                    },
-                  ]}
+                  style={[styles.triggerChip, { backgroundColor: colors.moodBg[entry.moodScore] }]}
                 >
-                  <Text
-                    style={[
-                      styles.triggerText,
-                      {
-                        color: colors.mood[entry.moodScore] || colors.primary,
-                      },
-                    ]}
-                  >
-                    {trigger.name}
-                  </Text>
+                  <Text style={[styles.triggerText, { color: mood.color }]}>{trigger.name}</Text>
                 </View>
               ))}
+              {extraCount > 0 && (
+                <View
+                  style={[styles.triggerChip, { backgroundColor: colors.moodBg[entry.moodScore] }]}
+                >
+                  <Text style={[styles.triggerText, { color: mood.color }]}>+{extraCount}</Text>
+                </View>
+              )}
             </View>
           )}
         </View>
@@ -83,7 +123,7 @@ export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
         {/* Chevron */}
         {onPress && (
           <View style={styles.chevronContainer}>
-            <Feather name="chevron-right" size={16} color={colors.textTertiary} />
+            <Ionicons name="chevron-forward" size={16} color={colors.textTertiary} />
           </View>
         )}
       </View>
@@ -103,12 +143,12 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    width: 5,
+    width: 3,
   },
   content: {
     flexDirection: "row",
     padding: spacing.md,
-    paddingLeft: spacing.md + 5,
+    paddingLeft: spacing.md + 3,
   },
   body: {
     flex: 1,
@@ -121,7 +161,7 @@ const styles = StyleSheet.create({
   moodInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.sm,
   },
   emoji: {
     fontSize: 28,
@@ -140,7 +180,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textSecondary,
-    marginTop: 8,
+    marginTop: spacing.sm,
     lineHeight: 18,
   },
   triggers: {
@@ -151,8 +191,8 @@ const styles = StyleSheet.create({
   },
   triggerChip: {
     height: 24,
-    paddingHorizontal: 8,
-    borderRadius: 12,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radii.sm,
     justifyContent: "center",
   },
   triggerText: {

@@ -2,8 +2,18 @@ import type { AuthResponse } from "@emovo/shared";
 
 import { api } from "./api";
 
-export async function registerApi(email: string, password: string, displayName: string) {
-  const { data } = await api.post("/auth/register", { email, password, displayName });
+export async function registerApi(
+  email: string,
+  password: string,
+  displayName: string,
+  preferredLanguage?: string,
+) {
+  const { data } = await api.post("/auth/register", {
+    email,
+    password,
+    displayName,
+    preferredLanguage,
+  });
   return data.data as { message: string };
 }
 

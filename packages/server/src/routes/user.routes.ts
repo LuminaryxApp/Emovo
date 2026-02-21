@@ -25,6 +25,7 @@ export async function userRoutes(fastify: FastifyInstance) {
         displayName: users.displayName,
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
+        preferredLanguage: users.preferredLanguage,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -42,6 +43,7 @@ export async function userRoutes(fastify: FastifyInstance) {
         displayName: user.displayName,
         timezone: user.timezone,
         notificationsEnabled: user.notificationsEnabled,
+        preferredLanguage: user.preferredLanguage,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
       },
@@ -59,6 +61,7 @@ export async function userRoutes(fastify: FastifyInstance) {
     if (body.timezone !== undefined) updateData.timezone = body.timezone;
     if (body.notificationsEnabled !== undefined)
       updateData.notificationsEnabled = body.notificationsEnabled;
+    if (body.preferredLanguage !== undefined) updateData.preferredLanguage = body.preferredLanguage;
 
     // Email change triggers re-verification
     if (body.email !== undefined) {
@@ -77,6 +80,7 @@ export async function userRoutes(fastify: FastifyInstance) {
         displayName: users.displayName,
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
+        preferredLanguage: users.preferredLanguage,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       });
@@ -97,6 +101,7 @@ export async function userRoutes(fastify: FastifyInstance) {
         displayName: updated.displayName,
         timezone: updated.timezone,
         notificationsEnabled: updated.notificationsEnabled,
+        preferredLanguage: updated.preferredLanguage,
         createdAt: updated.createdAt.toISOString(),
         updatedAt: updated.updatedAt.toISOString(),
       },
