@@ -162,16 +162,20 @@ export default function CommunityScreen() {
 
   const loadTabData = useCallback(
     async (tab: CommunityTab) => {
-      switch (tab) {
-        case "feed":
-          await fetchFeed(true);
-          break;
-        case "groups":
-          await Promise.all([fetchMyGroups(), fetchDiscoverGroups()]);
-          break;
-        case "messages":
-          await fetchConversations();
-          break;
+      try {
+        switch (tab) {
+          case "feed":
+            await fetchFeed(true);
+            break;
+          case "groups":
+            await Promise.all([fetchMyGroups(), fetchDiscoverGroups()]);
+            break;
+          case "messages":
+            await fetchConversations();
+            break;
+        }
+      } catch {
+        // Silently fail — data stays as is, pull-to-refresh to retry
       }
     },
     [fetchFeed, fetchMyGroups, fetchDiscoverGroups, fetchConversations],
@@ -788,6 +792,16 @@ export default function CommunityScreen() {
         {/* Bottom spacer for tab bar */}
         <View style={{ height: spacing.xxl + 40 }} />
       </ScrollView>
+
+      {/* New Message FAB (messages tab only) */}
+      {activeTab === "messages" && (
+        <Pressable
+          onPress={showComingSoon}
+          style={[styles.newMessageFab, { bottom: insets.bottom + spacing.xxl + 48 }]}
+        >
+          <Ionicons name="create-outline" size={22} color={colors.textInverse} />
+        </Pressable>
+      )}
 
       {/* ================================================================ */}
       {/* Create Post Modal */}
@@ -1580,5 +1594,26 @@ const styles = StyleSheet.create({
   },
   inlineLoader: {
     paddingVertical: spacing.md,
+  },
+  newMessageFab: {
+    position: "absolute",
+    right: screenPadding.horizontal,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
 });

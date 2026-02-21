@@ -639,10 +639,9 @@ export default function ProfileScreen() {
                   "Hi Emovo Team,\n\nI need help with...\n\n---\nApp Version: v0.0.1",
                 );
                 const url = `mailto:support@emovo.app?subject=${subject}&body=${body}`;
-                const canOpen = await Linking.canOpenURL(url);
-                if (canOpen) {
-                  Linking.openURL(url);
-                } else {
+                try {
+                  await Linking.openURL(url);
+                } catch {
                   Alert.alert(t("profile.contactUs"), "support@emovo.app");
                 }
               }}
