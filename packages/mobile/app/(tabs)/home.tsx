@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View, StyleSheet, ScrollView, RefreshControl, Pressable } from "react-native";
+import { Text, View, StyleSheet, ScrollView, RefreshControl, Pressable, Alert } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -145,7 +145,10 @@ export default function HomeScreen() {
               <Text style={styles.nameText}>{user?.displayName || "there"}</Text>
             </Text>
           </View>
-          <Pressable style={styles.notificationButton}>
+          <Pressable
+            onPress={() => Alert.alert(t("community.comingSoon"), t("community.comingSoonMessage"))}
+            style={styles.notificationButton}
+          >
             <Ionicons name="notifications-outline" size={iconSizes.md} color={colors.text} />
           </Pressable>
         </Animated.View>

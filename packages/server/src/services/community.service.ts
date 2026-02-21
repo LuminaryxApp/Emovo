@@ -468,6 +468,9 @@ export class CommunityService {
       memberCount: row.memberCount,
       createdBy: row.createdBy,
       createdAt: row.createdAt.toISOString(),
+      isMember: false,
+      role: null as string | null,
+      unreadCount: 0,
     }));
 
     const nextCursor = hasMore
@@ -699,16 +702,25 @@ export class CommunityService {
       unreadMap.set(row.conversation_id, row.unread_count);
     }
 
-    return convRows.map((conv) => ({
-      id: conv.id,
-      type: conv.type,
-      groupId: conv.groupId,
-      createdAt: conv.createdAt.toISOString(),
-      updatedAt: conv.updatedAt.toISOString(),
-      participants: participantsByConv.get(conv.id) || [],
-      lastMessage: lastMsgMap.get(conv.id) || null,
-      unreadCount: unreadMap.get(conv.id) || 0,
-    }));
+    return convRows.map((conv) => {
+      const participants = participantsByConv.get(conv.id) || [];
+      const lastMsg = lastMsgMap.get(conv.id) || null;
+      const name = participants.map((p) => p.displayName).join(", ") || "Conversation";
+
+      return {
+        id: conv.id,
+        type: conv.type,
+        groupId: conv.groupId,
+        createdAt: conv.createdAt.toISOString(),
+        updatedAt: conv.updatedAt.toISOString(),
+        name,
+        lastMessage: lastMsg?.content ?? null,
+        lastMessageAt: lastMsg?.createdAt ?? null,
+        unreadCount: unreadMap.get(conv.id) || 0,
+        isOnline: false,
+        participantIds: participants.map((p) => p.userId),
+      };
+    });
   }
 
   /**

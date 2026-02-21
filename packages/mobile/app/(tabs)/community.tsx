@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "expo-router";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
@@ -11,6 +12,10 @@ import {
   TextInput,
   RefreshControl,
   ActivityIndicator,
+  Modal,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -99,14 +104,35 @@ export default function CommunityScreen() {
   const fetchDiscoverGroups = useCommunityStore((s) => s.fetchDiscoverGroups);
   const joinGroup = useCommunityStore((s) => s.joinGroup);
 
+  const createPost = useCommunityStore((s) => s.createPost);
+  const createGroup = useCommunityStore((s) => s.createGroup);
+
   const conversations = useCommunityStore((s) => s.conversations);
   const isLoadingConversations = useCommunityStore((s) => s.isLoadingConversations);
   const fetchConversations = useCommunityStore((s) => s.fetchConversations);
+
+  const router = useRouter();
 
   // Local state
   const [activeTab, setActiveTab] = useState<CommunityTab>("feed");
   const [refreshing, setRefreshing] = useState(false);
   const [messageSearch, setMessageSearch] = useState("");
+
+  // Create post modal
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [postContent, setPostContent] = useState("");
+  const [postMoodScore, setPostMoodScore] = useState<number | null>(null);
+  const [postType, setPostType] = useState<"mood_update" | "tip" | "photo">("mood_update");
+  const [isSubmittingPost, setIsSubmittingPost] = useState(false);
+
+  // Create group modal
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const [groupDescription, setGroupDescription] = useState("");
+  const [groupIcon, setGroupIcon] = useState("🌿");
+  const [isSubmittingGroup, setIsSubmittingGroup] = useState(false);
+
+  const postInputRef = useRef<TextInput>(null);
 
   // Total unread count for the messages badge
   const totalUnread = useMemo(
@@ -176,6 +202,66 @@ export default function CommunityScreen() {
     [joinGroup],
   );
 
+  const handleOpenCreatePost = useCallback(
+    (type: "mood_update" | "tip" | "photo" = "mood_update") => {
+      setPostType(type);
+      setPostContent("");
+      setPostMoodScore(null);
+      setShowCreatePost(true);
+    },
+    [],
+  );
+
+  const handleSubmitPost = useCallback(async () => {
+    if (!postContent.trim()) return;
+    setIsSubmittingPost(true);
+    try {
+      await createPost({
+        content: postContent.trim(),
+        moodScore: postMoodScore ?? undefined,
+        type: postType,
+      });
+      setShowCreatePost(false);
+      setPostContent("");
+      setPostMoodScore(null);
+    } catch {
+      Alert.alert(t("common.error"), t("community.postError"));
+    } finally {
+      setIsSubmittingPost(false);
+    }
+  }, [postContent, postMoodScore, postType, createPost, t]);
+
+  const handleSubmitGroup = useCallback(async () => {
+    if (!groupName.trim()) return;
+    setIsSubmittingGroup(true);
+    try {
+      await createGroup({
+        name: groupName.trim(),
+        description: groupDescription.trim() || undefined,
+        icon: groupIcon,
+      });
+      setShowCreateGroup(false);
+      setGroupName("");
+      setGroupDescription("");
+      setGroupIcon("🌿");
+    } catch {
+      Alert.alert(t("common.error"), t("community.groupError"));
+    } finally {
+      setIsSubmittingGroup(false);
+    }
+  }, [groupName, groupDescription, groupIcon, createGroup, t]);
+
+  const showComingSoon = useCallback(() => {
+    Alert.alert(t("community.comingSoon"), t("community.comingSoonMessage"));
+  }, [t]);
+
+  const handleOpenComments = useCallback(
+    (postId: string) => {
+      router.push(`/post/${postId}`);
+    },
+    [router],
+  );
+
   // ---------------------------------------------------------------------------
   // Render: Header
   // ---------------------------------------------------------------------------
@@ -184,12 +270,12 @@ export default function CommunityScreen() {
     <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
       <Text style={styles.title}>{t("community.title")}</Text>
       <View style={styles.headerActions}>
-        <View style={[styles.headerIconBtn, cardShadow()]}>
+        <Pressable onPress={showComingSoon} style={[styles.headerIconBtn, cardShadow()]}>
           <Ionicons name="search-outline" size={iconSizes.sm} color={colors.text} />
-        </View>
-        <View style={[styles.headerIconBtn, cardShadow()]}>
+        </Pressable>
+        <Pressable onPress={showComingSoon} style={[styles.headerIconBtn, cardShadow()]}>
           <Ionicons name="notifications-outline" size={iconSizes.sm} color={colors.text} />
-        </View>
+        </Pressable>
       </View>
     </Animated.View>
   );
@@ -240,22 +326,28 @@ export default function CommunityScreen() {
       <Card variant="elevated" padding="md" style={styles.createPostCard}>
         <View style={styles.createPostRow}>
           <Avatar name={user?.displayName ?? "User"} size="md" />
-          <Pressable style={styles.createPostInput}>
+          <Pressable
+            onPress={() => handleOpenCreatePost("mood_update")}
+            style={styles.createPostInput}
+          >
             <Text style={styles.createPostPlaceholder}>{t("community.sharePlaceholder")}</Text>
           </Pressable>
         </View>
         <View style={styles.createPostActions}>
-          <Pressable style={styles.createPostAction}>
+          <Pressable
+            onPress={() => handleOpenCreatePost("mood_update")}
+            style={styles.createPostAction}
+          >
             <Ionicons name="happy-outline" size={iconSizes.xs} color={colors.primary} />
-            <Text style={styles.createPostActionText}>Mood</Text>
+            <Text style={styles.createPostActionText}>{t("community.mood")}</Text>
           </Pressable>
-          <Pressable style={styles.createPostAction}>
+          <Pressable onPress={() => handleOpenCreatePost("tip")} style={styles.createPostAction}>
             <Ionicons name="bulb-outline" size={iconSizes.xs} color={colors.accent} />
-            <Text style={styles.createPostActionText}>Tip</Text>
+            <Text style={styles.createPostActionText}>{t("community.tip")}</Text>
           </Pressable>
-          <Pressable style={styles.createPostAction}>
+          <Pressable onPress={() => handleOpenCreatePost("photo")} style={styles.createPostAction}>
             <Ionicons name="image-outline" size={iconSizes.xs} color={colors.warning} />
-            <Text style={styles.createPostActionText}>Photo</Text>
+            <Text style={styles.createPostActionText}>{t("community.photo")}</Text>
           </Pressable>
         </View>
       </Card>
@@ -295,20 +387,20 @@ export default function CommunityScreen() {
             </Text>
           </Pressable>
 
-          <Pressable style={styles.postAction}>
+          <Pressable onPress={() => handleOpenComments(post.id)} style={styles.postAction}>
             <Ionicons name="chatbubble-outline" size={iconSizes.sm} color={colors.textTertiary} />
             <Text style={styles.postActionCount}>
               {post.commentCount > 0 ? post.commentCount : ""}
             </Text>
           </Pressable>
 
-          <Pressable style={styles.postAction}>
+          <Pressable onPress={showComingSoon} style={styles.postAction}>
             <Ionicons name="share-outline" size={iconSizes.sm} color={colors.textTertiary} />
           </Pressable>
 
           <View style={styles.postActionSpacer} />
 
-          <Pressable style={styles.postAction}>
+          <Pressable onPress={showComingSoon} style={styles.postAction}>
             <Ionicons name="bookmark-outline" size={iconSizes.sm} color={colors.textTertiary} />
           </Pressable>
         </View>
@@ -327,10 +419,14 @@ export default function CommunityScreen() {
 
     if (posts.length === 0) {
       return (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="newspaper-outline" size={48} color={colors.textTertiary} />
-          <Text style={styles.emptyTitle}>{t("community.noEntries")}</Text>
-        </View>
+        <>
+          {renderCreatePostCard()}
+          <View style={styles.emptyContainer}>
+            <Ionicons name="newspaper-outline" size={48} color={colors.textTertiary} />
+            <Text style={styles.emptyTitle}>{t("community.noEntries")}</Text>
+            <Text style={styles.emptySubtitle}>{t("community.beFirstToPost")}</Text>
+          </View>
+        </>
       );
     }
 
@@ -371,7 +467,7 @@ export default function CommunityScreen() {
   };
 
   const renderCreateGroupCard = () => (
-    <Pressable style={styles.myGroupCard}>
+    <Pressable onPress={() => setShowCreateGroup(true)} style={styles.myGroupCard}>
       <View style={styles.createGroupCircle}>
         <Ionicons name="add" size={iconSizes.md} color={colors.primary} />
       </View>
@@ -636,6 +732,179 @@ export default function CommunityScreen() {
         {/* Bottom spacer for tab bar */}
         <View style={{ height: spacing.xxl + 40 }} />
       </ScrollView>
+
+      {/* ================================================================ */}
+      {/* Create Post Modal */}
+      {/* ================================================================ */}
+      <Modal visible={showCreatePost} animationType="slide" transparent>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalOverlay}
+        >
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowCreatePost(false)} />
+          <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.md }]}>
+            {/* Modal header */}
+            <View style={styles.modalHeader}>
+              <Pressable onPress={() => setShowCreatePost(false)}>
+                <Text style={styles.modalCancel}>{t("common.cancel")}</Text>
+              </Pressable>
+              <Text style={styles.modalTitle}>{t("community.createPost")}</Text>
+              <Pressable
+                onPress={handleSubmitPost}
+                disabled={!postContent.trim() || isSubmittingPost}
+                style={[
+                  styles.modalPostButton,
+                  (!postContent.trim() || isSubmittingPost) && styles.modalPostButtonDisabled,
+                ]}
+              >
+                {isSubmittingPost ? (
+                  <ActivityIndicator size="small" color={colors.textInverse} />
+                ) : (
+                  <Text style={styles.modalPostButtonText}>{t("community.post")}</Text>
+                )}
+              </Pressable>
+            </View>
+
+            {/* Post type pills */}
+            <View style={styles.postTypePills}>
+              {(["mood_update", "tip", "photo"] as const).map((type) => (
+                <Pressable
+                  key={type}
+                  onPress={() => setPostType(type)}
+                  style={[styles.postTypePill, postType === type && styles.postTypePillActive]}
+                >
+                  <Ionicons
+                    name={
+                      type === "mood_update"
+                        ? "happy-outline"
+                        : type === "tip"
+                          ? "bulb-outline"
+                          : "image-outline"
+                    }
+                    size={14}
+                    color={postType === type ? colors.textInverse : colors.textSecondary}
+                  />
+                  <Text
+                    style={[
+                      styles.postTypePillText,
+                      postType === type && styles.postTypePillTextActive,
+                    ]}
+                  >
+                    {t(`community.${type === "mood_update" ? "mood" : type}`)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {/* Content input */}
+            <TextInput
+              ref={postInputRef}
+              style={styles.postTextInput}
+              placeholder={t("community.sharePlaceholder")}
+              placeholderTextColor={colors.textTertiary}
+              value={postContent}
+              onChangeText={setPostContent}
+              multiline
+              maxLength={2000}
+              autoFocus
+            />
+
+            {/* Mood score selector */}
+            <View style={styles.moodSelector}>
+              <Text style={styles.moodSelectorLabel}>{t("community.howAreYouFeeling")}</Text>
+              <View style={styles.moodEmojiRow}>
+                {([1, 2, 3, 4, 5] as const).map((score) => (
+                  <Pressable
+                    key={score}
+                    onPress={() => setPostMoodScore(postMoodScore === score ? null : score)}
+                    style={[
+                      styles.moodEmojiBtn,
+                      postMoodScore === score && styles.moodEmojiBtnActive,
+                    ]}
+                  >
+                    <Text style={styles.moodEmoji}>{moodEmojis[score]}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <Text style={styles.charCount}>{postContent.length}/2000</Text>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ================================================================ */}
+      {/* Create Group Modal */}
+      {/* ================================================================ */}
+      <Modal visible={showCreateGroup} animationType="slide" transparent>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalOverlay}
+        >
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowCreateGroup(false)} />
+          <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.md }]}>
+            {/* Modal header */}
+            <View style={styles.modalHeader}>
+              <Pressable onPress={() => setShowCreateGroup(false)}>
+                <Text style={styles.modalCancel}>{t("common.cancel")}</Text>
+              </Pressable>
+              <Text style={styles.modalTitle}>{t("community.createGroup")}</Text>
+              <Pressable
+                onPress={handleSubmitGroup}
+                disabled={!groupName.trim() || isSubmittingGroup}
+                style={[
+                  styles.modalPostButton,
+                  (!groupName.trim() || isSubmittingGroup) && styles.modalPostButtonDisabled,
+                ]}
+              >
+                {isSubmittingGroup ? (
+                  <ActivityIndicator size="small" color={colors.textInverse} />
+                ) : (
+                  <Text style={styles.modalPostButtonText}>{t("community.create")}</Text>
+                )}
+              </Pressable>
+            </View>
+
+            {/* Icon picker */}
+            <View style={styles.groupIconPicker}>
+              <Text style={styles.moodSelectorLabel}>{t("community.groupIconLabel")}</Text>
+              <View style={styles.moodEmojiRow}>
+                {["🌿", "💬", "🧘", "💪", "🌈", "❤️", "🎯", "📚"].map((emoji) => (
+                  <Pressable
+                    key={emoji}
+                    onPress={() => setGroupIcon(emoji)}
+                    style={[styles.moodEmojiBtn, groupIcon === emoji && styles.moodEmojiBtnActive]}
+                  >
+                    <Text style={styles.moodEmoji}>{emoji}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            {/* Name input */}
+            <TextInput
+              style={styles.groupInput}
+              placeholder={t("community.groupNamePlaceholder")}
+              placeholderTextColor={colors.textTertiary}
+              value={groupName}
+              onChangeText={setGroupName}
+              maxLength={100}
+              autoFocus
+            />
+
+            {/* Description input */}
+            <TextInput
+              style={[styles.groupInput, styles.groupDescInput]}
+              placeholder={t("community.groupDescPlaceholder")}
+              placeholderTextColor={colors.textTertiary}
+              value={groupDescription}
+              onChangeText={setGroupDescription}
+              multiline
+              maxLength={500}
+            />
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -1078,6 +1347,144 @@ const styles = StyleSheet.create({
     color: colors.textInverse,
   },
 
+  // ── Modals ─────────────────────────────────────────────────
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  modalSheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radii.xl,
+    borderTopRightRadius: radii.xl,
+    paddingHorizontal: screenPadding.horizontal,
+    paddingTop: spacing.md,
+    maxHeight: "85%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  },
+  modalCancel: {
+    fontSize: 15,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.textSecondary,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontFamily: "SourceSerif4_700Bold",
+    color: colors.text,
+  },
+  modalPostButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md + 4,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    minWidth: 60,
+    alignItems: "center",
+  },
+  modalPostButtonDisabled: {
+    opacity: 0.5,
+  },
+  modalPostButtonText: {
+    fontSize: 14,
+    fontFamily: "SourceSerif4_600SemiBold",
+    color: colors.textInverse,
+  },
+  postTypePills: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  postTypePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
+    backgroundColor: colors.inputBackground,
+  },
+  postTypePillActive: {
+    backgroundColor: colors.primary,
+  },
+  postTypePillText: {
+    fontSize: 12,
+    fontFamily: "SourceSerif4_600SemiBold",
+    color: colors.textSecondary,
+  },
+  postTypePillTextActive: {
+    color: colors.textInverse,
+  },
+  postTextInput: {
+    fontSize: 15,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.text,
+    minHeight: 100,
+    textAlignVertical: "top",
+    padding: 0,
+    marginBottom: spacing.md,
+  },
+  moodSelector: {
+    marginBottom: spacing.md,
+  },
+  moodSelectorLabel: {
+    fontSize: 12,
+    fontFamily: "SourceSerif4_600SemiBold",
+    color: colors.sectionLabel,
+    letterSpacing: 1,
+    marginBottom: spacing.sm,
+  },
+  moodEmojiRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  moodEmojiBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.inputBackground,
+  },
+  moodEmojiBtnActive: {
+    backgroundColor: colors.primaryMuted,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  moodEmoji: {
+    fontSize: 20,
+  },
+  charCount: {
+    fontSize: 11,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.textTertiary,
+    textAlign: "right",
+    marginBottom: spacing.sm,
+  },
+  groupIconPicker: {
+    marginBottom: spacing.md,
+  },
+  groupInput: {
+    fontSize: 15,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.text,
+    backgroundColor: colors.inputBackground,
+    borderRadius: radii.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 4,
+    marginBottom: spacing.md,
+  },
+  groupDescInput: {
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+
   // ── Loading / Empty ─────────────────────────────────────────
   loadingContainer: {
     paddingVertical: spacing.xxl * 2,
@@ -1092,6 +1499,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
     color: colors.textSecondary,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.textTertiary,
+    textAlign: "center",
   },
   inlineLoader: {
     paddingVertical: spacing.md,
