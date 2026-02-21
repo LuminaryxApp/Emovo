@@ -4,7 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { View, Text, StyleSheet, Dimensions, FlatList, Animated, Pressable } from "react-native";
+import { View, Text, StyleSheet, Dimensions, Animated, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { colors, gradients } from "../../src/theme/colors";
@@ -86,7 +86,7 @@ export default function OnboardingScreen() {
         </Pressable>
       )}
 
-      <FlatList
+      <Animated.FlatList
         ref={flatListRef}
         data={SLIDES}
         renderItem={({ item, index }) => <SlideItem slide={item} index={index} scrollX={scrollX} />}
@@ -104,8 +104,8 @@ export default function OnboardingScreen() {
 
       <View style={[styles.bottomSection, { paddingBottom: insets.bottom + spacing.lg }]}>
         <View style={styles.pagination}>
-          {SLIDES.map((_, index) => (
-            <PaginationDot key={index} index={index} currentIndex={currentIndex} />
+          {SLIDES.map((_, i) => (
+            <PaginationDot key={i} index={i} currentIndex={currentIndex} />
           ))}
         </View>
 

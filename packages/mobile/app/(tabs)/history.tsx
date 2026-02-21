@@ -137,8 +137,8 @@ export default function HistoryScreen() {
   const fetchEntries = useCallback(async (date: Date) => {
     setIsLoadingEntries(true);
     try {
-      const from = format(startOfDay(date), "yyyy-MM-dd'T'HH:mm:ss");
-      const to = format(endOfDay(date), "yyyy-MM-dd'T'HH:mm:ss");
+      const from = startOfDay(date).toISOString();
+      const to = endOfDay(date).toISOString();
       const result = await listMoodsApi({ from, to });
       setEntries(result.entries ?? []);
     } catch {
@@ -173,8 +173,13 @@ export default function HistoryScreen() {
     setCurrentMonth((prev) => subMonths(prev, 1));
   }, []);
 
+  const isCurrentMonth = isSameMonth(currentMonth, new Date());
+
   const goToNextMonth = useCallback(() => {
-    setCurrentMonth((prev) => addMonths(prev, 1));
+    setCurrentMonth((prev) => {
+      const next = addMonths(prev, 1);
+      return next > startOfMonth(new Date()) ? prev : next;
+    });
   }, []);
 
   const handleDayPress = useCallback((date: Date) => {
@@ -217,6 +222,7 @@ export default function HistoryScreen() {
                 onPress={goToNextMonth}
                 variant="ghost"
                 size="sm"
+                disabled={isCurrentMonth}
               />
             </View>
 

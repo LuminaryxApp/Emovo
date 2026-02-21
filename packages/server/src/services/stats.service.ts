@@ -1,4 +1,4 @@
-import { sql, eq, and, gte, lt } from "drizzle-orm";
+import { sql, eq, and } from "drizzle-orm";
 
 import { db } from "../config/database.js";
 import { entryTriggers } from "../db/schema/entry-triggers.js";
@@ -59,8 +59,8 @@ export class StatsService {
       .where(
         and(
           eq(moodEntries.userId, userId),
-          gte(moodEntries.loggedAt, start),
-          lt(moodEntries.loggedAt, end),
+          sql`${moodEntries.loggedAt} >= ${start.toISOString()}::timestamptz`,
+          sql`${moodEntries.loggedAt} < ${end.toISOString()}::timestamptz`,
         ),
       );
 
@@ -74,8 +74,8 @@ export class StatsService {
       .where(
         and(
           eq(moodEntries.userId, userId),
-          gte(moodEntries.loggedAt, start),
-          lt(moodEntries.loggedAt, end),
+          sql`${moodEntries.loggedAt} >= ${start.toISOString()}::timestamptz`,
+          sql`${moodEntries.loggedAt} < ${end.toISOString()}::timestamptz`,
         ),
       )
       .groupBy(moodEntries.moodScore)
@@ -102,8 +102,8 @@ export class StatsService {
       .where(
         and(
           eq(moodEntries.userId, userId),
-          gte(moodEntries.loggedAt, start),
-          lt(moodEntries.loggedAt, end),
+          sql`${moodEntries.loggedAt} >= ${start.toISOString()}::timestamptz`,
+          sql`${moodEntries.loggedAt} < ${end.toISOString()}::timestamptz`,
         ),
       )
       .groupBy(triggers.id, triggers.name, triggers.icon, triggers.isDefault)
@@ -156,8 +156,8 @@ export class StatsService {
       .where(
         and(
           eq(moodEntries.userId, userId),
-          gte(moodEntries.loggedAt, start),
-          lt(moodEntries.loggedAt, end),
+          sql`${moodEntries.loggedAt} >= ${start.toISOString()}::timestamptz`,
+          sql`${moodEntries.loggedAt} < ${end.toISOString()}::timestamptz`,
         ),
       )
       .groupBy(truncExpr)
@@ -201,8 +201,8 @@ export class StatsService {
       .where(
         and(
           eq(moodEntries.userId, userId),
-          gte(moodEntries.loggedAt, start),
-          lt(moodEntries.loggedAt, end),
+          sql`${moodEntries.loggedAt} >= ${start.toISOString()}::timestamptz`,
+          sql`${moodEntries.loggedAt} < ${end.toISOString()}::timestamptz`,
         ),
       )
       .groupBy(triggers.id, triggers.name, triggers.icon, triggers.isDefault)
