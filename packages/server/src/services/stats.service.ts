@@ -1,9 +1,6 @@
-import { sql, eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
-import { db } from "../config/database.js";
-import { entryTriggers } from "../db/schema/entry-triggers.js";
-import { moodEntries } from "../db/schema/mood-entries.js";
-import { triggers } from "../db/schema/triggers.js";
+import { db, client } from "../config/database.js";
 import { users } from "../db/schema/users.js";
 
 type Period = "week" | "month" | "year";
@@ -34,97 +31,89 @@ function getDateRange(period: Period, dateStr: string | undefined, _timezone: st
   }
 }
 
+async function getUserTimezone(userId: string): Promise<string> {
+  const [user] = await db
+    .select({ timezone: users.timezone })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return user?.timezone || "UTC";
+}
+
 export class StatsService {
   /**
    * Summary stats: average mood, entry count, mood distribution, top triggers.
    */
   async getSummary(userId: string, period: Period, dateStr?: string) {
-    // Get user timezone
-    const [user] = await db
-      .select({ timezone: users.timezone })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    const tz = user?.timezone || "UTC";
+    const tz = await getUserTimezone(userId);
     const { start, end } = getDateRange(period, dateStr, tz);
+    const startIso = start.toISOString();
+    const endIso = end.toISOString();
 
     // Average mood and count
-    const [stats] = await db
-      .select({
-        avgMood: sql<number>`COALESCE(AVG(${moodEntries.moodScore})::numeric(3,2), 0)`,
-        entryCount: sql<number>`COUNT(*)::int`,
-      })
-      .from(moodEntries)
-      .where(
-        and(
-          eq(moodEntries.userId, userId),
-          sql`"mood_entries"."logged_at" >= ${start.toISOString()}::timestamptz`,
-          sql`"mood_entries"."logged_at" < ${end.toISOString()}::timestamptz`,
-        ),
-      );
+    const statsRows = await client`
+      SELECT
+        COALESCE(AVG(mood_score)::numeric(3,2), 0) AS avg_mood,
+        COUNT(*)::int AS entry_count
+      FROM mood_entries
+      WHERE user_id = ${userId}
+        AND logged_at >= ${startIso}::timestamptz
+        AND logged_at < ${endIso}::timestamptz
+    `;
 
     // Mood distribution
-    const distribution = await db
-      .select({
-        score: moodEntries.moodScore,
-        count: sql<number>`COUNT(*)::int`,
-      })
-      .from(moodEntries)
-      .where(
-        and(
-          eq(moodEntries.userId, userId),
-          sql`"mood_entries"."logged_at" >= ${start.toISOString()}::timestamptz`,
-          sql`"mood_entries"."logged_at" < ${end.toISOString()}::timestamptz`,
-        ),
-      )
-      .groupBy(moodEntries.moodScore)
-      .orderBy(moodEntries.moodScore);
+    const distRows = await client`
+      SELECT
+        mood_score AS score,
+        COUNT(*)::int AS count
+      FROM mood_entries
+      WHERE user_id = ${userId}
+        AND logged_at >= ${startIso}::timestamptz
+        AND logged_at < ${endIso}::timestamptz
+      GROUP BY mood_score
+      ORDER BY mood_score
+    `;
 
     const moodDistribution: Record<number, number> = {};
-    for (const row of distribution) {
+    for (const row of distRows) {
       moodDistribution[row.score] = row.count;
     }
 
     // Top triggers with average mood
-    const topTriggers = await db
-      .select({
-        triggerId: triggers.id,
-        triggerName: triggers.name,
-        triggerIcon: triggers.icon,
-        triggerIsDefault: triggers.isDefault,
-        count: sql<number>`COUNT(*)::int`,
-        avgMood: sql<number>`COALESCE(AVG(${moodEntries.moodScore})::numeric(3,2), 0)`,
-      })
-      .from(entryTriggers)
-      .innerJoin(moodEntries, eq(entryTriggers.entryId, moodEntries.id))
-      .innerJoin(triggers, eq(entryTriggers.triggerId, triggers.id))
-      .where(
-        and(
-          eq(moodEntries.userId, userId),
-          sql`"mood_entries"."logged_at" >= ${start.toISOString()}::timestamptz`,
-          sql`"mood_entries"."logged_at" < ${end.toISOString()}::timestamptz`,
-        ),
-      )
-      .groupBy(triggers.id, triggers.name, triggers.icon, triggers.isDefault)
-      .orderBy(sql`COUNT(*) DESC`)
-      .limit(10);
+    const triggerRows = await client`
+      SELECT
+        t.id AS trigger_id,
+        t.name AS trigger_name,
+        t.icon AS trigger_icon,
+        t.is_default AS trigger_is_default,
+        COUNT(*)::int AS count,
+        COALESCE(AVG(me.mood_score)::numeric(3,2), 0) AS avg_mood
+      FROM entry_triggers et
+      INNER JOIN mood_entries me ON et.entry_id = me.id
+      INNER JOIN triggers t ON et.trigger_id = t.id
+      WHERE me.user_id = ${userId}
+        AND me.logged_at >= ${startIso}::timestamptz
+        AND me.logged_at < ${endIso}::timestamptz
+      GROUP BY t.id, t.name, t.icon, t.is_default
+      ORDER BY COUNT(*) DESC
+      LIMIT 10
+    `;
 
     return {
-      avgMood: Number(stats.avgMood),
-      entryCount: stats.entryCount,
+      avgMood: Number(statsRows[0].avg_mood),
+      entryCount: statsRows[0].entry_count,
       moodDistribution,
-      topTriggers: topTriggers.map((t) => ({
+      topTriggers: triggerRows.map((t: Record<string, unknown>) => ({
         trigger: {
-          id: t.triggerId,
-          name: t.triggerName,
-          icon: t.triggerIcon,
-          isDefault: t.triggerIsDefault,
+          id: t.trigger_id,
+          name: t.trigger_name,
+          icon: t.trigger_icon,
+          isDefault: t.trigger_is_default,
         },
         count: t.count,
-        avgMood: Number(t.avgMood),
+        avgMood: Number(t.avg_mood),
       })),
-      period: { start: start.toISOString(), end: end.toISOString() },
+      period: { start: startIso, end: endIso },
     };
   }
 
@@ -132,44 +121,33 @@ export class StatsService {
    * Mood trend: data points over time (daily for week/month, monthly for year).
    */
   async getTrend(userId: string, period: Period, dateStr?: string) {
-    const [user] = await db
-      .select({ timezone: users.timezone })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    const tz = user?.timezone || "UTC";
+    const tz = await getUserTimezone(userId);
     const { start, end } = getDateRange(period, dateStr, tz);
+    const startIso = start.toISOString();
+    const endIso = end.toISOString();
 
-    const truncExpr =
-      period === "year"
-        ? sql`date_trunc('month', ${moodEntries.loggedAt})`
-        : sql`date_trunc('day', ${moodEntries.loggedAt})`;
+    const truncUnit = period === "year" ? "month" : "day";
 
-    const dataPoints = await db
-      .select({
-        date: sql<string>`${truncExpr}::text`,
-        avgMood: sql<number>`COALESCE(AVG(${moodEntries.moodScore})::numeric(3,2), 0)`,
-        count: sql<number>`COUNT(*)::int`,
-      })
-      .from(moodEntries)
-      .where(
-        and(
-          eq(moodEntries.userId, userId),
-          sql`"mood_entries"."logged_at" >= ${start.toISOString()}::timestamptz`,
-          sql`"mood_entries"."logged_at" < ${end.toISOString()}::timestamptz`,
-        ),
-      )
-      .groupBy(truncExpr)
-      .orderBy(truncExpr);
+    const dataPoints = await client`
+      SELECT
+        date_trunc(${truncUnit}, logged_at)::text AS date,
+        COALESCE(AVG(mood_score)::numeric(3,2), 0) AS avg_mood,
+        COUNT(*)::int AS count
+      FROM mood_entries
+      WHERE user_id = ${userId}
+        AND logged_at >= ${startIso}::timestamptz
+        AND logged_at < ${endIso}::timestamptz
+      GROUP BY date_trunc(${truncUnit}, logged_at)
+      ORDER BY date_trunc(${truncUnit}, logged_at)
+    `;
 
     return {
-      dataPoints: dataPoints.map((dp) => ({
+      dataPoints: dataPoints.map((dp: Record<string, unknown>) => ({
         date: dp.date,
-        avgMood: Number(dp.avgMood),
+        avgMood: Number(dp.avg_mood),
         count: dp.count,
       })),
-      period: { start: start.toISOString(), end: end.toISOString() },
+      period: { start: startIso, end: endIso },
     };
   }
 
@@ -177,49 +155,41 @@ export class StatsService {
    * Trigger frequency breakdown.
    */
   async getTriggerBreakdown(userId: string, period: Period, dateStr?: string) {
-    const [user] = await db
-      .select({ timezone: users.timezone })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    const tz = user?.timezone || "UTC";
+    const tz = await getUserTimezone(userId);
     const { start, end } = getDateRange(period, dateStr, tz);
+    const startIso = start.toISOString();
+    const endIso = end.toISOString();
 
-    const breakdown = await db
-      .select({
-        triggerId: triggers.id,
-        triggerName: triggers.name,
-        triggerIcon: triggers.icon,
-        triggerIsDefault: triggers.isDefault,
-        count: sql<number>`COUNT(*)::int`,
-        avgMood: sql<number>`COALESCE(AVG(${moodEntries.moodScore})::numeric(3,2), 0)`,
-      })
-      .from(entryTriggers)
-      .innerJoin(moodEntries, eq(entryTriggers.entryId, moodEntries.id))
-      .innerJoin(triggers, eq(entryTriggers.triggerId, triggers.id))
-      .where(
-        and(
-          eq(moodEntries.userId, userId),
-          sql`"mood_entries"."logged_at" >= ${start.toISOString()}::timestamptz`,
-          sql`"mood_entries"."logged_at" < ${end.toISOString()}::timestamptz`,
-        ),
-      )
-      .groupBy(triggers.id, triggers.name, triggers.icon, triggers.isDefault)
-      .orderBy(sql`COUNT(*) DESC`);
+    const breakdown = await client`
+      SELECT
+        t.id AS trigger_id,
+        t.name AS trigger_name,
+        t.icon AS trigger_icon,
+        t.is_default AS trigger_is_default,
+        COUNT(*)::int AS count,
+        COALESCE(AVG(me.mood_score)::numeric(3,2), 0) AS avg_mood
+      FROM entry_triggers et
+      INNER JOIN mood_entries me ON et.entry_id = me.id
+      INNER JOIN triggers t ON et.trigger_id = t.id
+      WHERE me.user_id = ${userId}
+        AND me.logged_at >= ${startIso}::timestamptz
+        AND me.logged_at < ${endIso}::timestamptz
+      GROUP BY t.id, t.name, t.icon, t.is_default
+      ORDER BY COUNT(*) DESC
+    `;
 
     return {
-      triggerBreakdown: breakdown.map((b) => ({
+      triggerBreakdown: breakdown.map((b: Record<string, unknown>) => ({
         trigger: {
-          id: b.triggerId,
-          name: b.triggerName,
-          icon: b.triggerIcon,
-          isDefault: b.triggerIsDefault,
+          id: b.trigger_id,
+          name: b.trigger_name,
+          icon: b.trigger_icon,
+          isDefault: b.trigger_is_default,
         },
         count: b.count,
-        avgMood: Number(b.avgMood),
+        avgMood: Number(b.avg_mood),
       })),
-      period: { start: start.toISOString(), end: end.toISOString() },
+      period: { start: startIso, end: endIso },
     };
   }
 
@@ -227,35 +197,26 @@ export class StatsService {
    * Streak data: current streak (consecutive days from today backward) and longest streak ever.
    */
   async getStreak(userId: string) {
-    // Get user timezone
-    const [user] = await db
-      .select({ timezone: users.timezone })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
-
-    const tz = user?.timezone || "UTC";
+    const tz = await getUserTimezone(userId);
 
     // Get distinct dates (in user's timezone) with mood entries, ordered descending
-    const rows = await db
-      .select({
-        date: sql<string>`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz})::text`,
-      })
-      .from(moodEntries)
-      .where(eq(moodEntries.userId, userId))
-      .groupBy(sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz})`)
-      .orderBy(sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz}) DESC`);
+    const rows = await client`
+      SELECT DATE(logged_at AT TIME ZONE ${tz})::text AS date
+      FROM mood_entries
+      WHERE user_id = ${userId}
+      GROUP BY DATE(logged_at AT TIME ZONE ${tz})
+      ORDER BY DATE(logged_at AT TIME ZONE ${tz}) DESC
+    `;
 
     if (rows.length === 0) {
       return { currentStreak: 0, longestStreak: 0, lastLogDate: null };
     }
 
-    const dates = rows.map((r) => r.date);
+    const dates = rows.map((r: Record<string, unknown>) => r.date as string);
     const lastLogDate = dates[0];
 
     // Calculate current streak: starting from today, count consecutive days backward
     const now = new Date();
-    // Get today's date string in user's timezone using Intl
     const todayStr = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(now);
 
     let currentStreak = 0;
@@ -271,7 +232,6 @@ export class StatsService {
         currentStreak++;
         checkDate = new Date(checkDate.getTime() - 1000 * 60 * 60 * 24);
       } else if (diffDays === 1 && currentStreak === 0) {
-        // Yesterday counts if today hasn't been logged yet
         currentStreak++;
         checkDate = new Date(entryDate.getTime() - 1000 * 60 * 60 * 24);
       } else {
@@ -297,7 +257,6 @@ export class StatsService {
       }
     }
 
-    // Current streak might also be the longest
     longestStreak = Math.max(longestStreak, currentStreak);
 
     return { currentStreak, longestStreak, lastLogDate };
@@ -307,40 +266,27 @@ export class StatsService {
    * Mood calendar: average mood per day for a given month (YYYY-MM).
    */
   async getMoodCalendar(userId: string, month: string) {
-    // Get user timezone
-    const [user] = await db
-      .select({ timezone: users.timezone })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1);
+    const tz = await getUserTimezone(userId);
 
-    const tz = user?.timezone || "UTC";
-
-    // Parse month boundaries in user's timezone
     const [yearStr, monthStr] = month.split("-");
     const year = parseInt(yearStr, 10);
+    const monthStart = `${year}-${monthStr}-01`;
 
-    // Start of month and start of next month in user's timezone
-    // We use SQL to handle timezone conversion properly
-    const rows = await db
-      .select({
-        date: sql<string>`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz})::text`,
-        avgMood: sql<number>`ROUND(AVG(${moodEntries.moodScore}))::int`,
-      })
-      .from(moodEntries)
-      .where(
-        and(
-          eq(moodEntries.userId, userId),
-          sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz}) >= ${`${year}-${monthStr}-01`}::date`,
-          sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz}) < (${`${year}-${monthStr}-01`}::date + interval '1 month')::date`,
-        ),
-      )
-      .groupBy(sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz})`)
-      .orderBy(sql`DATE(${moodEntries.loggedAt} AT TIME ZONE ${tz}) ASC`);
+    const rows = await client`
+      SELECT
+        DATE(logged_at AT TIME ZONE ${tz})::text AS date,
+        ROUND(AVG(mood_score))::int AS avg_mood
+      FROM mood_entries
+      WHERE user_id = ${userId}
+        AND DATE(logged_at AT TIME ZONE ${tz}) >= ${monthStart}::date
+        AND DATE(logged_at AT TIME ZONE ${tz}) < (${monthStart}::date + interval '1 month')::date
+      GROUP BY DATE(logged_at AT TIME ZONE ${tz})
+      ORDER BY DATE(logged_at AT TIME ZONE ${tz}) ASC
+    `;
 
     const calendar: Record<string, number> = {};
     for (const row of rows) {
-      calendar[row.date] = Number(row.avgMood);
+      calendar[row.date] = Number(row.avg_mood);
     }
 
     return calendar;
