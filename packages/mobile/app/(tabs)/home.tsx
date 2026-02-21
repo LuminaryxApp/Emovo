@@ -288,7 +288,7 @@ export default function HomeScreen() {
       {/* ------------------------------------------------------------------ */}
       <Animated.View
         entering={FadeInDown.delay(600).duration(400).springify()}
-        style={[styles.fabContainer, { bottom: insets.bottom + 90 }]}
+        style={[styles.fabContainer, { bottom: insets.bottom + 80 }]}
       >
         <Pressable onPress={goToLogMood}>
           <LinearGradient

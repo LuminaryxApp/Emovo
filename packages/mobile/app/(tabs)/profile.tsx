@@ -711,7 +711,11 @@ function SettingsRow({
       <Text style={settingsStyles.label}>{label}</Text>
       {value ? <Text style={settingsStyles.value}>{value}</Text> : null}
       {badge ? (
-        <Badge variant="secondary" size="sm" style={{ marginRight: spacing.sm }}>
+        <Badge
+          variant="secondary"
+          size="sm"
+          style={{ marginRight: spacing.sm, alignSelf: "center" }}
+        >
           {badge}
         </Badge>
       ) : null}
@@ -761,6 +765,7 @@ const styles = StyleSheet.create({
   },
   memberBadge: {
     marginTop: spacing.sm,
+    alignSelf: "center",
   },
 
   // ---- Stats Card ----
