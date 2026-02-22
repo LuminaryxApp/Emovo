@@ -9,7 +9,6 @@ const RESERVED = [
   "administrator",
   "mod",
   "moderator",
-  "emovo",
   "support",
   "help",
   "system",
@@ -24,6 +23,9 @@ const RESERVED = [
   "deleted",
   "unknown",
 ];
+
+// Prefix patterns — block usernames that START with these (brand protection)
+const RESERVED_PREFIXES = ["emovo"];
 
 // Slurs, hate speech, and offensive terms
 // This is intentionally broad to catch common variations (leet speak, etc.)
@@ -100,6 +102,13 @@ export function isUsernameBlocked(username: string): { blocked: boolean; reason?
   // Exact match against reserved names
   if (RESERVED.includes(lower)) {
     return { blocked: true, reason: "reserved" };
+  }
+
+  // Prefix match — block "emovo_admin", "emovoapp", etc. but allow exact "emovo"
+  for (const prefix of RESERVED_PREFIXES) {
+    if (lower.startsWith(prefix) && lower !== prefix) {
+      return { blocked: true, reason: "reserved" };
+    }
   }
 
   // Check offensive patterns
