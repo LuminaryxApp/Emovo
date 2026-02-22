@@ -33,6 +33,12 @@ export type {
   Conversation,
   ConversationPreview,
   Message,
+  Report,
+  ReportWithContext,
+  ReportTargetType,
+  ReportReason,
+  ReportStatus,
+  ReportAction,
 } from "./types/community.js";
 export type { Notification } from "./types/notification.js";
 
@@ -73,6 +79,9 @@ export {
   feedQuerySchema,
   groupQuerySchema,
   messageQuerySchema,
+  createReportSchema,
+  resolveReportSchema,
+  reportQuerySchema,
 } from "./schemas/community.schema.js";
 export type {
   CreatePostInput,
@@ -80,4 +89,7 @@ export type {
   CreateGroupInput,
   SendMessageInput,
   CreateConversationInput,
+  CreateReportInput,
+  ResolveReportInput,
+  ReportQueryInput,
 } from "./schemas/community.schema.js";

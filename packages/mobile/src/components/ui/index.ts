@@ -15,3 +15,5 @@ export { Divider } from "./Divider";
 export { EmptyState } from "./EmptyState";
 export { ProgressBar } from "./ProgressBar";
 export { BottomSheet } from "./BottomSheet";
+export { ActionSheet } from "./ActionSheet";
+export type { ActionSheetItem } from "./ActionSheet";

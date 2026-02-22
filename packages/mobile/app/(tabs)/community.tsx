@@ -1,4 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
@@ -16,11 +18,12 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Card, Avatar, Badge } from "../../src/components/ui";
+import { Card, Avatar, Badge, ActionSheet, type ActionSheetItem } from "../../src/components/ui";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useCommunityStore } from "../../src/stores/community.store";
 import { moodEmojis } from "../../src/theme";
@@ -105,6 +108,7 @@ export default function CommunityScreen() {
   const joinGroup = useCommunityStore((s) => s.joinGroup);
 
   const deletePost = useCommunityStore((s) => s.deletePost);
+  const reportContent = useCommunityStore((s) => s.reportContent);
   const leaveGroup = useCommunityStore((s) => s.leaveGroup);
 
   const createPost = useCommunityStore((s) => s.createPost);
@@ -127,6 +131,7 @@ export default function CommunityScreen() {
   const [postMoodScore, setPostMoodScore] = useState<number | null>(null);
   const [postType, setPostType] = useState<"mood_update" | "tip" | "photo">("mood_update");
   const [isSubmittingPost, setIsSubmittingPost] = useState(false);
+  const [postImageBase64, setPostImageBase64] = useState<string | null>(null);
 
   // Create group modal
   const [showCreateGroup, setShowCreateGroup] = useState(false);
@@ -134,6 +139,17 @@ export default function CommunityScreen() {
   const [groupDescription, setGroupDescription] = useState("");
   const [groupIcon, setGroupIcon] = useState("🌿");
   const [isSubmittingGroup, setIsSubmittingGroup] = useState(false);
+
+  // Action sheet
+  const [actionSheetVisible, setActionSheetVisible] = useState(false);
+  const [actionSheetItems, setActionSheetItems] = useState<ActionSheetItem[]>([]);
+
+  // Report reason picker
+  const [reportSheetVisible, setReportSheetVisible] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{
+    targetType: string;
+    targetId: string;
+  } | null>(null);
 
   const postInputRef = useRef<TextInput>(null);
 
@@ -214,10 +230,25 @@ export default function CommunityScreen() {
       setPostType(type);
       setPostContent("");
       setPostMoodScore(null);
+      setPostImageBase64(null);
       setShowCreatePost(true);
     },
     [],
   );
+
+  const handlePickImage = useCallback(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.6,
+      base64: true,
+    });
+    if (!result.canceled && result.assets[0]?.base64) {
+      const mime = result.assets[0].mimeType ?? "image/jpeg";
+      setPostImageBase64(`data:${mime};base64,${result.assets[0].base64}`);
+    }
+  }, []);
 
   const handleSubmitPost = useCallback(async () => {
     if (!postContent.trim()) return;
@@ -227,10 +258,12 @@ export default function CommunityScreen() {
         content: postContent.trim(),
         moodScore: postMoodScore ?? undefined,
         type: postType,
+        imageBase64: postImageBase64 ?? undefined,
       });
       setShowCreatePost(false);
       setPostContent("");
       setPostMoodScore(null);
+      setPostImageBase64(null);
     } catch {
       Alert.alert(t("common.error"), t("community.postError"));
     } finally {
@@ -258,24 +291,99 @@ export default function CommunityScreen() {
     }
   }, [groupName, groupDescription, groupIcon, createGroup, t]);
 
-  const handleDeletePost = useCallback(
-    (postId: string) => {
-      Alert.alert(t("community.deletePostTitle"), t("community.deletePostMessage"), [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("community.delete"),
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deletePost(postId);
-            } catch {
-              Alert.alert(t("common.error"), t("community.deletePostError"));
-            }
+  const handlePostLongPress = useCallback(
+    (postId: string, isOwn: boolean) => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const items: ActionSheetItem[] = [];
+
+      if (isOwn) {
+        items.push({
+          label: t("community.delete"),
+          icon: "trash-outline",
+          destructive: true,
+          onPress: () => {
+            Alert.alert(t("community.deletePostTitle"), t("community.deletePostMessage"), [
+              { text: t("common.cancel"), style: "cancel" },
+              {
+                text: t("community.delete"),
+                style: "destructive",
+                onPress: async () => {
+                  try {
+                    await deletePost(postId);
+                  } catch {
+                    Alert.alert(t("common.error"), t("community.deletePostError"));
+                  }
+                },
+              },
+            ]);
           },
+        });
+      }
+
+      items.push({
+        label: t("community.report"),
+        icon: "flag-outline",
+        onPress: () => {
+          setReportTarget({ targetType: "post", targetId: postId });
+          setReportSheetVisible(true);
         },
-      ]);
+      });
+
+      setActionSheetItems(items);
+      setActionSheetVisible(true);
     },
     [deletePost, t],
+  );
+
+  const reportReasons = useMemo(
+    () =>
+      (
+        [
+          "spam",
+          "harassment",
+          "hate_speech",
+          "self_harm",
+          "misinformation",
+          "inappropriate",
+          "other",
+        ] as const
+      ).map((reason) => ({
+        label: t(`community.reportReasons.${reason}`),
+        icon: (reason === "spam"
+          ? "mail-outline"
+          : reason === "harassment"
+            ? "hand-left-outline"
+            : reason === "hate_speech"
+              ? "megaphone-outline"
+              : reason === "self_harm"
+                ? "heart-outline"
+                : reason === "misinformation"
+                  ? "alert-circle-outline"
+                  : reason === "inappropriate"
+                    ? "eye-off-outline"
+                    : "ellipsis-horizontal-outline") as keyof typeof Ionicons.glyphMap,
+        onPress: async () => {
+          if (!reportTarget) return;
+          try {
+            await reportContent({
+              targetType: reportTarget.targetType,
+              targetId: reportTarget.targetId,
+              reason,
+            });
+            Alert.alert(t("community.reportSubmitted"), t("community.reportSubmittedMessage"));
+          } catch (err: unknown) {
+            const msg =
+              err instanceof Error &&
+              "response" in err &&
+              (err as { response?: { status?: number } }).response?.status === 409
+                ? t("community.alreadyReported")
+                : t("community.reportFailed");
+            Alert.alert(t("common.error"), msg);
+          }
+          setReportTarget(null);
+        },
+      })),
+    [reportTarget, reportContent, t],
   );
 
   const handleLeaveGroup = useCallback(
@@ -406,64 +514,90 @@ export default function CommunityScreen() {
 
     return (
       <Animated.View key={post.id} entering={FadeInDown.delay(150 + index * 60).duration(400)}>
-        <Card variant="elevated" padding="md" style={styles.postCard}>
-          {/* Author row */}
-          <View style={styles.postAuthorRow}>
-            <Avatar name={post.author.displayName} size="md" />
-            <View style={styles.postAuthorInfo}>
-              <Text style={styles.postAuthorName}>{post.author.displayName}</Text>
-              <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
+        <Pressable onLongPress={() => handlePostLongPress(post.id, isOwnPost)}>
+          <Card variant="elevated" padding="md" style={styles.postCard}>
+            {/* Author row */}
+            <View style={styles.postAuthorRow}>
+              <Avatar name={post.author.displayName} size="md" />
+              <View style={styles.postAuthorInfo}>
+                <Text style={styles.postAuthorName}>{post.author.displayName}</Text>
+                <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
+              </View>
+              {post.moodScore != null && (
+                <Badge variant={getMoodBadgeVariant(post.moodScore)} size="sm">
+                  {`${moodEmojis[post.moodScore as MoodLevel] ?? ""} ${post.moodScore}/5`}
+                </Badge>
+              )}
             </View>
-            {post.moodScore != null && (
-              <Badge variant={getMoodBadgeVariant(post.moodScore)} size="sm">
-                {`${moodEmojis[post.moodScore as MoodLevel] ?? ""} ${post.moodScore}/5`}
-              </Badge>
+
+            {/* Post type tag */}
+            {post.type === "tip" && (
+              <View style={[styles.postTypeTag, { backgroundColor: colors.accent + "18" }]}>
+                <Ionicons name="bulb" size={13} color={colors.accent} />
+                <Text style={[styles.postTypeTagText, { color: colors.accent }]}>
+                  {t("community.tip")}
+                </Text>
+              </View>
             )}
-            {isOwnPost && (
-              <Pressable
-                onPress={() => handleDeletePost(post.id)}
-                hitSlop={8}
-                style={styles.postMenuBtn}
-              >
-                <Ionicons name="trash-outline" size={iconSizes.xs} color={colors.textTertiary} />
+            {post.type === "photo" && (
+              <View style={[styles.postTypeTag, { backgroundColor: colors.warning + "18" }]}>
+                <Ionicons name="image" size={13} color={colors.warning} />
+                <Text style={[styles.postTypeTagText, { color: colors.warning }]}>
+                  {t("community.photo")}
+                </Text>
+              </View>
+            )}
+
+            {/* Photo */}
+            {post.imageBase64 && (
+              <View style={styles.postImageWrap}>
+                <Image
+                  source={{ uri: post.imageBase64 }}
+                  style={styles.postImage}
+                  resizeMode="cover"
+                />
+              </View>
+            )}
+
+            {/* Content */}
+            <Text style={styles.postContent}>{post.content}</Text>
+
+            {/* Actions row */}
+            <View style={styles.postActionsRow}>
+              <Pressable onPress={() => handleToggleLike(post.id)} style={styles.postAction}>
+                <Ionicons
+                  name={post.isLiked ? "heart" : "heart-outline"}
+                  size={iconSizes.sm}
+                  color={post.isLiked ? colors.error : colors.textTertiary}
+                />
+                <Text style={[styles.postActionCount, post.isLiked && { color: colors.error }]}>
+                  {post.likeCount > 0 ? post.likeCount : ""}
+                </Text>
               </Pressable>
-            )}
-          </View>
 
-          {/* Content */}
-          <Text style={styles.postContent}>{post.content}</Text>
+              <Pressable onPress={() => handleOpenComments(post.id)} style={styles.postAction}>
+                <Ionicons
+                  name="chatbubble-outline"
+                  size={iconSizes.sm}
+                  color={colors.textTertiary}
+                />
+                <Text style={styles.postActionCount}>
+                  {post.commentCount > 0 ? post.commentCount : ""}
+                </Text>
+              </Pressable>
 
-          {/* Actions row */}
-          <View style={styles.postActionsRow}>
-            <Pressable onPress={() => handleToggleLike(post.id)} style={styles.postAction}>
-              <Ionicons
-                name={post.isLiked ? "heart" : "heart-outline"}
-                size={iconSizes.sm}
-                color={post.isLiked ? colors.error : colors.textTertiary}
-              />
-              <Text style={[styles.postActionCount, post.isLiked && { color: colors.error }]}>
-                {post.likeCount > 0 ? post.likeCount : ""}
-              </Text>
-            </Pressable>
+              <Pressable onPress={showComingSoon} style={styles.postAction}>
+                <Ionicons name="share-outline" size={iconSizes.sm} color={colors.textTertiary} />
+              </Pressable>
 
-            <Pressable onPress={() => handleOpenComments(post.id)} style={styles.postAction}>
-              <Ionicons name="chatbubble-outline" size={iconSizes.sm} color={colors.textTertiary} />
-              <Text style={styles.postActionCount}>
-                {post.commentCount > 0 ? post.commentCount : ""}
-              </Text>
-            </Pressable>
+              <View style={styles.postActionSpacer} />
 
-            <Pressable onPress={showComingSoon} style={styles.postAction}>
-              <Ionicons name="share-outline" size={iconSizes.sm} color={colors.textTertiary} />
-            </Pressable>
-
-            <View style={styles.postActionSpacer} />
-
-            <Pressable onPress={showComingSoon} style={styles.postAction}>
-              <Ionicons name="bookmark-outline" size={iconSizes.sm} color={colors.textTertiary} />
-            </Pressable>
-          </View>
-        </Card>
+              <Pressable onPress={showComingSoon} style={styles.postAction}>
+                <Ionicons name="bookmark-outline" size={iconSizes.sm} color={colors.textTertiary} />
+              </Pressable>
+            </View>
+          </Card>
+        </Pressable>
       </Animated.View>
     );
   };
@@ -835,70 +969,98 @@ export default function CommunityScreen() {
               </Pressable>
             </View>
 
-            {/* Post type pills */}
-            <View style={styles.postTypePills}>
-              {(["mood_update", "tip", "photo"] as const).map((type) => (
-                <Pressable
-                  key={type}
-                  onPress={() => setPostType(type)}
-                  style={[styles.postTypePill, postType === type && styles.postTypePillActive]}
-                >
-                  <Ionicons
-                    name={
-                      type === "mood_update"
-                        ? "happy-outline"
-                        : type === "tip"
-                          ? "bulb-outline"
-                          : "image-outline"
-                    }
-                    size={14}
-                    color={postType === type ? colors.textInverse : colors.textSecondary}
-                  />
-                  <Text
-                    style={[
-                      styles.postTypePillText,
-                      postType === type && styles.postTypePillTextActive,
-                    ]}
-                  >
-                    {t(`community.${type === "mood_update" ? "mood" : type}`)}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            {/* Content input */}
-            <TextInput
-              ref={postInputRef}
-              style={styles.postTextInput}
-              placeholder={t("community.sharePlaceholder")}
-              placeholderTextColor={colors.textTertiary}
-              value={postContent}
-              onChangeText={setPostContent}
-              multiline
-              maxLength={2000}
-              autoFocus
-            />
-
-            {/* Mood score selector */}
-            <View style={styles.moodSelector}>
-              <Text style={styles.moodSelectorLabel}>{t("community.howAreYouFeeling")}</Text>
-              <View style={styles.moodEmojiRow}>
-                {([1, 2, 3, 4, 5] as const).map((score) => (
+            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+              {/* Post type pills */}
+              <View style={styles.postTypePills}>
+                {(["mood_update", "tip", "photo"] as const).map((type) => (
                   <Pressable
-                    key={score}
-                    onPress={() => setPostMoodScore(postMoodScore === score ? null : score)}
-                    style={[
-                      styles.moodEmojiBtn,
-                      postMoodScore === score && styles.moodEmojiBtnActive,
-                    ]}
+                    key={type}
+                    onPress={() => setPostType(type)}
+                    style={[styles.postTypePill, postType === type && styles.postTypePillActive]}
                   >
-                    <Text style={styles.moodEmoji}>{moodEmojis[score]}</Text>
+                    <Ionicons
+                      name={
+                        type === "mood_update"
+                          ? "happy-outline"
+                          : type === "tip"
+                            ? "bulb-outline"
+                            : "image-outline"
+                      }
+                      size={14}
+                      color={postType === type ? colors.textInverse : colors.textSecondary}
+                    />
+                    <Text
+                      style={[
+                        styles.postTypePillText,
+                        postType === type && styles.postTypePillTextActive,
+                      ]}
+                    >
+                      {t(`community.${type === "mood_update" ? "mood" : type}`)}
+                    </Text>
                   </Pressable>
                 ))}
               </View>
-            </View>
 
-            <Text style={styles.charCount}>{postContent.length}/2000</Text>
+              {/* Photo picker (photo type only) */}
+              {postType === "photo" && (
+                <View style={styles.photoPickerWrap}>
+                  {postImageBase64 ? (
+                    <View style={styles.photoPreviewWrap}>
+                      <Image
+                        source={{ uri: postImageBase64 }}
+                        style={styles.photoPreview}
+                        resizeMode="cover"
+                      />
+                      <Pressable
+                        onPress={() => setPostImageBase64(null)}
+                        style={styles.photoRemoveBtn}
+                      >
+                        <Ionicons name="close-circle" size={24} color={colors.error} />
+                      </Pressable>
+                    </View>
+                  ) : (
+                    <Pressable onPress={handlePickImage} style={styles.photoPickerBtn}>
+                      <Ionicons name="camera-outline" size={28} color={colors.primary} />
+                      <Text style={styles.photoPickerText}>{t("community.addPhoto")}</Text>
+                    </Pressable>
+                  )}
+                </View>
+              )}
+
+              {/* Content input */}
+              <TextInput
+                ref={postInputRef}
+                style={styles.postTextInput}
+                placeholder={t("community.sharePlaceholder")}
+                placeholderTextColor={colors.textTertiary}
+                value={postContent}
+                onChangeText={setPostContent}
+                multiline
+                maxLength={2000}
+                autoFocus
+              />
+
+              {/* Mood score selector */}
+              <View style={styles.moodSelector}>
+                <Text style={styles.moodSelectorLabel}>{t("community.howAreYouFeeling")}</Text>
+                <View style={styles.moodEmojiRow}>
+                  {([1, 2, 3, 4, 5] as const).map((score) => (
+                    <Pressable
+                      key={score}
+                      onPress={() => setPostMoodScore(postMoodScore === score ? null : score)}
+                      style={[
+                        styles.moodEmojiBtn,
+                        postMoodScore === score && styles.moodEmojiBtnActive,
+                      ]}
+                    >
+                      <Text style={styles.moodEmoji}>{moodEmojis[score]}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
+
+              <Text style={styles.charCount}>{postContent.length}/2000</Text>
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -975,6 +1137,24 @@ export default function CommunityScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
+
+      {/* Long-press Action Sheet */}
+      <ActionSheet
+        visible={actionSheetVisible}
+        onClose={() => setActionSheetVisible(false)}
+        actions={actionSheetItems}
+      />
+
+      {/* Report reason picker */}
+      <ActionSheet
+        visible={reportSheetVisible}
+        onClose={() => {
+          setReportSheetVisible(false);
+          setReportTarget(null);
+        }}
+        actions={reportReasons}
+        title={t("community.selectReportReason")}
+      />
     </View>
   );
 }
@@ -1140,6 +1320,30 @@ const styles = StyleSheet.create({
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textTertiary,
     marginTop: 1,
+  },
+  postTypeTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radii.pill,
+    marginBottom: spacing.sm,
+  },
+  postTypeTagText: {
+    fontSize: 11,
+    fontFamily: "SourceSerif4_600SemiBold",
+  },
+  postImageWrap: {
+    borderRadius: radii.md,
+    overflow: "hidden",
+    marginBottom: spacing.sm,
+  },
+  postImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: radii.md,
   },
   postContent: {
     fontSize: 14,
@@ -1528,7 +1732,7 @@ const styles = StyleSheet.create({
   },
   moodEmojiRow: {
     flexDirection: "row",
-    gap: spacing.sm,
+    justifyContent: "space-evenly",
   },
   moodEmojiBtn: {
     width: 40,
@@ -1615,5 +1819,39 @@ const styles = StyleSheet.create({
         elevation: 6,
       },
     }),
+  },
+
+  // ── Photo picker ────────────────────────────────────────────
+  photoPickerWrap: {
+    marginBottom: spacing.md,
+  },
+  photoPickerBtn: {
+    height: 120,
+    borderRadius: radii.lg,
+    borderWidth: 2,
+    borderStyle: "dashed",
+    borderColor: colors.border,
+    backgroundColor: colors.inputBackground,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.xs,
+  },
+  photoPickerText: {
+    fontSize: 13,
+    fontFamily: "SourceSerif4_600SemiBold",
+    color: colors.primary,
+  },
+  photoPreviewWrap: {
+    position: "relative",
+  },
+  photoPreview: {
+    width: "100%",
+    height: 180,
+    borderRadius: radii.lg,
+  },
+  photoRemoveBtn: {
+    position: "absolute",
+    top: spacing.xs,
+    right: spacing.xs,
   },
 });

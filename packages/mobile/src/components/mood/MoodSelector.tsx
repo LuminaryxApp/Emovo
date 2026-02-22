@@ -26,9 +26,9 @@ const MOOD_DATA: {
 ];
 
 const SIZES = {
-  sm: { circle: 48, emoji: 20, emojiSelected: 24, glow: 56, label: 10 },
-  md: { circle: 64, emoji: 26, emojiSelected: 32, glow: 76, label: 11 },
-  lg: { circle: 80, emoji: 32, emojiSelected: 38, glow: 92, label: 12 },
+  sm: { circle: 44, emoji: 18, emojiSelected: 22, glow: 52, label: 10 },
+  md: { circle: 56, emoji: 24, emojiSelected: 28, glow: 64, label: 11 },
+  lg: { circle: 72, emoji: 30, emojiSelected: 36, glow: 84, label: 12 },
 } as const;
 
 interface MoodSelectorProps {
@@ -173,11 +173,12 @@ export function MoodSelector({
 const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-evenly",
     alignItems: "flex-start",
   },
   moodItem: {
     alignItems: "center",
+    flex: 1,
   },
   circleWrapper: {
     alignItems: "center",

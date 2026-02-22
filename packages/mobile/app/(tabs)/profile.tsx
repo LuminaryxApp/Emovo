@@ -518,19 +518,21 @@ export default function ProfileScreen() {
               icon="notifications-outline"
               label={t("profile.notifications")}
               trailing={
-                <Switch
-                  value={user?.notificationsEnabled ?? false}
-                  onValueChange={async (val) => {
-                    try {
-                      await updateProfile({ notificationsEnabled: val });
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    } catch {
-                      Alert.alert(t("common.error"), t("profile.failedUpdateProfile"));
-                    }
-                  }}
-                  trackColor={{ false: colors.border, true: colors.primary }}
-                  thumbColor={colors.surface}
-                />
+                <View style={{ alignSelf: "center", marginRight: spacing.xs }}>
+                  <Switch
+                    value={user?.notificationsEnabled ?? false}
+                    onValueChange={async (val) => {
+                      try {
+                        await updateProfile({ notificationsEnabled: val });
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      } catch {
+                        Alert.alert(t("common.error"), t("profile.failedUpdateProfile"));
+                      }
+                    }}
+                    trackColor={{ false: colors.border, true: colors.primary }}
+                    thumbColor={colors.surface}
+                  />
+                </View>
               }
             />
             <Divider spacing={0} />
@@ -620,6 +622,20 @@ export default function ProfileScreen() {
               onPress={() => router.push("/backup-sync")}
             />
           </Card>
+
+          {/* ---- Admin Section (only if admin) ---- */}
+          {user?.isAdmin && (
+            <>
+              <Text style={styles.sectionLabel}>{t("profile.sectionAdmin")}</Text>
+              <Card variant="elevated" padding="none" style={styles.sectionCard}>
+                <SettingsRow
+                  icon="shield-outline"
+                  label={t("profile.moderation")}
+                  onPress={() => router.push("/admin")}
+                />
+              </Card>
+            </>
+          )}
 
           {/* ---- Support Section ---- */}
           <Text style={styles.sectionLabel}>{t("profile.sectionSupport")}</Text>

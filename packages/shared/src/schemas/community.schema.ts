@@ -4,7 +4,7 @@ export const createPostSchema = z.object({
   content: z.string().min(1).max(2000).trim(),
   moodScore: z.number().int().min(1).max(5).nullable().optional(),
   type: z.enum(["mood_update", "tip", "photo"]).default("mood_update"),
-  imageUrl: z.string().url().max(500).nullable().optional(),
+  imageBase64: z.string().max(2_000_000).nullable().optional(),
 });
 
 export const createCommentSchema = z.object({
@@ -51,8 +51,41 @@ export const messageQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 
+export const createReportSchema = z.object({
+  targetType: z.enum(["post", "comment", "message", "user"]),
+  targetId: z.string().uuid(),
+  reason: z.enum([
+    "spam",
+    "harassment",
+    "hate_speech",
+    "self_harm",
+    "misinformation",
+    "inappropriate",
+    "other",
+  ]),
+  description: z.string().max(500).nullable().optional(),
+});
+
+export const resolveReportSchema = z.object({
+  status: z.enum(["reviewed", "actioned", "dismissed"]),
+  actionTaken: z
+    .enum(["none", "content_removed", "user_warned", "user_suspended", "user_banned"])
+    .optional(),
+  adminNote: z.string().max(1000).nullable().optional(),
+  suspendDays: z.number().int().min(1).max(365).optional(),
+});
+
+export const reportQuerySchema = z.object({
+  status: z.enum(["pending", "reviewed", "actioned", "dismissed"]).optional(),
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;
 export type CreateConversationInput = z.infer<typeof createConversationSchema>;
+export type CreateReportInput = z.infer<typeof createReportSchema>;
+export type ResolveReportInput = z.infer<typeof resolveReportSchema>;
+export type ReportQueryInput = z.infer<typeof reportQuerySchema>;

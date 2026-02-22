@@ -13,6 +13,7 @@ import { authRoutes } from "./routes/auth.routes.js";
 import { communityRoutes } from "./routes/community.routes.js";
 import { exportRoutes } from "./routes/export.routes.js";
 import { healthRoutes } from "./routes/health.routes.js";
+import { moderationRoutes } from "./routes/moderation.routes.js";
 import { moodRoutes } from "./routes/mood.routes.js";
 import { notificationRoutes } from "./routes/notification.routes.js";
 import { pushTokenRoutes } from "./routes/push-token.routes.js";
@@ -174,6 +175,7 @@ export async function buildApp() {
   await fastify.register(statsRoutes, { prefix: "/api/v1" });
   await fastify.register(exportRoutes, { prefix: "/api/v1" });
   await fastify.register(communityRoutes, { prefix: "/api/v1" });
+  await fastify.register(moderationRoutes, { prefix: "/api/v1" });
   await fastify.register(pushTokenRoutes, { prefix: "/api/v1/push-tokens" });
   await fastify.register(notificationRoutes, { prefix: "/api/v1/notifications" });
 

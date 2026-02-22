@@ -23,6 +23,7 @@ import {
   listConversationsApi,
   createConversationApi,
   markConversationReadApi,
+  submitReportApi,
 } from "../services/community.api";
 
 interface CommunityState {
@@ -47,6 +48,7 @@ interface CommunityState {
     content: string;
     moodScore?: number;
     type?: string;
+    imageBase64?: string;
   }) => Promise<PostWithAuthor>;
   deletePost: (id: string) => Promise<void>;
   toggleLike: (postId: string) => Promise<void>;
@@ -75,6 +77,14 @@ interface CommunityState {
   fetchConversations: () => Promise<void>;
   createConversation: (participantIds: string[]) => Promise<ConversationPreview>;
   markAsRead: (conversationId: string) => Promise<void>;
+
+  // Report actions
+  reportContent: (input: {
+    targetType: string;
+    targetId: string;
+    reason: string;
+    description?: string | null;
+  }) => Promise<void>;
 }
 
 export const useCommunityStore = create<CommunityState>((set, get) => ({
@@ -277,5 +287,11 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
         c.id === conversationId ? { ...c, unreadCount: 0 } : c,
       ),
     }));
+  },
+
+  // ── Reports ──────────────────────────────────────────────────
+
+  reportContent: async (input) => {
+    await submitReportApi(input);
   },
 }));

@@ -10,7 +10,12 @@ import { api } from "./api";
 
 // ── Posts / Feed ──────────────────────────────────────────────
 
-export async function createPostApi(input: { content: string; moodScore?: number; type?: string }) {
+export async function createPostApi(input: {
+  content: string;
+  moodScore?: number;
+  type?: string;
+  imageBase64?: string;
+}) {
   const { data } = await api.post("/community/posts", input);
   return data.data as PostWithAuthor;
 }
@@ -112,4 +117,16 @@ export async function sendMessageApi(
 
 export async function markConversationReadApi(conversationId: string) {
   await api.patch(`/community/conversations/${conversationId}/read`);
+}
+
+// ── Reports ──────────────────────────────────────────────────
+
+export async function submitReportApi(input: {
+  targetType: string;
+  targetId: string;
+  reason: string;
+  description?: string | null;
+}) {
+  const { data } = await api.post("/moderation/reports", input);
+  return data.data;
 }

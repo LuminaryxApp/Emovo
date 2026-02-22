@@ -26,12 +26,16 @@ export async function communityRoutes(fastify: FastifyInstance) {
    * POST /community/posts
    * Create a new community post.
    */
-  fastify.post("/community/posts", async (request, reply) => {
-    const input = createPostSchema.parse(request.body);
-    const post = await communityService.createPost(request.userId, input);
+  fastify.post(
+    "/community/posts",
+    { preHandler: [fastify.requireNotBanned] },
+    async (request, reply) => {
+      const input = createPostSchema.parse(request.body);
+      const post = await communityService.createPost(request.userId, input);
 
-    return reply.status(201).send({ data: post });
-  });
+      return reply.status(201).send({ data: post });
+    },
+  );
 
   /**
    * GET /community/feed
@@ -65,12 +69,16 @@ export async function communityRoutes(fastify: FastifyInstance) {
    * POST /community/posts/:id/like
    * Like a post.
    */
-  fastify.post("/community/posts/:id/like", async (request, reply) => {
-    const { id } = request.params as { id: string };
-    await communityService.likePost(request.userId, id);
+  fastify.post(
+    "/community/posts/:id/like",
+    { preHandler: [fastify.requireNotBanned] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      await communityService.likePost(request.userId, id);
 
-    return reply.status(204).send();
-  });
+      return reply.status(204).send();
+    },
+  );
 
   /**
    * DELETE /community/posts/:id/like
@@ -91,13 +99,17 @@ export async function communityRoutes(fastify: FastifyInstance) {
    * POST /community/posts/:id/comments
    * Create a comment on a post.
    */
-  fastify.post("/community/posts/:id/comments", async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const input = createCommentSchema.parse(request.body);
-    const comment = await communityService.createComment(request.userId, id, input);
+  fastify.post(
+    "/community/posts/:id/comments",
+    { preHandler: [fastify.requireNotBanned] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const input = createCommentSchema.parse(request.body);
+      const comment = await communityService.createComment(request.userId, id, input);
 
-    return reply.status(201).send({ data: comment });
-  });
+      return reply.status(201).send({ data: comment });
+    },
+  );
 
   /**
    * GET /community/posts/:id/comments
@@ -136,12 +148,16 @@ export async function communityRoutes(fastify: FastifyInstance) {
    * POST /community/groups
    * Create a new group.
    */
-  fastify.post("/community/groups", async (request, reply) => {
-    const input = createGroupSchema.parse(request.body);
-    const group = await communityService.createGroup(request.userId, input);
+  fastify.post(
+    "/community/groups",
+    { preHandler: [fastify.requireNotBanned] },
+    async (request, reply) => {
+      const input = createGroupSchema.parse(request.body);
+      const group = await communityService.createGroup(request.userId, input);
 
-    return reply.status(201).send({ data: group });
-  });
+      return reply.status(201).send({ data: group });
+    },
+  );
 
   /**
    * GET /community/groups
@@ -175,12 +191,16 @@ export async function communityRoutes(fastify: FastifyInstance) {
    * POST /community/groups/:id/join
    * Join a public group.
    */
-  fastify.post("/community/groups/:id/join", async (request, reply) => {
-    const { id } = request.params as { id: string };
-    await communityService.joinGroup(request.userId, id);
+  fastify.post(
+    "/community/groups/:id/join",
+    { preHandler: [fastify.requireNotBanned] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      await communityService.joinGroup(request.userId, id);
 
-    return reply.status(204).send();
-  });
+      return reply.status(204).send();
+    },
+  );
 
   /**
    * DELETE /community/groups/:id/leave
@@ -211,12 +231,16 @@ export async function communityRoutes(fastify: FastifyInstance) {
    * POST /community/conversations
    * Create a direct conversation (or return existing).
    */
-  fastify.post("/community/conversations", async (request, reply) => {
-    const input = createConversationSchema.parse(request.body);
-    const result = await communityService.createConversation(request.userId, input.participantId);
+  fastify.post(
+    "/community/conversations",
+    { preHandler: [fastify.requireNotBanned] },
+    async (request, reply) => {
+      const input = createConversationSchema.parse(request.body);
+      const result = await communityService.createConversation(request.userId, input.participantId);
 
-    return reply.status(result.isNew ? 201 : 200).send({ data: result });
-  });
+      return reply.status(result.isNew ? 201 : 200).send({ data: result });
+    },
+  );
 
   /**
    * GET /community/conversations/:id/messages
@@ -240,13 +264,17 @@ export async function communityRoutes(fastify: FastifyInstance) {
    * POST /community/conversations/:id/messages
    * Send a message in a conversation.
    */
-  fastify.post("/community/conversations/:id/messages", async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const input = sendMessageSchema.parse(request.body);
-    const message = await communityService.sendMessage(id, request.userId, input);
+  fastify.post(
+    "/community/conversations/:id/messages",
+    { preHandler: [fastify.requireNotBanned] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const input = sendMessageSchema.parse(request.body);
+      const message = await communityService.sendMessage(id, request.userId, input);
 
-    return reply.status(201).send({ data: message });
-  });
+      return reply.status(201).send({ data: message });
+    },
+  );
 
   /**
    * PATCH /community/conversations/:id/read

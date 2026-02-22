@@ -1,7 +1,8 @@
 import type { Comment } from "@emovo/shared";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
@@ -14,10 +15,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Image,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Avatar, Badge, Card } from "../../src/components/ui";
+import { Avatar, Badge, Card, ActionSheet, type ActionSheetItem } from "../../src/components/ui";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useCommunityStore } from "../../src/stores/community.store";
 import { moodEmojis } from "../../src/theme";
@@ -72,6 +74,7 @@ export default function PostDetailScreen() {
   const createComment = useCommunityStore((s) => s.createComment);
   const deleteComment = useCommunityStore((s) => s.deleteComment);
   const deletePost = useCommunityStore((s) => s.deletePost);
+  const reportContent = useCommunityStore((s) => s.reportContent);
   const toggleLike = useCommunityStore((s) => s.toggleLike);
 
   // Find the post from the store
@@ -83,6 +86,13 @@ export default function PostDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [actionSheetVisible, setActionSheetVisible] = useState(false);
+  const [actionSheetItems, setActionSheetItems] = useState<ActionSheetItem[]>([]);
+  const [reportSheetVisible, setReportSheetVisible] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{
+    targetType: string;
+    targetId: string;
+  } | null>(null);
 
   const inputRef = useRef<TextInput>(null);
 
@@ -139,46 +149,147 @@ export default function PostDetailScreen() {
     if (id) toggleLike(id);
   }, [id, toggleLike]);
 
-  const handleDeleteComment = useCallback(
-    (commentId: string) => {
-      Alert.alert(t("community.deleteCommentTitle"), t("community.deleteCommentMessage"), [
-        { text: t("common.cancel"), style: "cancel" },
-        {
-          text: t("community.delete"),
-          style: "destructive",
-          onPress: async () => {
-            if (!id) return;
-            try {
-              await deleteComment(id, commentId);
-              setComments((prev) => prev.filter((c) => c.id !== commentId));
-            } catch {
-              Alert.alert(t("common.error"), t("community.deleteCommentError"));
-            }
+  const handleCommentLongPress = useCallback(
+    (comment: Comment) => {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      const isOwn = user?.id === comment.author.id;
+      const items: ActionSheetItem[] = [];
+
+      if (isOwn) {
+        items.push({
+          label: t("community.delete"),
+          icon: "trash-outline",
+          destructive: true,
+          onPress: () => {
+            Alert.alert(t("community.deleteCommentTitle"), t("community.deleteCommentMessage"), [
+              { text: t("common.cancel"), style: "cancel" },
+              {
+                text: t("community.delete"),
+                style: "destructive",
+                onPress: async () => {
+                  if (!id) return;
+                  try {
+                    await deleteComment(id, comment.id);
+                    setComments((prev) => prev.filter((c) => c.id !== comment.id));
+                  } catch {
+                    Alert.alert(t("common.error"), t("community.deleteCommentError"));
+                  }
+                },
+              },
+            ]);
           },
+        });
+      }
+
+      items.push({
+        label: t("community.report"),
+        icon: "flag-outline",
+        onPress: () => {
+          setReportTarget({ targetType: "comment", targetId: comment.id });
+          setReportSheetVisible(true);
         },
-      ]);
+      });
+
+      setActionSheetItems(items);
+      setActionSheetVisible(true);
     },
-    [id, deleteComment, t],
+    [id, user, deleteComment, t],
   );
 
-  const handleDeletePost = useCallback(() => {
-    if (!id) return;
-    Alert.alert(t("community.deletePostTitle"), t("community.deletePostMessage"), [
-      { text: t("common.cancel"), style: "cancel" },
-      {
-        text: t("community.delete"),
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deletePost(id);
-            router.back();
-          } catch {
-            Alert.alert(t("common.error"), t("community.deletePostError"));
-          }
+  const handlePostLongPress = useCallback(() => {
+    if (!id || !post) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const isOwn = user?.id === post.author.id;
+    const items: ActionSheetItem[] = [];
+
+    if (isOwn) {
+      items.push({
+        label: t("community.delete"),
+        icon: "trash-outline",
+        destructive: true,
+        onPress: () => {
+          Alert.alert(t("community.deletePostTitle"), t("community.deletePostMessage"), [
+            { text: t("common.cancel"), style: "cancel" },
+            {
+              text: t("community.delete"),
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  await deletePost(id);
+                  router.back();
+                } catch {
+                  Alert.alert(t("common.error"), t("community.deletePostError"));
+                }
+              },
+            },
+          ]);
         },
+      });
+    }
+
+    items.push({
+      label: t("community.report"),
+      icon: "flag-outline",
+      onPress: () => {
+        setReportTarget({ targetType: "post", targetId: id });
+        setReportSheetVisible(true);
       },
-    ]);
-  }, [id, deletePost, router, t]);
+    });
+
+    setActionSheetItems(items);
+    setActionSheetVisible(true);
+  }, [id, post, user, deletePost, router, t]);
+
+  const reportReasons = useMemo(
+    () =>
+      (
+        [
+          "spam",
+          "harassment",
+          "hate_speech",
+          "self_harm",
+          "misinformation",
+          "inappropriate",
+          "other",
+        ] as const
+      ).map((reason) => ({
+        label: t(`community.reportReasons.${reason}`),
+        icon: (reason === "spam"
+          ? "mail-outline"
+          : reason === "harassment"
+            ? "hand-left-outline"
+            : reason === "hate_speech"
+              ? "megaphone-outline"
+              : reason === "self_harm"
+                ? "heart-outline"
+                : reason === "misinformation"
+                  ? "alert-circle-outline"
+                  : reason === "inappropriate"
+                    ? "eye-off-outline"
+                    : "ellipsis-horizontal-outline") as keyof typeof Ionicons.glyphMap,
+        onPress: async () => {
+          if (!reportTarget) return;
+          try {
+            await reportContent({
+              targetType: reportTarget.targetType,
+              targetId: reportTarget.targetId,
+              reason,
+            });
+            Alert.alert(t("community.reportSubmitted"), t("community.reportSubmittedMessage"));
+          } catch (err: unknown) {
+            const msg =
+              err instanceof Error &&
+              "response" in err &&
+              (err as { response?: { status?: number } }).response?.status === 409
+                ? t("community.alreadyReported")
+                : t("community.reportFailed");
+            Alert.alert(t("common.error"), msg);
+          }
+          setReportTarget(null);
+        },
+      })),
+    [reportTarget, reportContent, t],
+  );
 
   // ---------------------------------------------------------------------------
   // Render
@@ -211,13 +322,9 @@ export default function PostDetailScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
         <Text style={styles.headerTitle}>{t("community.comments")}</Text>
-        {post && user?.id === post.author.id ? (
-          <Pressable onPress={handleDeletePost} style={styles.backButton}>
-            <Ionicons name="trash-outline" size={20} color={colors.error} />
-          </Pressable>
-        ) : (
-          <View style={{ width: 40 }} />
-        )}
+        <Pressable onPress={handlePostLongPress} style={styles.backButton}>
+          <Ionicons name="ellipsis-horizontal" size={20} color={colors.text} />
+        </Pressable>
       </View>
 
       <ScrollView
@@ -226,39 +333,56 @@ export default function PostDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Post */}
-        <Card variant="elevated" padding="md" style={styles.postCard}>
-          <View style={styles.postAuthorRow}>
-            <Avatar name={post.author.displayName} size="md" />
-            <View style={styles.postAuthorInfo}>
-              <Text style={styles.postAuthorName}>{post.author.displayName}</Text>
-              <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
+        <Pressable onLongPress={handlePostLongPress}>
+          <Card variant="elevated" padding="md" style={styles.postCard}>
+            <View style={styles.postAuthorRow}>
+              <Avatar name={post.author.displayName} size="md" />
+              <View style={styles.postAuthorInfo}>
+                <Text style={styles.postAuthorName}>{post.author.displayName}</Text>
+                <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
+              </View>
+              {post.moodScore != null && (
+                <Badge variant={getMoodBadgeVariant(post.moodScore)} size="sm">
+                  {`${moodEmojis[post.moodScore as MoodLevel] ?? ""} ${post.moodScore}/5`}
+                </Badge>
+              )}
             </View>
-            {post.moodScore != null && (
-              <Badge variant={getMoodBadgeVariant(post.moodScore)} size="sm">
-                {`${moodEmojis[post.moodScore as MoodLevel] ?? ""} ${post.moodScore}/5`}
-              </Badge>
+            {post.type === "tip" && (
+              <View style={[styles.postTypeTag, { backgroundColor: colors.accent + "18" }]}>
+                <Ionicons name="bulb" size={13} color={colors.accent} />
+                <Text style={[styles.postTypeTagText, { color: colors.accent }]}>Tip</Text>
+              </View>
             )}
-          </View>
-          <Text style={styles.postContent}>{post.content}</Text>
-          <View style={styles.postActionsRow}>
-            <Pressable onPress={handleToggleLike} style={styles.postAction}>
-              <Ionicons
-                name={post.isLiked ? "heart" : "heart-outline"}
-                size={iconSizes.sm}
-                color={post.isLiked ? colors.error : colors.textTertiary}
-              />
-              <Text style={[styles.postActionCount, post.isLiked && { color: colors.error }]}>
-                {post.likeCount > 0 ? post.likeCount : ""}
-              </Text>
-            </Pressable>
-            <View style={styles.postAction}>
-              <Ionicons name="chatbubble-outline" size={iconSizes.sm} color={colors.primary} />
-              <Text style={[styles.postActionCount, { color: colors.primary }]}>
-                {post.commentCount > 0 ? post.commentCount : ""}
-              </Text>
+            {(post.imageBase64 || post.imageUrl) && (
+              <View style={styles.postImageWrap}>
+                <Image
+                  source={{ uri: post.imageBase64 ?? post.imageUrl ?? "" }}
+                  style={styles.postImage}
+                  resizeMode="cover"
+                />
+              </View>
+            )}
+            <Text style={styles.postContent}>{post.content}</Text>
+            <View style={styles.postActionsRow}>
+              <Pressable onPress={handleToggleLike} style={styles.postAction}>
+                <Ionicons
+                  name={post.isLiked ? "heart" : "heart-outline"}
+                  size={iconSizes.sm}
+                  color={post.isLiked ? colors.error : colors.textTertiary}
+                />
+                <Text style={[styles.postActionCount, post.isLiked && { color: colors.error }]}>
+                  {post.likeCount > 0 ? post.likeCount : ""}
+                </Text>
+              </Pressable>
+              <View style={styles.postAction}>
+                <Ionicons name="chatbubble-outline" size={iconSizes.sm} color={colors.primary} />
+                <Text style={[styles.postActionCount, { color: colors.primary }]}>
+                  {post.commentCount > 0 ? post.commentCount : ""}
+                </Text>
+              </View>
             </View>
-          </View>
-        </Card>
+          </Card>
+        </Pressable>
 
         {/* Comments section */}
         <Text style={styles.sectionLabel}>
@@ -278,29 +402,20 @@ export default function PostDetailScreen() {
         ) : (
           <>
             {comments.map((comment) => (
-              <View key={comment.id} style={styles.commentItem}>
-                <Avatar name={comment.author.displayName} size="sm" />
-                <View style={styles.commentContent}>
-                  <View style={styles.commentHeader}>
-                    <Text style={styles.commentAuthor}>{comment.author.displayName}</Text>
-                    <View style={styles.commentHeaderRight}>
+              <Pressable key={comment.id} onLongPress={() => handleCommentLongPress(comment)}>
+                <View style={styles.commentItem}>
+                  <Avatar name={comment.author.displayName} size="sm" />
+                  <View style={styles.commentContent}>
+                    <View style={styles.commentHeader}>
+                      <Text style={styles.commentAuthor}>{comment.author.displayName}</Text>
                       <Text style={styles.commentTime}>
                         {formatRelativeTime(comment.createdAt)}
                       </Text>
-                      {user?.id === comment.author.id && (
-                        <Pressable
-                          onPress={() => handleDeleteComment(comment.id)}
-                          hitSlop={8}
-                          style={styles.commentDeleteBtn}
-                        >
-                          <Ionicons name="trash-outline" size={14} color={colors.textTertiary} />
-                        </Pressable>
-                      )}
                     </View>
+                    <Text style={styles.commentText}>{comment.content}</Text>
                   </View>
-                  <Text style={styles.commentText}>{comment.content}</Text>
                 </View>
-              </View>
+              </Pressable>
             ))}
             {cursor && (
               <Pressable onPress={loadMoreComments} style={styles.loadMoreBtn}>
@@ -340,6 +455,24 @@ export default function PostDetailScreen() {
           )}
         </Pressable>
       </View>
+
+      {/* Long-press Action Sheet */}
+      <ActionSheet
+        visible={actionSheetVisible}
+        onClose={() => setActionSheetVisible(false)}
+        actions={actionSheetItems}
+      />
+
+      {/* Report reason picker */}
+      <ActionSheet
+        visible={reportSheetVisible}
+        onClose={() => {
+          setReportSheetVisible(false);
+          setReportTarget(null);
+        }}
+        actions={reportReasons}
+        title={t("community.selectReportReason")}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -405,6 +538,30 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     marginTop: 1,
   },
+  postTypeTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 4,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radii.pill,
+    marginBottom: spacing.sm,
+  },
+  postTypeTagText: {
+    fontSize: 11,
+    fontFamily: "SourceSerif4_600SemiBold",
+  },
+  postImageWrap: {
+    borderRadius: radii.md,
+    overflow: "hidden",
+    marginBottom: spacing.sm,
+  },
+  postImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: radii.md,
+  },
   postContent: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
@@ -459,14 +616,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 4,
-  },
-  commentHeaderRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  commentDeleteBtn: {
-    padding: 2,
   },
   commentAuthor: {
     fontSize: 13,

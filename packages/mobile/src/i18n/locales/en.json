@@ -199,6 +199,7 @@
     "mood": "Mood",
     "tip": "Tip",
     "photo": "Photo",
+    "addPhoto": "Tap to add a photo",
     "createPost": "Create Post",
     "post": "Post",
     "create": "Create",
@@ -228,7 +229,26 @@
     "leaveGroupMessage": "You will no longer see posts from this group.",
     "leaveGroup": "Leave",
     "leaveGroupError": "Failed to leave group. Please try again.",
-    "leave": "Leave"
+    "leave": "Leave",
+    "report": "Report",
+    "reportPostTitle": "Report Post",
+    "reportPostMessage": "Are you sure you want to report this post? Our team will review it.",
+    "reportCommentTitle": "Report Comment",
+    "reportCommentMessage": "Are you sure you want to report this comment? Our team will review it.",
+    "reportSubmitted": "Report Submitted",
+    "reportSubmittedMessage": "Thank you. Our team will review this content shortly.",
+    "reportReasons": {
+      "spam": "Spam",
+      "harassment": "Harassment",
+      "hate_speech": "Hate Speech",
+      "self_harm": "Self-Harm Concern",
+      "misinformation": "Misinformation",
+      "inappropriate": "Inappropriate Content",
+      "other": "Other"
+    },
+    "selectReportReason": "Why are you reporting this?",
+    "alreadyReported": "You have already reported this content.",
+    "reportFailed": "Failed to submit report. Please try again."
   },
   "charts": {
     "moodDistribution": "MOOD DISTRIBUTION",
@@ -310,7 +330,9 @@
     "removePhoto": "Remove Photo",
     "reminderPickTime": "Choose a time for your daily mood reminder.",
     "reminderPermissionDenied": "Please enable notifications in your device settings to use reminders.",
-    "themePickMessage": "Choose your preferred appearance."
+    "themePickMessage": "Choose your preferred appearance.",
+    "sectionAdmin": "ADMIN",
+    "moderation": "Moderation"
   },
   "faq": {
     "title": "Help & FAQ",
@@ -349,6 +371,36 @@
     "title": "Notifications",
     "empty": "No notifications yet",
     "emptySubtitle": "When someone likes or comments on your posts, you'll see it here."
+  },
+  "admin": {
+    "title": "Moderation",
+    "pending": "Pending",
+    "all": "All",
+    "actioned": "Actioned",
+    "dismissed": "Dismissed",
+    "noReports": "No reports",
+    "noReportsMessage": "All clear! No reports to review.",
+    "loadMore": "Load more",
+    "loadError": "Failed to load reports.",
+    "actionError": "Failed to perform action.",
+    "takeAction": "Choose an action",
+    "dismiss": "Dismiss",
+    "removeContent": "Remove Content",
+    "suspendUser": "Suspend User",
+    "banUser": "Ban User",
+    "confirmRemove": "Remove Content?",
+    "confirmRemoveMessage": "This will permanently delete the reported content.",
+    "confirmBan": "Ban User?",
+    "confirmBanMessage": "This will permanently ban the user from the platform.",
+    "suspendDays": "Suspend Duration",
+    "suspendDaysMessage": "How many days should this user be suspended?",
+    "invalidDays": "Please enter a valid number of days (1–365).",
+    "userUnbanned": "User has been unbanned.",
+    "reportResolved": "Report Already Resolved",
+    "action": "Action",
+    "note": "Note",
+    "by": "by",
+    "reportedBy": "Reported by"
   },
   "errors": {
     "somethingWrong": "Something went wrong",

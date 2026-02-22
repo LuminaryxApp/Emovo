@@ -23,6 +23,7 @@ export const posts = pgTable(
     moodScore: integer("mood_score"),
     type: varchar("type", { length: 20 }).notNull().default("mood_update"),
     imageUrl: varchar("image_url", { length: 500 }),
+    imageBase64: text("image_base64"),
     likeCount: integer("like_count").notNull().default(0),
     commentCount: integer("comment_count").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),

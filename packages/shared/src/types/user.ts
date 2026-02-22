@@ -9,6 +9,9 @@ export interface User {
   avatarBase64: string | null;
   reminderTime: string | null;
   themePreference: string;
+  isAdmin: boolean;
+  bannedAt: string | null;
+  suspendedUntil: string | null;
   createdAt: string;
   updatedAt: string;
 }

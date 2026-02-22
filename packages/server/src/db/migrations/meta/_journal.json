@@ -8,6 +8,20 @@
       "when": 1771700000000,
       "tag": "0001_add_profile_and_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771800000000,
+      "tag": "0002_add_post_image_base64",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771900000000,
+      "tag": "0003_add_moderation",
+      "breakpoints": true
     }
   ]
 }

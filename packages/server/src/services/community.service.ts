@@ -62,7 +62,7 @@ export class CommunityService {
         content: input.content,
         moodScore: input.moodScore ?? null,
         type: input.type,
-        imageUrl: input.imageUrl ?? null,
+        imageBase64: input.imageBase64 ?? null,
       })
       .returning();
 

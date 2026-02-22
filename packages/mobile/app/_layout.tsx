@@ -72,6 +72,7 @@ function AppContent() {
         <Stack.Screen name="post/[id]" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="backup-sync" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="notifications" options={{ animation: "slide_from_right" }} />
+        <Stack.Screen name="admin" options={{ animation: "slide_from_right" }} />
       </Stack>
     </>
   );

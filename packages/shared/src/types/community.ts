@@ -5,6 +5,7 @@ export interface Post {
   moodScore: number | null;
   type: "mood_update" | "tip" | "photo";
   imageUrl: string | null;
+  imageBase64: string | null;
   likeCount: number;
   commentCount: number;
   createdAt: string;
@@ -84,4 +85,42 @@ export interface Message {
   content: string;
   type: "text" | "image" | "system";
   createdAt: string;
+}
+
+export type ReportTargetType = "post" | "comment" | "message" | "user";
+export type ReportReason =
+  | "spam"
+  | "harassment"
+  | "hate_speech"
+  | "self_harm"
+  | "misinformation"
+  | "inappropriate"
+  | "other";
+export type ReportStatus = "pending" | "reviewed" | "actioned" | "dismissed";
+export type ReportAction =
+  | "none"
+  | "content_removed"
+  | "user_warned"
+  | "user_suspended"
+  | "user_banned";
+
+export interface Report {
+  id: string;
+  reporterId: string;
+  targetType: ReportTargetType;
+  targetId: string;
+  reason: ReportReason;
+  description: string | null;
+  status: ReportStatus;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  actionTaken: ReportAction | null;
+  adminNote: string | null;
+  createdAt: string;
+}
+
+export interface ReportWithContext extends Report {
+  reporter: { id: string; displayName: string };
+  targetContent?: string;
+  targetAuthor?: { id: string; displayName: string };
 }
