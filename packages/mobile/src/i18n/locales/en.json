@@ -162,20 +162,12 @@
     "avgMood": "Average mood",
     "outOf5": "out of 5",
     "moodDistribution": "Distribution",
-    "aiInsights": "AI Insights",
-    "aiInsightsSubtitle": "Personalized takeaways from your mood data",
+    "aiInsights": "Your Insights",
+    "aiInsightsSubtitle": "Patterns and takeaways from your mood data",
     "periodHint": {
       "week": "Showing data from the last 7 days",
       "month": "Showing data from the last 30 days",
       "year": "Showing data from the last 12 months"
-    },
-    "aiCard": {
-      "morningTitle": "Morning routine matters",
-      "morningDesc": "Your mood tends to be higher on days you log before 10 AM. A consistent morning check-in could help.",
-      "trendTitle": "Positive trend",
-      "trendDesc": "Your average mood has improved over the past two weeks. Keep up the great work!",
-      "selfCareTitle": "Self-care reminder",
-      "selfCareDesc": "Weekends show lower activity. Consider setting a gentle reminder to check in with yourself."
     },
     "periods": {
       "week": "Week",

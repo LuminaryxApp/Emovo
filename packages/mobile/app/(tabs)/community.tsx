@@ -515,7 +515,10 @@ export default function CommunityScreen() {
 
     return (
       <Animated.View key={post.id} entering={FadeInDown.delay(150 + index * 60).duration(400)}>
-        <Pressable onLongPress={() => handlePostLongPress(post.id, isOwnPost)}>
+        <Pressable
+          onPress={() => handleOpenComments(post.id)}
+          onLongPress={() => handlePostLongPress(post.id, isOwnPost)}
+        >
           <Card variant="elevated" padding="md" style={styles.postCard}>
             {/* Author row */}
             <View style={styles.postAuthorRow}>

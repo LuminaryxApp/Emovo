@@ -1,7 +1,7 @@
 import { MOOD_SCALE } from "@emovo/shared";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
@@ -62,30 +62,160 @@ export default function InsightsScreen() {
     });
   };
 
-  // AI Insights placeholder data
-  const aiInsights = [
-    {
-      icon: "bulb-outline" as const,
-      color: colors.primary,
-      bgColor: "rgba(117, 134, 60, 0.12)",
-      title: t("insights.aiCard.morningTitle"),
-      description: t("insights.aiCard.morningDesc"),
-    },
-    {
-      icon: "trending-up-outline" as const,
-      color: colors.success,
-      bgColor: "rgba(117, 134, 60, 0.12)",
-      title: t("insights.aiCard.trendTitle"),
-      description: t("insights.aiCard.trendDesc"),
-    },
-    {
-      icon: "heart-outline" as const,
-      color: colors.accent,
-      bgColor: "rgba(111, 152, 184, 0.12)",
-      title: t("insights.aiCard.selfCareTitle"),
-      description: t("insights.aiCard.selfCareDesc"),
-    },
-  ];
+  // Compute insights from actual data
+  const computedInsights = useMemo(() => {
+    const insights: Array<{
+      icon: keyof typeof Ionicons.glyphMap;
+      color: string;
+      bgColor: string;
+      title: string;
+      description: string;
+    }> = [];
+
+    if (!summary || summary.entryCount === 0) return insights;
+
+    // 1. Mood trend insight (from trend data)
+    if (trend && trend.dataPoints.length >= 2) {
+      const pts = trend.dataPoints;
+      const recentHalf = pts.slice(Math.floor(pts.length / 2));
+      const olderHalf = pts.slice(0, Math.floor(pts.length / 2));
+      const recentAvg = recentHalf.reduce((s, p) => s + p.avgMood, 0) / recentHalf.length;
+      const olderAvg = olderHalf.reduce((s, p) => s + p.avgMood, 0) / olderHalf.length;
+      const diff = recentAvg - olderAvg;
+
+      if (Math.abs(diff) >= 0.3) {
+        const improving = diff > 0;
+        insights.push({
+          icon: improving ? "trending-up-outline" : "trending-down-outline",
+          color: improving ? colors.success : colors.error,
+          bgColor: improving ? "rgba(117, 134, 60, 0.12)" : "rgba(220, 38, 38, 0.12)",
+          title: improving
+            ? t("insights.computed.trendUpTitle", "Mood is improving")
+            : t("insights.computed.trendDownTitle", "Mood has dipped"),
+          description: improving
+            ? t(
+                "insights.computed.trendUpDesc",
+                "Your average mood has been trending upward recently. Keep doing what works for you!",
+              )
+            : t(
+                "insights.computed.trendDownDesc",
+                "Your mood has been lower recently. Be gentle with yourself and consider what might help.",
+              ),
+        });
+      } else {
+        insights.push({
+          icon: "analytics-outline",
+          color: colors.primary,
+          bgColor: "rgba(117, 134, 60, 0.12)",
+          title: t("insights.computed.stableTitle", "Mood is steady"),
+          description: t(
+            "insights.computed.stableDesc",
+            "Your mood has been fairly consistent. Stability is a sign of good emotional balance.",
+          ),
+        });
+      }
+    }
+
+    // 2. Top trigger insight
+    if (triggers.length > 0) {
+      const topTrigger = triggers[0];
+      insights.push({
+        icon: "bulb-outline",
+        color: colors.primary,
+        bgColor: "rgba(117, 134, 60, 0.12)",
+        title: t("insights.computed.topTriggerTitle", "Top factor: {{name}}", {
+          name: topTrigger.trigger.name,
+        }),
+        description:
+          topTrigger.avgMood >= 3.5
+            ? t(
+                "insights.computed.topTriggerPositive",
+                '"{{name}}" appears most often and is linked to a positive mood (avg {{avg}}). It seems to be good for you!',
+                { name: topTrigger.trigger.name, avg: topTrigger.avgMood.toFixed(1) },
+              )
+            : t(
+                "insights.computed.topTriggerNegative",
+                '"{{name}}" appears most often and is linked to a lower mood (avg {{avg}}). You may want to reflect on this pattern.',
+                { name: topTrigger.trigger.name, avg: topTrigger.avgMood.toFixed(1) },
+              ),
+      });
+    }
+
+    // 3. Distribution insight — predominant mood
+    if (summary.moodDistribution) {
+      const total = summary.entryCount;
+      const highMood = (summary.moodDistribution[4] || 0) + (summary.moodDistribution[5] || 0);
+      const lowMood = (summary.moodDistribution[1] || 0) + (summary.moodDistribution[2] || 0);
+      const highPct = Math.round((highMood / total) * 100);
+      const lowPct = Math.round((lowMood / total) * 100);
+
+      if (highPct >= 60) {
+        insights.push({
+          icon: "sunny-outline",
+          color: colors.success,
+          bgColor: "rgba(117, 134, 60, 0.12)",
+          title: t("insights.computed.mostlyPositiveTitle", "Mostly positive"),
+          description: t(
+            "insights.computed.mostlyPositiveDesc",
+            "{{pct}}% of your entries this period are positive (4-5). You're in a good place!",
+            { pct: highPct },
+          ),
+        });
+      } else if (lowPct >= 60) {
+        insights.push({
+          icon: "heart-outline",
+          color: colors.accent,
+          bgColor: "rgba(111, 152, 184, 0.12)",
+          title: t("insights.computed.mostlyLowTitle", "Tough period"),
+          description: t(
+            "insights.computed.mostlyLowDesc",
+            "{{pct}}% of your entries this period are on the lower side (1-2). Remember, tracking is the first step to understanding.",
+            { pct: lowPct },
+          ),
+        });
+      } else {
+        insights.push({
+          icon: "swap-horizontal-outline",
+          color: colors.accent,
+          bgColor: "rgba(111, 152, 184, 0.12)",
+          title: t("insights.computed.mixedTitle", "Mixed emotions"),
+          description: t(
+            "insights.computed.mixedDesc",
+            "Your moods have been varied this period. That's completely normal — emotions naturally fluctuate.",
+          ),
+        });
+      }
+    }
+
+    // 4. Entry count / consistency insight
+    if (period === "week" && summary.entryCount < 4) {
+      insights.push({
+        icon: "calendar-outline",
+        color: colors.textSecondary,
+        bgColor: "rgba(0, 0, 0, 0.06)",
+        title: t("insights.computed.logMoreTitle", "Log more often"),
+        description: t(
+          "insights.computed.logMoreDesc",
+          "You logged {{count}} times this week. Try to log daily for more accurate insights.",
+          { count: summary.entryCount },
+        ),
+      });
+    } else if (period === "week" && summary.entryCount >= 6) {
+      insights.push({
+        icon: "checkmark-circle-outline",
+        color: colors.success,
+        bgColor: "rgba(117, 134, 60, 0.12)",
+        title: t("insights.computed.consistentTitle", "Great consistency"),
+        description: t(
+          "insights.computed.consistentDesc",
+          "You logged {{count}} times this week. Consistent tracking leads to better self-awareness.",
+          { count: summary.entryCount },
+        ),
+      });
+    }
+
+    return insights;
+  }, [summary, trend, triggers, period, t]);
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
@@ -218,32 +348,34 @@ export default function InsightsScreen() {
               </Animated.View>
             )}
 
-            {/* AI Insights Section */}
-            <Animated.View entering={FadeInDown.delay(700).springify()} style={styles.aiSection}>
-              <Text style={styles.sectionTitle}>{t("insights.aiInsights")}</Text>
-              <Text style={styles.sectionSubtitle}>{t("insights.aiInsightsSubtitle")}</Text>
+            {/* Data-Driven Insights Section */}
+            {computedInsights.length > 0 && (
+              <Animated.View entering={FadeInDown.delay(700).springify()} style={styles.aiSection}>
+                <Text style={styles.sectionTitle}>{t("insights.aiInsights")}</Text>
+                <Text style={styles.sectionSubtitle}>{t("insights.aiInsightsSubtitle")}</Text>
 
-              {aiInsights.map((insight, index) => (
-                <Animated.View
-                  key={insight.title}
-                  entering={FadeInDown.delay(750 + index * 80).springify()}
-                >
-                  <Card variant="elevated" padding="md" style={styles.insightCard}>
-                    <View style={styles.insightRow}>
-                      <View
-                        style={[styles.insightIconCircle, { backgroundColor: insight.bgColor }]}
-                      >
-                        <Ionicons name={insight.icon} size={iconSizes.md} color={insight.color} />
+                {computedInsights.map((insight, index) => (
+                  <Animated.View
+                    key={insight.title}
+                    entering={FadeInDown.delay(750 + index * 80).springify()}
+                  >
+                    <Card variant="elevated" padding="md" style={styles.insightCard}>
+                      <View style={styles.insightRow}>
+                        <View
+                          style={[styles.insightIconCircle, { backgroundColor: insight.bgColor }]}
+                        >
+                          <Ionicons name={insight.icon} size={iconSizes.md} color={insight.color} />
+                        </View>
+                        <View style={styles.insightTextWrap}>
+                          <Text style={styles.insightTitle}>{insight.title}</Text>
+                          <Text style={styles.insightDesc}>{insight.description}</Text>
+                        </View>
                       </View>
-                      <View style={styles.insightTextWrap}>
-                        <Text style={styles.insightTitle}>{insight.title}</Text>
-                        <Text style={styles.insightDesc}>{insight.description}</Text>
-                      </View>
-                    </View>
-                  </Card>
-                </Animated.View>
-              ))}
-            </Animated.View>
+                    </Card>
+                  </Animated.View>
+                ))}
+              </Animated.View>
+            )}
           </>
         ) : (
           <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.emptyContainer}>

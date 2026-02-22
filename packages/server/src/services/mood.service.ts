@@ -3,12 +3,12 @@ import { randomUUID } from "node:crypto";
 import type { CreateMoodInput, UpdateMoodInput } from "@emovo/shared";
 import { eq, and, sql, desc, lt, gte, inArray } from "drizzle-orm";
 
-import { db } from "../config/database.js";
+import { db, client } from "../config/database.js";
 import { entryTriggers } from "../db/schema/entry-triggers.js";
 import { moodEntries } from "../db/schema/mood-entries.js";
 import { triggers } from "../db/schema/triggers.js";
 import { users } from "../db/schema/users.js";
-import { NotFoundError } from "../utils/errors.js";
+import { ConflictError, NotFoundError } from "../utils/errors.js";
 import { encodeCursor, decodeCursor } from "../utils/pagination.js";
 
 import { encryptNote, decryptNote } from "./encryption.service.js";
@@ -30,9 +30,9 @@ export class MoodService {
    * On conflict: returns existing entry (no error).
    */
   async createEntry(userId: string, input: CreateMoodInput): Promise<MoodEntryResult> {
-    // Get user's encryption key version
+    // Get user's encryption key version and timezone
     const [user] = await db
-      .select({ encryptionKeyVersion: users.encryptionKeyVersion })
+      .select({ encryptionKeyVersion: users.encryptionKeyVersion, timezone: users.timezone })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
@@ -51,6 +51,19 @@ export class MoodService {
     if (existing) {
       // Return the existing entry
       return this.getEntry(userId, existing.id);
+    }
+
+    // Enforce one mood entry per calendar day (in user's timezone)
+    const tz = user.timezone || "UTC";
+    const loggedAtDate = input.loggedAt ? new Date(input.loggedAt) : new Date();
+    const [existingToday] = await client`
+      SELECT id FROM mood_entries
+      WHERE user_id = ${userId}
+        AND DATE(logged_at AT TIME ZONE ${tz}) = DATE(${loggedAtDate.toISOString()}::timestamptz AT TIME ZONE ${tz})
+      LIMIT 1
+    `;
+    if (existingToday) {
+      throw new ConflictError("You have already logged a mood for today");
     }
 
     const entryId = randomUUID();

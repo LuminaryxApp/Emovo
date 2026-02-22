@@ -72,11 +72,20 @@ export default function LogMoodScreen() {
           : t("mood.savedOffline", "Saved offline, will sync later"),
       });
       router.back();
-    } catch {
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      const serverMsg = (err as { response?: { data?: { error?: { message?: string } } } })
+        ?.response?.data?.error?.message;
       Toast.show({
         type: "error",
-        text1: t("errors.somethingWrong", "Something went wrong"),
-        text2: t("errors.tryAgain", "Please try again"),
+        text1:
+          status === 409
+            ? t("mood.alreadyLogged", "Already logged today")
+            : t("errors.somethingWrong", "Something went wrong"),
+        text2:
+          status === 409
+            ? serverMsg || t("mood.alreadyLoggedDesc", "You can only log one mood per day")
+            : t("errors.tryAgain", "Please try again"),
       });
     } finally {
       setIsSubmitting(false);

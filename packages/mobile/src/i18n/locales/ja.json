@@ -162,20 +162,12 @@
     "avgMood": "平均気分",
     "outOf5": "5段階中",
     "moodDistribution": "分布",
-    "aiInsights": "AI分析",
-    "aiInsightsSubtitle": "あなたの気分データからのパーソナライズされた分析",
+    "aiInsights": "あなたの気づき",
+    "aiInsightsSubtitle": "気分データからのパターンと発見",
     "periodHint": {
       "week": "過去7日間のデータを表示中",
       "month": "過去30日間のデータを表示中",
       "year": "過去12ヶ月のデータを表示中"
-    },
-    "aiCard": {
-      "morningTitle": "朝のルーティンが大切",
-      "morningDesc": "午前10時前に記録する日は気分が良い傾向があります。",
-      "trendTitle": "ポジティブな傾向",
-      "trendDesc": "過去2週間で平均気分が向上しています。この調子で続けましょう！",
-      "selfCareTitle": "セルフケアのリマインダー",
-      "selfCareDesc": "週末は活動が少なめです。優しいリマインダーを設定してみませんか。"
     },
     "periods": {
       "week": "週",

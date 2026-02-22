@@ -162,20 +162,12 @@
     "avgMood": "Ánimo promedio",
     "outOf5": "de 5",
     "moodDistribution": "Distribución",
-    "aiInsights": "Análisis IA",
-    "aiInsightsSubtitle": "Conclusiones personalizadas de tus datos de ánimo",
+    "aiInsights": "Tus perspectivas",
+    "aiInsightsSubtitle": "Patrones y conclusiones de tus datos de ánimo",
     "periodHint": {
       "week": "Mostrando datos de los últimos 7 días",
       "month": "Mostrando datos de los últimos 30 días",
       "year": "Mostrando datos de los últimos 12 meses"
-    },
-    "aiCard": {
-      "morningTitle": "La rutina matutina importa",
-      "morningDesc": "Tu ánimo tiende a ser más alto los días que registras antes de las 10 AM.",
-      "trendTitle": "Tendencia positiva",
-      "trendDesc": "Tu ánimo promedio ha mejorado en las últimas dos semanas. ¡Sigue así!",
-      "selfCareTitle": "Recordatorio de autocuidado",
-      "selfCareDesc": "Los fines de semana muestran menos actividad. Considera ponerte un recordatorio suave."
     },
     "periods": {
       "week": "Semana",

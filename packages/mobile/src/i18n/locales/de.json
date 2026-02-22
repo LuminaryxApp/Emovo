@@ -162,20 +162,12 @@
     "avgMood": "Durchschnittliche Stimmung",
     "outOf5": "von 5",
     "moodDistribution": "Verteilung",
-    "aiInsights": "KI-Auswertungen",
-    "aiInsightsSubtitle": "Personalisierte Erkenntnisse aus deinen Stimmungsdaten",
+    "aiInsights": "Deine Einblicke",
+    "aiInsightsSubtitle": "Muster und Erkenntnisse aus deinen Stimmungsdaten",
     "periodHint": {
       "week": "Daten der letzten 7 Tage",
       "month": "Daten der letzten 30 Tage",
       "year": "Daten der letzten 12 Monate"
-    },
-    "aiCard": {
-      "morningTitle": "Morgenroutine zählt",
-      "morningDesc": "Deine Stimmung ist tendenziell besser an Tagen, an denen du vor 10 Uhr einträgst.",
-      "trendTitle": "Positiver Trend",
-      "trendDesc": "Deine durchschnittliche Stimmung hat sich in den letzten zwei Wochen verbessert. Weiter so!",
-      "selfCareTitle": "Selbstfürsorge-Erinnerung",
-      "selfCareDesc": "Am Wochenende zeigt sich weniger Aktivität. Setze dir eine sanfte Erinnerung."
     },
     "periods": {
       "week": "Woche",

@@ -162,20 +162,12 @@
     "avgMood": "Humeur moyenne",
     "outOf5": "sur 5",
     "moodDistribution": "Répartition",
-    "aiInsights": "Analyses IA",
-    "aiInsightsSubtitle": "Conclusions personnalisées tirées de vos données d'humeur",
+    "aiInsights": "Vos aperçus",
+    "aiInsightsSubtitle": "Tendances et enseignements de vos données d'humeur",
     "periodHint": {
       "week": "Données des 7 derniers jours",
       "month": "Données des 30 derniers jours",
       "year": "Données des 12 derniers mois"
-    },
-    "aiCard": {
-      "morningTitle": "La routine matinale compte",
-      "morningDesc": "Votre humeur tend à être meilleure les jours où vous enregistrez avant 10h.",
-      "trendTitle": "Tendance positive",
-      "trendDesc": "Votre humeur moyenne s'est améliorée ces deux dernières semaines. Continuez !",
-      "selfCareTitle": "Rappel de bien-être",
-      "selfCareDesc": "Les week-ends montrent moins d'activité. Pensez à vous accorder un moment pour vous."
     },
     "periods": {
       "week": "Semaine",

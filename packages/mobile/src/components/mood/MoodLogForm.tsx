@@ -60,11 +60,18 @@ export function MoodLogForm() {
       setMoodScore(null);
       setSelectedTriggerIds([]);
       setNote("");
-    } catch {
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      const serverMsg = (err as { response?: { data?: { error?: { message?: string } } } })
+        ?.response?.data?.error?.message;
       Toast.show({
         type: "error",
-        text1: t("mood.logFailed"),
-        text2: t("mood.logFailedSubtitle"),
+        text1:
+          status === 409 ? t("mood.alreadyLogged", "Already logged today") : t("mood.logFailed"),
+        text2:
+          status === 409
+            ? serverMsg || t("mood.alreadyLoggedDesc", "You can only log one mood per day")
+            : t("mood.logFailedSubtitle"),
       });
     } finally {
       setIsSubmitting(false);

@@ -162,20 +162,12 @@
     "avgMood": "平均心情",
     "outOf5": "满分5分",
     "moodDistribution": "分布",
-    "aiInsights": "AI分析",
-    "aiInsightsSubtitle": "从您的心情数据中得出的个性化见解",
+    "aiInsights": "你的洞察",
+    "aiInsightsSubtitle": "来自你情绪数据的模式和发现",
     "periodHint": {
       "week": "显示最近7天的数据",
       "month": "显示最近30天的数据",
       "year": "显示最近12个月的数据"
-    },
-    "aiCard": {
-      "morningTitle": "早晨习惯很重要",
-      "morningDesc": "在上午10点前记录的日子里，你的心情往往更好。",
-      "trendTitle": "积极趋势",
-      "trendDesc": "你的平均心情在过去两周有所改善。继续保持！",
-      "selfCareTitle": "自我关爱提醒",
-      "selfCareDesc": "周末活动较少。考虑设置一个温柔的提醒来关注自己的状态。"
     },
     "periods": {
       "week": "周",

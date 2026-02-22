@@ -1,4 +1,5 @@
 import type { User, UserProfile } from "@emovo/shared";
+import { getCalendars } from "expo-localization";
 import { create } from "zustand";
 
 import { getOrCreateDeviceId, getDeviceName } from "../lib/device-id";
@@ -30,6 +31,19 @@ interface AuthState {
   setUser: (user: User) => void;
 }
 
+/** Sync device timezone to server if it differs from what the server has */
+async function syncTimezone(serverTimezone: string | undefined) {
+  try {
+    const deviceTz =
+      getCalendars()[0]?.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (deviceTz && deviceTz !== serverTimezone) {
+      await updateProfileApi({ timezone: deviceTz });
+    }
+  } catch {
+    // Non-critical — don't block login/hydrate
+  }
+}
+
 export const useAuthStore = create<AuthState>((set, _get) => ({
   user: null,
   isAuthenticated: false,
@@ -54,6 +68,9 @@ export const useAuthStore = create<AuthState>((set, _get) => ({
         isLoading: false,
         error: null,
       });
+
+      // Sync device timezone to server in background
+      syncTimezone(result.user.timezone);
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
@@ -148,6 +165,9 @@ export const useAuthStore = create<AuthState>((set, _get) => ({
         isAuthenticated: true,
         isLoading: false,
       });
+
+      // Sync device timezone to server in background
+      syncTimezone(user.timezone);
     } catch {
       // Refresh failed — clear everything
       setAccessToken(null);

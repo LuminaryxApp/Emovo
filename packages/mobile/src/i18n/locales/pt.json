@@ -162,20 +162,12 @@
     "avgMood": "Humor médio",
     "outOf5": "de 5",
     "moodDistribution": "Distribuição",
-    "aiInsights": "Análises IA",
-    "aiInsightsSubtitle": "Conclusões personalizadas dos seus dados de humor",
+    "aiInsights": "Seus insights",
+    "aiInsightsSubtitle": "Padrões e conclusões dos seus dados de humor",
     "periodHint": {
       "week": "Mostrando dados dos últimos 7 dias",
       "month": "Mostrando dados dos últimos 30 dias",
       "year": "Mostrando dados dos últimos 12 meses"
-    },
-    "aiCard": {
-      "morningTitle": "A rotina matinal importa",
-      "morningDesc": "Seu humor tende a ser melhor nos dias em que você registra antes das 10h.",
-      "trendTitle": "Tendência positiva",
-      "trendDesc": "Seu humor médio melhorou nas últimas duas semanas. Continue assim!",
-      "selfCareTitle": "Lembrete de autocuidado",
-      "selfCareDesc": "Os fins de semana mostram menos atividade. Considere definir um lembrete gentil."
     },
     "periods": {
       "week": "Semana",
