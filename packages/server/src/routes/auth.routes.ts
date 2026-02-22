@@ -18,7 +18,8 @@ import { users } from "../db/schema/users.js";
 import { getT } from "../i18n/config.js";
 import { AuthService } from "../services/auth.service.js";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../services/email.service.js";
-import { UnauthorizedError } from "../utils/errors.js";
+import { isUsernameBlocked } from "../utils/blocked-usernames.js";
+import { UnauthorizedError, ConflictError, ValidationError } from "../utils/errors.js";
 
 export async function authRoutes(fastify: FastifyInstance) {
   const authService = new AuthService(fastify);
@@ -41,6 +42,24 @@ export async function authRoutes(fastify: FastifyInstance) {
     const body = registerSchema.parse(request.body);
     const lang = body.preferredLanguage || "en";
     const t = getT(lang);
+
+    // Validate username if provided
+    if (body.username) {
+      const blocked = isUsernameBlocked(body.username);
+      if (blocked.blocked) {
+        throw new ValidationError("This username is not allowed");
+      }
+
+      const [existingUsername] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.username, body.username))
+        .limit(1);
+
+      if (existingUsername) {
+        throw new ConflictError("This username is already taken");
+      }
+    }
 
     // Check if user already exists
     const [existingUser] = await db
@@ -69,6 +88,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         email: body.email,
         passwordHash,
         displayName: body.displayName,
+        username: body.username || null,
         preferredLanguage: lang,
       })
       .returning({ id: users.id });
@@ -95,9 +115,17 @@ export async function authRoutes(fastify: FastifyInstance) {
         email: users.email,
         emailVerified: users.emailVerified,
         displayName: users.displayName,
+        username: users.username,
+        showRealName: users.showRealName,
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
         preferredLanguage: users.preferredLanguage,
+        avatarBase64: users.avatarBase64,
+        reminderTime: users.reminderTime,
+        themePreference: users.themePreference,
+        isAdmin: users.isAdmin,
+        bannedAt: users.bannedAt,
+        suspendedUntil: users.suspendedUntil,
         tokenVersion: users.tokenVersion,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
@@ -120,9 +148,17 @@ export async function authRoutes(fastify: FastifyInstance) {
           email: user.email,
           emailVerified: user.emailVerified,
           displayName: user.displayName,
+          username: user.username,
+          showRealName: user.showRealName,
           timezone: user.timezone,
           notificationsEnabled: user.notificationsEnabled,
           preferredLanguage: user.preferredLanguage,
+          avatarBase64: user.avatarBase64,
+          reminderTime: user.reminderTime,
+          themePreference: user.themePreference,
+          isAdmin: user.isAdmin,
+          bannedAt: user.bannedAt?.toISOString() ?? null,
+          suspendedUntil: user.suspendedUntil?.toISOString() ?? null,
           createdAt: user.createdAt.toISOString(),
           updatedAt: user.updatedAt.toISOString(),
         },
@@ -288,9 +324,17 @@ export async function authRoutes(fastify: FastifyInstance) {
         emailVerified: users.emailVerified,
         passwordHash: users.passwordHash,
         displayName: users.displayName,
+        username: users.username,
+        showRealName: users.showRealName,
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
         preferredLanguage: users.preferredLanguage,
+        avatarBase64: users.avatarBase64,
+        reminderTime: users.reminderTime,
+        themePreference: users.themePreference,
+        isAdmin: users.isAdmin,
+        bannedAt: users.bannedAt,
+        suspendedUntil: users.suspendedUntil,
         tokenVersion: users.tokenVersion,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
@@ -341,9 +385,17 @@ export async function authRoutes(fastify: FastifyInstance) {
           email: user.email,
           emailVerified: user.emailVerified,
           displayName: user.displayName,
+          username: user.username,
+          showRealName: user.showRealName,
           timezone: user.timezone,
           notificationsEnabled: user.notificationsEnabled,
           preferredLanguage: user.preferredLanguage,
+          avatarBase64: user.avatarBase64,
+          reminderTime: user.reminderTime,
+          themePreference: user.themePreference,
+          isAdmin: user.isAdmin,
+          bannedAt: user.bannedAt?.toISOString() ?? null,
+          suspendedUntil: user.suspendedUntil?.toISOString() ?? null,
           createdAt: user.createdAt.toISOString(),
           updatedAt: user.updatedAt.toISOString(),
         },

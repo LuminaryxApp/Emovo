@@ -19,6 +19,7 @@ interface AuthState {
     password: string,
     displayName: string,
     preferredLanguage?: string,
+    username?: string,
   ) => Promise<string>;
   logout: () => Promise<void>;
   logoutAll: () => Promise<void>;
@@ -67,10 +68,11 @@ export const useAuthStore = create<AuthState>((set, _get) => ({
     password: string,
     displayName: string,
     preferredLanguage?: string,
+    username?: string,
   ) => {
     set({ isLoading: true, error: null });
     try {
-      const result = await registerApi(email, password, displayName, preferredLanguage);
+      const result = await registerApi(email, password, displayName, preferredLanguage, username);
       set({ isLoading: false });
       return result.message;
     } catch (err: unknown) {

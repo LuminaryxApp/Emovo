@@ -67,7 +67,11 @@ export class CommunityService {
       .returning();
 
     const [author] = await db
-      .select({ displayName: users.displayName })
+      .select({
+        displayName: users.displayName,
+        username: users.username,
+        showRealName: users.showRealName,
+      })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
@@ -76,7 +80,12 @@ export class CommunityService {
       ...post,
       createdAt: post.createdAt.toISOString(),
       updatedAt: post.updatedAt.toISOString(),
-      author: { id: userId, displayName: author.displayName },
+      author: {
+        id: userId,
+        displayName: author.displayName,
+        username: author.username,
+        showRealName: author.showRealName,
+      },
       isLiked: false,
     };
   }
@@ -114,6 +123,8 @@ export class CommunityService {
         createdAt: posts.createdAt,
         updatedAt: posts.updatedAt,
         authorName: users.displayName,
+        authorUsername: users.username,
+        authorShowRealName: users.showRealName,
       })
       .from(posts)
       .innerJoin(users, eq(posts.userId, users.id))
@@ -145,7 +156,12 @@ export class CommunityService {
       commentCount: row.commentCount,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
-      author: { id: row.userId, displayName: row.authorName },
+      author: {
+        id: row.userId,
+        displayName: row.authorName,
+        username: row.authorUsername,
+        showRealName: row.authorShowRealName,
+      },
       isLiked: likedSet.has(row.id),
     }));
 
@@ -251,7 +267,11 @@ export class CommunityService {
       .where(eq(posts.id, postId));
 
     const [author] = await db
-      .select({ displayName: users.displayName })
+      .select({
+        displayName: users.displayName,
+        username: users.username,
+        showRealName: users.showRealName,
+      })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
@@ -260,7 +280,12 @@ export class CommunityService {
       ...comment,
       createdAt: comment.createdAt.toISOString(),
       updatedAt: comment.updatedAt.toISOString(),
-      author: { id: userId, displayName: author.displayName },
+      author: {
+        id: userId,
+        displayName: author.displayName,
+        username: author.username,
+        showRealName: author.showRealName,
+      },
     };
   }
 
@@ -290,6 +315,8 @@ export class CommunityService {
         createdAt: comments.createdAt,
         updatedAt: comments.updatedAt,
         authorName: users.displayName,
+        authorUsername: users.username,
+        authorShowRealName: users.showRealName,
       })
       .from(comments)
       .innerJoin(users, eq(comments.userId, users.id))
@@ -307,7 +334,12 @@ export class CommunityService {
       content: row.content,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
-      author: { id: row.userId, displayName: row.authorName },
+      author: {
+        id: row.userId,
+        displayName: row.authorName,
+        username: row.authorUsername,
+        showRealName: row.authorShowRealName,
+      },
     }));
 
     const nextCursor = hasMore
@@ -833,7 +865,11 @@ export class CommunityService {
       .where(eq(conversations.id, conversationId));
 
     const [sender] = await db
-      .select({ displayName: users.displayName })
+      .select({
+        displayName: users.displayName,
+        username: users.username,
+        showRealName: users.showRealName,
+      })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);

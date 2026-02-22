@@ -7,11 +7,13 @@ export async function registerApi(
   password: string,
   displayName: string,
   preferredLanguage?: string,
+  username?: string,
 ) {
   const { data } = await api.post("/auth/register", {
     email,
     password,
     displayName,
+    username: username || undefined,
     preferredLanguage,
   });
   return data.data as { message: string };

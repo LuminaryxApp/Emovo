@@ -76,7 +76,7 @@ export default function ProfileScreen() {
 
   // Edit modal state
   const [editModal, setEditModal] = useState<{
-    field: "displayName" | "timezone" | null;
+    field: "displayName" | "timezone" | "username" | null;
     value: string;
   }>({ field: null, value: "" });
   const [isSaving, setIsSaving] = useState(false);
@@ -177,9 +177,12 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const openEdit = (field: "displayName" | "timezone") => {
+  const openEdit = (field: "displayName" | "timezone" | "username") => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const value = field === "displayName" ? user?.displayName || "" : user?.timezone || "UTC";
+    let value = "";
+    if (field === "displayName") value = user?.displayName || "";
+    else if (field === "timezone") value = user?.timezone || "UTC";
+    else if (field === "username") value = user?.username || "";
     setEditModal({ field, value });
   };
 
@@ -462,6 +465,7 @@ export default function ProfileScreen() {
               </View>
             </Pressable>
             <Text style={styles.name}>{user?.displayName || "User"}</Text>
+            {user?.username ? <Text style={styles.username}>@{user.username}</Text> : null}
             <Text style={styles.email}>{user?.email || ""}</Text>
             {joinDate ? (
               <View style={styles.memberBadge}>
@@ -506,6 +510,10 @@ export default function ProfileScreen() {
                     onPress: () => openEdit("displayName"),
                   },
                   {
+                    text: t("profile.username"),
+                    onPress: () => openEdit("username"),
+                  },
+                  {
                     text: t("profile.timezone"),
                     onPress: () => openEdit("timezone"),
                   },
@@ -524,6 +532,28 @@ export default function ProfileScreen() {
                     onValueChange={async (val) => {
                       try {
                         await updateProfile({ notificationsEnabled: val });
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      } catch {
+                        Alert.alert(t("common.error"), t("profile.failedUpdateProfile"));
+                      }
+                    }}
+                    trackColor={{ false: colors.border, true: colors.primary }}
+                    thumbColor={colors.surface}
+                  />
+                </View>
+              }
+            />
+            <Divider spacing={0} />
+            <SettingsRow
+              icon="eye-outline"
+              label={t("profile.showRealName")}
+              trailing={
+                <View style={{ alignSelf: "center", marginRight: spacing.xs }}>
+                  <Switch
+                    value={user?.showRealName ?? false}
+                    onValueChange={async (val) => {
+                      try {
+                        await updateProfile({ showRealName: val });
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       } catch {
                         Alert.alert(t("common.error"), t("profile.failedUpdateProfile"));
@@ -727,17 +757,31 @@ export default function ProfileScreen() {
             <Text style={modalStyles.title}>
               {editModal.field === "displayName"
                 ? t("profile.editDisplayName")
-                : t("profile.editTimezone")}
+                : editModal.field === "username"
+                  ? t("profile.editUsername")
+                  : t("profile.editTimezone")}
             </Text>
             <TextInput
               style={modalStyles.input}
               value={editModal.value}
-              onChangeText={(v) => setEditModal((prev) => ({ ...prev, value: v }))}
+              onChangeText={(v) => {
+                if (editModal.field === "username") {
+                  setEditModal((prev) => ({
+                    ...prev,
+                    value: v.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase(),
+                  }));
+                } else {
+                  setEditModal((prev) => ({ ...prev, value: v }));
+                }
+              }}
               placeholder={
                 editModal.field === "displayName"
                   ? t("profile.enterName")
-                  : t("profile.timezoneExample")
+                  : editModal.field === "username"
+                    ? t("profile.enterUsername")
+                    : t("profile.timezoneExample")
               }
+              autoCapitalize={editModal.field === "username" ? "none" : undefined}
               placeholderTextColor={colors.textTertiary}
               autoFocus
             />
@@ -774,53 +818,101 @@ export default function ProfileScreen() {
         onRequestClose={() => setSessionsVisible(false)}
       >
         <View style={modalStyles.overlay}>
-          <View style={[modalStyles.container, { maxHeight: "70%" }]}>
-            <View style={modalStyles.headerRow}>
-              <Text style={modalStyles.title}>{t("profile.activeSessions")}</Text>
-              <TouchableOpacity onPress={() => setSessionsVisible(false)}>
-                <Ionicons name="close-outline" size={22} color={colors.text} />
+          <View style={[modalStyles.container, { maxHeight: "80%", padding: 0 }]}>
+            {/* Header */}
+            <View style={sessionStyles.header}>
+              <View>
+                <Text style={modalStyles.title}>{t("profile.activeSessions")}</Text>
+                {!sessionsLoading && sessions.length > 0 && (
+                  <Text style={sessionStyles.sessionCount}>
+                    {sessions.length} {sessions.length === 1 ? "device" : "devices"}
+                  </Text>
+                )}
+              </View>
+              <TouchableOpacity
+                onPress={() => setSessionsVisible(false)}
+                style={sessionStyles.closeBtn}
+              >
+                <Ionicons name="close" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
+
             {sessionsLoading ? (
               <ActivityIndicator
                 size="large"
                 color={colors.primary}
-                style={{ marginVertical: spacing.xl }}
+                style={{ marginVertical: spacing.xxl }}
               />
             ) : sessions.length === 0 ? (
-              <Text style={modalStyles.emptyText}>{t("profile.noSessionsFound")}</Text>
+              <View style={sessionStyles.emptyState}>
+                <Ionicons name="shield-checkmark-outline" size={40} color={colors.textTertiary} />
+                <Text style={modalStyles.emptyText}>{t("profile.noSessionsFound")}</Text>
+              </View>
             ) : (
-              <ScrollView style={{ marginTop: spacing.md }}>
-                {sessions.map((session) => (
-                  <View key={session.id} style={sessionStyles.row}>
-                    <Ionicons
-                      name="phone-portrait-outline"
-                      size={18}
-                      color={session.current ? colors.primary : colors.textTertiary}
-                    />
-                    <View style={sessionStyles.info}>
-                      <Text style={sessionStyles.deviceName}>
-                        {session.deviceName || t("profile.unknownDevice")}
-                        {session.current ? ` ${t("profile.currentSession")}` : ""}
+              <>
+                <ScrollView
+                  style={{ paddingHorizontal: spacing.md }}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {/* Current session first, then others */}
+                  {sessions
+                    .sort((a, b) => (a.current ? -1 : b.current ? 1 : 0))
+                    .map((session) => (
+                      <SessionCard
+                        key={session.id}
+                        session={session}
+                        onRevoke={() => handleRevokeSession(session)}
+                        t={t}
+                      />
+                    ))}
+                </ScrollView>
+
+                {/* Log out other devices button */}
+                {sessions.filter((s) => !s.current).length > 0 && (
+                  <View style={sessionStyles.footerActions}>
+                    <TouchableOpacity
+                      style={sessionStyles.logoutOtherBtn}
+                      onPress={() => {
+                        Alert.alert(
+                          t("profile.logoutOtherTitle"),
+                          t("profile.logoutOtherMessage"),
+                          [
+                            { text: t("common.cancel"), style: "cancel" },
+                            {
+                              text: t("profile.logoutAllConfirm"),
+                              style: "destructive",
+                              onPress: async () => {
+                                try {
+                                  const otherSessions = sessions.filter((s) => !s.current);
+                                  await Promise.all(
+                                    otherSessions.map((s) => deleteSessionApi(s.id)),
+                                  );
+                                  setSessions((prev) => prev.filter((s) => s.current));
+                                  Haptics.notificationAsync(
+                                    Haptics.NotificationFeedbackType.Success,
+                                  );
+                                } catch {
+                                  Alert.alert(t("common.error"), t("profile.failedRevokeSession"));
+                                }
+                              },
+                            },
+                          ],
+                        );
+                      }}
+                    >
+                      <Ionicons
+                        name="log-out-outline"
+                        size={18}
+                        color={colors.error}
+                        style={{ marginRight: spacing.xs }}
+                      />
+                      <Text style={sessionStyles.logoutOtherText}>
+                        {t("profile.logoutOtherDevices")}
                       </Text>
-                      <Text style={sessionStyles.lastUsed}>
-                        {session.lastUsedAt
-                          ? t("profile.lastActive", {
-                              date: new Date(session.lastUsedAt).toLocaleDateString(),
-                            })
-                          : t("profile.created", {
-                              date: new Date(session.createdAt).toLocaleDateString(),
-                            })}
-                      </Text>
-                    </View>
-                    {!session.current && (
-                      <TouchableOpacity onPress={() => handleRevokeSession(session)}>
-                        <Ionicons name="close-circle-outline" size={20} color={colors.error} />
-                      </TouchableOpacity>
-                    )}
+                    </TouchableOpacity>
                   </View>
-                ))}
-              </ScrollView>
+                )}
+              </>
             )}
           </View>
         </View>
@@ -874,6 +966,145 @@ export default function ProfileScreen() {
         </View>
       </Modal>
     </>
+  );
+}
+
+// ===========================================================================
+// Helpers — device detection + relative time
+// ===========================================================================
+
+function getDeviceIcon(deviceName: string | null): keyof typeof Ionicons.glyphMap {
+  if (!deviceName) return "hardware-chip-outline";
+  const lower = deviceName.toLowerCase();
+  if (
+    lower.includes("iphone") ||
+    lower.includes("android") ||
+    lower.includes("pixel") ||
+    lower.includes("galaxy") ||
+    lower.includes("phone")
+  )
+    return "phone-portrait-outline";
+  if (lower.includes("ipad") || lower.includes("tablet")) return "tablet-portrait-outline";
+  if (
+    lower.includes("mac") ||
+    lower.includes("windows") ||
+    lower.includes("linux") ||
+    lower.includes("desktop") ||
+    lower.includes("pc")
+  )
+    return "desktop-outline";
+  if (
+    lower.includes("web") ||
+    lower.includes("chrome") ||
+    lower.includes("safari") ||
+    lower.includes("firefox")
+  )
+    return "globe-outline";
+  return "phone-portrait-outline";
+}
+
+function getRelativeTime(
+  dateStr: string | null,
+  t: (key: string, opts?: Record<string, unknown>) => string,
+): string {
+  if (!dateStr) return "";
+  const now = Date.now();
+  const date = new Date(dateStr).getTime();
+  const diffMs = now - date;
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHrs = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMin < 2) return t("profile.activeNow");
+  if (diffMin < 60) return t("profile.minutesAgo", { count: diffMin });
+  if (diffHrs < 24) return t("profile.hoursAgo", { count: diffHrs });
+  return t("profile.daysAgo", { count: diffDays });
+}
+
+// ===========================================================================
+// SessionCard — a single session in the sessions modal
+// ===========================================================================
+
+function SessionCard({
+  session,
+  onRevoke,
+  t,
+}: {
+  session: Session;
+  onRevoke: () => void;
+  t: (key: string, opts?: Record<string, unknown>) => string;
+}) {
+  const deviceIcon = getDeviceIcon(session.deviceName);
+  const lastActive = getRelativeTime(session.lastUsedAt || session.createdAt, t);
+  const isActiveNow = lastActive === t("profile.activeNow");
+
+  return (
+    <View style={[sessionStyles.card, session.current && sessionStyles.cardCurrent]}>
+      <View style={sessionStyles.cardTop}>
+        <View
+          style={[
+            sessionStyles.iconContainer,
+            session.current ? sessionStyles.iconContainerCurrent : sessionStyles.iconContainerOther,
+          ]}
+        >
+          <Ionicons
+            name={deviceIcon}
+            size={20}
+            color={session.current ? colors.primary : colors.textSecondary}
+          />
+        </View>
+        <View style={sessionStyles.cardInfo}>
+          <View style={sessionStyles.nameRow}>
+            <Text
+              style={[sessionStyles.deviceName, session.current && sessionStyles.deviceNameCurrent]}
+              numberOfLines={1}
+            >
+              {session.deviceName || t("profile.unknownDevice")}
+            </Text>
+            {session.current && (
+              <View style={sessionStyles.currentBadge}>
+                <View style={sessionStyles.currentDot} />
+                <Text style={sessionStyles.currentBadgeText}>{t("profile.currentSession")}</Text>
+              </View>
+            )}
+          </View>
+          <View style={sessionStyles.metaRow}>
+            <View style={sessionStyles.metaItem}>
+              <Ionicons
+                name={isActiveNow ? "radio-button-on" : "time-outline"}
+                size={12}
+                color={isActiveNow ? colors.success : colors.textTertiary}
+              />
+              <Text style={[sessionStyles.metaText, isActiveNow && { color: colors.success }]}>
+                {lastActive}
+              </Text>
+            </View>
+            {session.expiresAt && (
+              <View style={sessionStyles.metaItem}>
+                <Ionicons name="hourglass-outline" size={12} color={colors.textTertiary} />
+                <Text style={sessionStyles.metaText}>
+                  {t("profile.sessionExpires", {
+                    date: new Date(session.expiresAt).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    }),
+                  })}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+        {!session.current && (
+          <TouchableOpacity
+            onPress={onRevoke}
+            style={sessionStyles.revokeBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="trash-outline" size={18} color={colors.error} />
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
   );
 }
 
@@ -997,6 +1228,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: "SourceSerif4_700Bold",
     color: colors.textInverse,
+  },
+  username: {
+    fontSize: 15,
+    fontFamily: "SourceSerif4_400Regular",
+    color: "rgba(255, 255, 255, 0.7)",
+    marginTop: 2,
   },
   email: {
     fontSize: 16,
@@ -1204,27 +1441,146 @@ const modalStyles = StyleSheet.create({
 });
 
 const sessionStyles = StyleSheet.create({
-  row: {
+  header: {
     flexDirection: "row",
-    alignItems: "center",
-    padding: spacing.md,
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.divider,
+  },
+  sessionCount: {
+    fontSize: 13,
+    fontFamily: "SourceSerif4_400Regular",
+    color: colors.textTertiary,
+    marginTop: 2,
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.inputBackground,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: spacing.xxl,
+    gap: spacing.md,
+  },
+  card: {
+    backgroundColor: colors.inputBackground,
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+  },
+  cardCurrent: {
+    backgroundColor: `${colors.primary}08`,
+    borderWidth: 1,
+    borderColor: `${colors.primary}20`,
+  },
+  cardTop: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
-  info: {
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconContainerCurrent: {
+    backgroundColor: `${colors.primary}15`,
+  },
+  iconContainerOther: {
+    backgroundColor: colors.surface,
+  },
+  cardInfo: {
     flex: 1,
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    flexWrap: "wrap",
   },
   deviceName: {
     fontSize: 14,
     fontFamily: "SourceSerif4_600SemiBold",
     color: colors.text,
+    flexShrink: 1,
   },
-  lastUsed: {
+  deviceNameCurrent: {
+    color: colors.primary,
+  },
+  currentBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: `${colors.success}18`,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radii.pill,
+    gap: 4,
+  },
+  currentDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.success,
+  },
+  currentBadgeText: {
+    fontSize: 11,
+    fontFamily: "SourceSerif4_600SemiBold",
+    color: colors.success,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    marginTop: 4,
+  },
+  metaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  metaText: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
     color: colors.textTertiary,
-    marginTop: 2,
+  },
+  revokeBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: `${colors.error}10`,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  footerActions: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+  },
+  logoutOtherBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radii.lg,
+    backgroundColor: `${colors.error}08`,
+    borderWidth: 1,
+    borderColor: `${colors.error}20`,
+  },
+  logoutOtherText: {
+    fontSize: 14,
+    fontFamily: "SourceSerif4_600SemiBold",
+    color: colors.error,
   },
 });
 

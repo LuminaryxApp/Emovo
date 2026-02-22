@@ -16,6 +16,8 @@ export interface PostWithAuthor extends Post {
   author: {
     id: string;
     displayName: string;
+    username: string | null;
+    showRealName: boolean;
   };
   isLiked: boolean;
 }
@@ -28,6 +30,8 @@ export interface Comment {
   author: {
     id: string;
     displayName: string;
+    username: string | null;
+    showRealName: boolean;
   };
   createdAt: string;
   updatedAt: string;
@@ -56,6 +60,8 @@ export interface GroupMember {
   id: string;
   userId: string;
   displayName: string;
+  username: string | null;
+  showRealName: boolean;
   role: "admin" | "moderator" | "member";
   joinedAt: string;
 }

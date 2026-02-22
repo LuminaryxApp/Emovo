@@ -24,6 +24,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Card, Avatar, Badge, ActionSheet, type ActionSheetItem } from "../../src/components/ui";
+import { getPublicName } from "../../src/lib/display-name";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useCommunityStore } from "../../src/stores/community.store";
 import { moodEmojis } from "../../src/theme";
@@ -520,7 +521,7 @@ export default function CommunityScreen() {
             <View style={styles.postAuthorRow}>
               <Avatar name={post.author.displayName} size="md" />
               <View style={styles.postAuthorInfo}>
-                <Text style={styles.postAuthorName}>{post.author.displayName}</Text>
+                <Text style={styles.postAuthorName}>{getPublicName(post.author)}</Text>
                 <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
               </View>
               {post.moodScore != null && (

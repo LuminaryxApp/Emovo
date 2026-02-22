@@ -18,9 +18,11 @@ export async function deleteAccountApi(): Promise<void> {
 
 export interface Session {
   id: string;
+  deviceId: string | null;
   deviceName: string | null;
   lastUsedAt: string | null;
   createdAt: string;
+  expiresAt: string;
   current: boolean;
 }
 

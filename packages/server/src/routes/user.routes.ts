@@ -1,11 +1,12 @@
 import { updateProfileSchema } from "@emovo/shared";
-import { eq } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 
 import { db } from "../config/database.js";
 import { users } from "../db/schema/users.js";
 import { AuthService } from "../services/auth.service.js";
-import { NotFoundError } from "../utils/errors.js";
+import { isUsernameBlocked } from "../utils/blocked-usernames.js";
+import { NotFoundError, ConflictError, ValidationError } from "../utils/errors.js";
 
 export async function userRoutes(fastify: FastifyInstance) {
   const authService = new AuthService(fastify);
@@ -23,6 +24,8 @@ export async function userRoutes(fastify: FastifyInstance) {
         email: users.email,
         emailVerified: users.emailVerified,
         displayName: users.displayName,
+        username: users.username,
+        showRealName: users.showRealName,
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
         preferredLanguage: users.preferredLanguage,
@@ -47,6 +50,8 @@ export async function userRoutes(fastify: FastifyInstance) {
         email: user.email,
         emailVerified: user.emailVerified,
         displayName: user.displayName,
+        username: user.username,
+        showRealName: user.showRealName,
         timezone: user.timezone,
         notificationsEnabled: user.notificationsEnabled,
         preferredLanguage: user.preferredLanguage,
@@ -70,6 +75,26 @@ export async function userRoutes(fastify: FastifyInstance) {
     const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
     if (body.displayName !== undefined) updateData.displayName = body.displayName;
+
+    // Username validation: check blocked words + uniqueness
+    if (body.username !== undefined && body.username !== null) {
+      const blocked = isUsernameBlocked(body.username);
+      if (blocked.blocked) {
+        throw new ValidationError("This username is not allowed");
+      }
+
+      const [existingUsername] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.username, body.username), ne(users.id, request.userId)))
+        .limit(1);
+
+      if (existingUsername) {
+        throw new ConflictError("This username is already taken");
+      }
+    }
+    if (body.username !== undefined) updateData.username = body.username;
+    if (body.showRealName !== undefined) updateData.showRealName = body.showRealName;
     if (body.timezone !== undefined) updateData.timezone = body.timezone;
     if (body.notificationsEnabled !== undefined)
       updateData.notificationsEnabled = body.notificationsEnabled;
@@ -93,6 +118,8 @@ export async function userRoutes(fastify: FastifyInstance) {
         email: users.email,
         emailVerified: users.emailVerified,
         displayName: users.displayName,
+        username: users.username,
+        showRealName: users.showRealName,
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
         preferredLanguage: users.preferredLanguage,
@@ -120,6 +147,8 @@ export async function userRoutes(fastify: FastifyInstance) {
         email: updated.email,
         emailVerified: updated.emailVerified,
         displayName: updated.displayName,
+        username: updated.username,
+        showRealName: updated.showRealName,
         timezone: updated.timezone,
         notificationsEnabled: updated.notificationsEnabled,
         preferredLanguage: updated.preferredLanguage,

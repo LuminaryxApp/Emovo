@@ -403,17 +403,21 @@ export class AuthService {
   async getActiveSessions(userId: string): Promise<
     Array<{
       id: string;
+      deviceId: string | null;
       deviceName: string | null;
       lastUsedAt: Date | null;
       createdAt: Date;
+      expiresAt: Date;
     }>
   > {
     return db
       .select({
         id: refreshTokens.id,
+        deviceId: refreshTokens.deviceId,
         deviceName: refreshTokens.deviceName,
         lastUsedAt: refreshTokens.lastUsedAt,
         createdAt: refreshTokens.createdAt,
+        expiresAt: refreshTokens.expiresAt,
       })
       .from(refreshTokens)
       .where(and(eq(refreshTokens.userId, userId), eq(refreshTokens.revoked, false)))

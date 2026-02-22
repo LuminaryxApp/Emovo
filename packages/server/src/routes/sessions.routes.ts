@@ -24,9 +24,11 @@ export async function sessionsRoutes(fastify: FastifyInstance) {
     return reply.send({
       data: sessions.map((s) => ({
         id: s.id,
+        deviceId: s.deviceId,
         deviceName: s.deviceName,
         lastUsedAt: s.lastUsedAt?.toISOString() || null,
         createdAt: s.createdAt.toISOString(),
+        expiresAt: s.expiresAt.toISOString(),
         current: s.id === currentSessionId,
       })),
     });

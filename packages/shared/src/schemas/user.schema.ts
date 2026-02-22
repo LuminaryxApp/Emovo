@@ -1,5 +1,12 @@
 import { z } from "zod";
 
+export const usernameSchema = z
+  .string()
+  .min(3)
+  .max(30)
+  .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
+  .transform((u) => u.toLowerCase());
+
 export const registerSchema = z.object({
   email: z
     .string()
@@ -8,6 +15,7 @@ export const registerSchema = z.object({
     .transform((e) => e.trim().toLowerCase()),
   password: z.string().min(8).max(128),
   displayName: z.string().min(1).max(100).trim(),
+  username: usernameSchema.optional(),
   preferredLanguage: z
     .enum(["en", "es", "fr", "de", "pt", "ja", "zh", "ar", "hi", "ru"])
     .optional()
@@ -58,6 +66,8 @@ export const logoutSchema = z.object({
 
 export const updateProfileSchema = z.object({
   displayName: z.string().min(1).max(100).trim().optional(),
+  username: usernameSchema.nullable().optional(),
+  showRealName: z.boolean().optional(),
   timezone: z.string().max(50).optional(),
   notificationsEnabled: z.boolean().optional(),
   email: z

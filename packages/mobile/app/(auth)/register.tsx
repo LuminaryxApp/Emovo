@@ -24,6 +24,7 @@ import { spacing, radii } from "../../src/theme/spacing";
 export default function RegisterScreen() {
   const { t } = useTranslation();
   const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -49,7 +50,13 @@ export default function RegisterScreen() {
     }
 
     try {
-      await register(email.trim(), password, displayName.trim(), getCurrentLanguage());
+      await register(
+        email.trim(),
+        password,
+        displayName.trim(),
+        getCurrentLanguage(),
+        username.trim() || undefined,
+      );
       Toast.show({
         type: "success",
         text1: t("auth.register.accountCreated"),
@@ -92,6 +99,15 @@ export default function RegisterScreen() {
               placeholder={t("auth.register.displayNamePlaceholder")}
               leftIcon="person-outline"
               autoCapitalize="words"
+            />
+
+            <Input
+              label={t("auth.register.username")}
+              value={username}
+              onChangeText={(text) => setUsername(text.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())}
+              placeholder={t("auth.register.usernamePlaceholder")}
+              leftIcon="at-outline"
+              autoCapitalize="none"
             />
 
             <Input

@@ -3,6 +3,8 @@ export interface User {
   email: string;
   emailVerified: boolean;
   displayName: string;
+  username: string | null;
+  showRealName: boolean;
   timezone: string;
   notificationsEnabled: boolean;
   preferredLanguage: string;
@@ -18,6 +20,8 @@ export interface User {
 
 export interface UserProfile {
   displayName?: string;
+  username?: string | null;
+  showRealName?: boolean;
   timezone?: string;
   notificationsEnabled?: boolean;
   email?: string;

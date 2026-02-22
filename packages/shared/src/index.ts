@@ -44,6 +44,7 @@ export type { Notification } from "./types/notification.js";
 
 // Schemas
 export {
+  usernameSchema,
   registerSchema,
   loginSchema,
   verifyEmailSchema,

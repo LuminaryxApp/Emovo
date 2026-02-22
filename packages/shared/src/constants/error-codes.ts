@@ -15,6 +15,8 @@ export const ErrorCode = {
   USER_BANNED: "USER_BANNED",
   USER_SUSPENDED: "USER_SUSPENDED",
   DUPLICATE_REPORT: "DUPLICATE_REPORT",
+  USERNAME_TAKEN: "USERNAME_TAKEN",
+  USERNAME_INAPPROPRIATE: "USERNAME_INAPPROPRIATE",
 } as const;
 
 export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

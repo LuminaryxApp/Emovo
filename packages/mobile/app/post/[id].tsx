@@ -20,6 +20,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Avatar, Badge, Card, ActionSheet, type ActionSheetItem } from "../../src/components/ui";
+import { getPublicName } from "../../src/lib/display-name";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useCommunityStore } from "../../src/stores/community.store";
 import { moodEmojis } from "../../src/theme";
@@ -338,7 +339,7 @@ export default function PostDetailScreen() {
             <View style={styles.postAuthorRow}>
               <Avatar name={post.author.displayName} size="md" />
               <View style={styles.postAuthorInfo}>
-                <Text style={styles.postAuthorName}>{post.author.displayName}</Text>
+                <Text style={styles.postAuthorName}>{getPublicName(post.author)}</Text>
                 <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
               </View>
               {post.moodScore != null && (
@@ -407,7 +408,7 @@ export default function PostDetailScreen() {
                   <Avatar name={comment.author.displayName} size="sm" />
                   <View style={styles.commentContent}>
                     <View style={styles.commentHeader}>
-                      <Text style={styles.commentAuthor}>{comment.author.displayName}</Text>
+                      <Text style={styles.commentAuthor}>{getPublicName(comment.author)}</Text>
                       <Text style={styles.commentTime}>
                         {formatRelativeTime(comment.createdAt)}
                       </Text>
