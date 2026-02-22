@@ -1149,10 +1149,7 @@ export default function CommunityScreen() {
       {/* Report reason picker */}
       <ActionSheet
         visible={reportSheetVisible}
-        onClose={() => {
-          setReportSheetVisible(false);
-          setReportTarget(null);
-        }}
+        onClose={() => setReportSheetVisible(false)}
         actions={reportReasons}
         title={t("community.selectReportReason")}
       />

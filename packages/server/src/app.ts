@@ -5,6 +5,7 @@ import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import Fastify from "fastify";
+import { ZodError } from "zod";
 
 import { env } from "./config/env.js";
 import authPlugin from "./plugins/auth.plugin.js";
@@ -137,6 +138,21 @@ export async function buildApp() {
             code: "VALIDATION_FAILED",
             message: "Validation error",
             details: error.validation,
+            requestId: request.id,
+          },
+        });
+      }
+
+      // Zod validation errors
+      if (error instanceof ZodError) {
+        return reply.status(400).send({
+          error: {
+            code: "VALIDATION_FAILED",
+            message: "Validation error",
+            details: error.errors.map((e) => ({
+              path: e.path.join("."),
+              message: e.message,
+            })),
             requestId: request.id,
           },
         });

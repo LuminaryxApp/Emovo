@@ -3,9 +3,9 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import * as StoreReview from "expo-store-review";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
@@ -38,7 +38,12 @@ import {
 import { getSessionId } from "../../src/lib/secure-storage";
 import { exportData } from "../../src/services/export.api";
 import { getStreakApi, getStatsSummaryApi } from "../../src/services/stats.api";
-import { getSessionsApi, deleteSessionApi, type Session } from "../../src/services/user.api";
+import {
+  getMeApi,
+  getSessionsApi,
+  deleteSessionApi,
+  type Session,
+} from "../../src/services/user.api";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useTheme, type ThemeMode } from "../../src/theme/ThemeContext";
 import { colors, gradients, cardShadowStrong } from "../../src/theme/colors";
@@ -99,6 +104,25 @@ export default function ProfileScreen() {
     lastLogDate: null,
   });
   const [entryCount, setEntryCount] = useState(0);
+
+  const setUser = useAuthStore((s) => s.setUser);
+
+  // Refresh user data when the profile tab gains focus
+  const hasMountedRef = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      // Skip the initial mount — hydrate already fetched the user
+      if (!hasMountedRef.current) {
+        hasMountedRef.current = true;
+        return;
+      }
+      getMeApi()
+        .then((freshUser) => setUser(freshUser))
+        .catch(() => {
+          /* ignore — non-critical refresh */
+        });
+    }, [setUser]),
+  );
 
   const currentLangCode = getCurrentLanguage();
   const currentLangObj = SUPPORTED_LANGUAGES.find((l) => l.code === currentLangCode);
@@ -193,8 +217,16 @@ export default function ProfileScreen() {
       await updateProfile({ [editModal.field]: editModal.value.trim() });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setEditModal({ field: null, value: "" });
-    } catch {
-      Alert.alert(t("common.error"), t("profile.failedUpdateProfile"));
+    } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      const code = (err as { response?: { data?: { error?: { code?: string } } } })?.response?.data
+        ?.error?.code;
+      let msg = t("profile.failedUpdateProfile");
+      if (editModal.field === "username") {
+        if (status === 409 || code === "CONFLICT") msg = t("profile.usernameTaken");
+        else if (code === "VALIDATION_FAILED") msg = t("profile.usernameInappropriate");
+      }
+      Alert.alert(t("common.error"), msg);
     } finally {
       setIsSaving(false);
     }
