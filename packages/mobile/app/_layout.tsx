@@ -75,8 +75,6 @@ function AppContent() {
         <Stack.Screen name="admin" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="follow-requests" options={{ animation: "slide_from_right" }} />
         <Stack.Screen name="profile/[id]" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="profile/[id]/followers" options={{ animation: "slide_from_right" }} />
-        <Stack.Screen name="profile/[id]/following" options={{ animation: "slide_from_right" }} />
       </Stack>
     </>
   );

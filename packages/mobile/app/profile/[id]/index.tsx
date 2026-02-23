@@ -17,11 +17,15 @@ import {
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Avatar } from "../../src/components/ui";
-import { getPublicName } from "../../src/lib/display-name";
-import { getPublicProfileApi, followUserApi, unfollowUserApi } from "../../src/services/follow.api";
-import { useTheme } from "../../src/theme/ThemeContext";
-import { spacing, radii, screenPadding, iconSizes } from "../../src/theme/spacing";
+import { Avatar } from "../../../src/components/ui";
+import { getPublicName } from "../../../src/lib/display-name";
+import {
+  getPublicProfileApi,
+  followUserApi,
+  unfollowUserApi,
+} from "../../../src/services/follow.api";
+import { useTheme } from "../../../src/theme/ThemeContext";
+import { spacing, radii, screenPadding, iconSizes } from "../../../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
 // Helpers

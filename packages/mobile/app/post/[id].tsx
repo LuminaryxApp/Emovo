@@ -24,7 +24,8 @@ import { getPublicName } from "../../src/lib/display-name";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useCommunityStore } from "../../src/stores/community.store";
 import { moodEmojis } from "../../src/theme";
-import { colors, type MoodLevel } from "../../src/theme/colors";
+import { useTheme } from "../../src/theme/ThemeContext";
+import type { MoodLevel } from "../../src/theme/colors";
 import { spacing, radii, screenPadding, iconSizes } from "../../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -67,6 +68,7 @@ export default function PostDetailScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   // Store
   const user = useAuthStore((s) => s.user);
@@ -298,14 +300,16 @@ export default function PostDetailScreen() {
 
   if (!post) {
     return (
-      <View style={[styles.screen, { paddingTop: insets.top }]}>
-        <View style={styles.headerBar}>
+      <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+        <View style={[styles.headerBar, { borderBottomColor: colors.borderLight }]}>
           <Pressable onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </Pressable>
         </View>
         <View style={styles.centered}>
-          <Text style={styles.emptyTitle}>{t("community.noEntries")}</Text>
+          <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+            {t("community.noEntries")}
+          </Text>
         </View>
       </View>
     );
@@ -314,15 +318,15 @@ export default function PostDetailScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={[styles.screen, { paddingTop: insets.top }]}
+      style={[styles.screen, { paddingTop: insets.top, backgroundColor: colors.background }]}
       keyboardVerticalOffset={0}
     >
       {/* Header bar */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { borderBottomColor: colors.borderLight }]}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t("community.comments")}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t("community.comments")}</Text>
         <Pressable onPress={handlePostLongPress} style={styles.backButton}>
           <Ionicons name="ellipsis-horizontal" size={20} color={colors.text} />
         </Pressable>
@@ -343,8 +347,12 @@ export default function PostDetailScreen() {
               >
                 <Avatar name={post.author.displayName} size="md" />
                 <View style={styles.postAuthorInfo}>
-                  <Text style={styles.postAuthorName}>{getPublicName(post.author)}</Text>
-                  <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
+                  <Text style={[styles.postAuthorName, { color: colors.text }]}>
+                    {getPublicName(post.author)}
+                  </Text>
+                  <Text style={[styles.postTimestamp, { color: colors.textTertiary }]}>
+                    {formatRelativeTime(post.createdAt)}
+                  </Text>
                 </View>
               </Pressable>
               {post.moodScore != null && (
@@ -368,15 +376,21 @@ export default function PostDetailScreen() {
                 />
               </View>
             )}
-            <Text style={styles.postContent}>{post.content}</Text>
-            <View style={styles.postActionsRow}>
+            <Text style={[styles.postContent, { color: colors.text }]}>{post.content}</Text>
+            <View style={[styles.postActionsRow, { borderTopColor: colors.borderLight }]}>
               <Pressable onPress={handleToggleLike} style={styles.postAction}>
                 <Ionicons
                   name={post.isLiked ? "heart" : "heart-outline"}
                   size={iconSizes.sm}
                   color={post.isLiked ? colors.error : colors.textTertiary}
                 />
-                <Text style={[styles.postActionCount, post.isLiked && { color: colors.error }]}>
+                <Text
+                  style={[
+                    styles.postActionCount,
+                    { color: colors.textTertiary },
+                    post.isLiked && { color: colors.error },
+                  ]}
+                >
                   {post.likeCount > 0 ? post.likeCount : ""}
                 </Text>
               </Pressable>
@@ -391,7 +405,7 @@ export default function PostDetailScreen() {
         </Pressable>
 
         {/* Comments section */}
-        <Text style={styles.sectionLabel}>
+        <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
           {t("community.comments").toUpperCase()} ({post.commentCount})
         </Text>
 
@@ -402,8 +416,12 @@ export default function PostDetailScreen() {
         ) : comments.length === 0 ? (
           <View style={styles.centered}>
             <Ionicons name="chatbubbles-outline" size={48} color={colors.textTertiary} />
-            <Text style={styles.emptyTitle}>{t("community.noComments")}</Text>
-            <Text style={styles.emptySubtitle}>{t("community.beFirstToComment")}</Text>
+            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+              {t("community.noComments")}
+            </Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
+              {t("community.beFirstToComment")}
+            </Text>
           </View>
         ) : (
           <>
@@ -413,23 +431,31 @@ export default function PostDetailScreen() {
                   <Pressable onPress={() => router.push(`/profile/${comment.author.id}`)}>
                     <Avatar name={comment.author.displayName} size="sm" />
                   </Pressable>
-                  <View style={styles.commentContent}>
+                  <View
+                    style={[styles.commentContent, { backgroundColor: colors.inputBackground }]}
+                  >
                     <View style={styles.commentHeader}>
                       <Pressable onPress={() => router.push(`/profile/${comment.author.id}`)}>
-                        <Text style={styles.commentAuthor}>{getPublicName(comment.author)}</Text>
+                        <Text style={[styles.commentAuthor, { color: colors.text }]}>
+                          {getPublicName(comment.author)}
+                        </Text>
                       </Pressable>
-                      <Text style={styles.commentTime}>
+                      <Text style={[styles.commentTime, { color: colors.textTertiary }]}>
                         {formatRelativeTime(comment.createdAt)}
                       </Text>
                     </View>
-                    <Text style={styles.commentText}>{comment.content}</Text>
+                    <Text style={[styles.commentText, { color: colors.text }]}>
+                      {comment.content}
+                    </Text>
                   </View>
                 </View>
               </Pressable>
             ))}
             {cursor && (
               <Pressable onPress={loadMoreComments} style={styles.loadMoreBtn}>
-                <Text style={styles.loadMoreText}>{t("community.seeAll")}</Text>
+                <Text style={[styles.loadMoreText, { color: colors.primary }]}>
+                  {t("community.seeAll")}
+                </Text>
               </Pressable>
             )}
           </>
@@ -439,10 +465,22 @@ export default function PostDetailScreen() {
       </ScrollView>
 
       {/* Comment input */}
-      <View style={[styles.commentInputBar, { paddingBottom: insets.bottom + spacing.sm }]}>
+      <View
+        style={[
+          styles.commentInputBar,
+          {
+            paddingBottom: insets.bottom + spacing.sm,
+            borderTopColor: colors.borderLight,
+            backgroundColor: colors.surface,
+          },
+        ]}
+      >
         <TextInput
           ref={inputRef}
-          style={styles.commentInput}
+          style={[
+            styles.commentInput,
+            { color: colors.text, backgroundColor: colors.inputBackground },
+          ]}
           placeholder={t("community.addComment")}
           placeholderTextColor={colors.textTertiary}
           value={commentText}
@@ -455,6 +493,7 @@ export default function PostDetailScreen() {
           disabled={!commentText.trim() || isSubmitting}
           style={[
             styles.sendButton,
+            { backgroundColor: colors.primary },
             (!commentText.trim() || isSubmitting) && styles.sendButtonDisabled,
           ]}
         >
@@ -494,7 +533,6 @@ export default function PostDetailScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   flex: {
     flex: 1,
@@ -509,7 +547,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: screenPadding.horizontal,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
   },
   backButton: {
     width: 40,
@@ -520,7 +557,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
   },
 
   // Post
@@ -546,12 +582,10 @@ const styles = StyleSheet.create({
   postAuthorName: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
   },
   postTimestamp: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     marginTop: 1,
   },
   postTypeTag: {
@@ -581,7 +615,6 @@ const styles = StyleSheet.create({
   postContent: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
     lineHeight: 22,
     marginBottom: spacing.md,
   },
@@ -590,7 +623,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
     gap: spacing.lg,
   },
   postAction: {
@@ -602,14 +634,12 @@ const styles = StyleSheet.create({
   postActionCount: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
 
   // Section
   sectionLabel: {
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.sectionLabel,
     letterSpacing: 1.5,
     marginBottom: spacing.md,
   },
@@ -623,7 +653,6 @@ const styles = StyleSheet.create({
   },
   commentContent: {
     flex: 1,
-    backgroundColor: colors.inputBackground,
     borderRadius: radii.md,
     padding: spacing.sm + 2,
   },
@@ -636,17 +665,14 @@ const styles = StyleSheet.create({
   commentAuthor: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
   },
   commentTime: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
   commentText: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
     lineHeight: 20,
   },
   loadMoreBtn: {
@@ -656,7 +682,6 @@ const styles = StyleSheet.create({
   loadMoreText: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.primary,
   },
 
   // Comment input bar
@@ -666,16 +691,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: screenPadding.horizontal,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
-    backgroundColor: colors.surface,
     gap: spacing.sm,
   },
   commentInput: {
     flex: 1,
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
-    backgroundColor: colors.inputBackground,
     borderRadius: radii.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 2,
@@ -685,7 +706,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -702,12 +722,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
   },
   emptySubtitle: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     textAlign: "center",
   },
 });

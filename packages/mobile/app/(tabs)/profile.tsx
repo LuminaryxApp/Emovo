@@ -37,6 +37,7 @@ import {
 } from "../../src/lib/notifications";
 import { getSessionId } from "../../src/lib/secure-storage";
 import { exportData } from "../../src/services/export.api";
+import { getPublicProfileApi } from "../../src/services/follow.api";
 import { getStreakApi, getStatsSummaryApi } from "../../src/services/stats.api";
 import {
   getMeApi,
@@ -104,6 +105,8 @@ export default function ProfileScreen() {
     lastLogDate: null,
   });
   const [entryCount, setEntryCount] = useState(0);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   const setUser = useAuthStore((s) => s.setUser);
 
@@ -157,6 +160,17 @@ export default function ProfileScreen() {
         setEntryCount(summaryData.entryCount ?? 0);
       } catch {
         // Silently fail — stats are non-critical
+      }
+
+      // Fetch follow counts
+      try {
+        if (!user?.id) return;
+        const profile = await getPublicProfileApi(user.id);
+        if (cancelled) return;
+        setFollowerCount(profile.followerCount);
+        setFollowingCount(profile.followingCount);
+      } catch {
+        // Non-critical
       }
     }
 
@@ -518,6 +532,18 @@ export default function ProfileScreen() {
           <Card variant="elevated" padding="md" style={styles.statsCard}>
             <View style={styles.statsRow}>
               <StatItem
+                icon="people-outline"
+                value={followerCount}
+                label={t("publicProfile.followers")}
+              />
+              <Divider orientation="vertical" spacing={0} />
+              <StatItem
+                icon="person-add-outline"
+                value={followingCount}
+                label={t("publicProfile.followingTab")}
+              />
+              <Divider orientation="vertical" spacing={0} />
+              <StatItem
                 icon="create-outline"
                 value={entryCount}
                 label={t("profile.totalEntries")}
@@ -527,12 +553,6 @@ export default function ProfileScreen() {
                 icon="flame-outline"
                 value={streak.currentStreak}
                 label={t("profile.currentStreak")}
-              />
-              <Divider orientation="vertical" spacing={0} />
-              <StatItem
-                icon="trophy-outline"
-                value={streak.longestStreak}
-                label={t("profile.longestStreak")}
               />
             </View>
           </Card>

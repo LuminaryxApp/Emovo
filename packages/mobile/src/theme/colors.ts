@@ -132,15 +132,15 @@ export const gradients = {
 
 // Dark theme colors — mirrors the light colors structure
 export const darkColors: ThemeColors = {
-  // Brand colors (same in dark mode)
-  primary: "#8FA04E",
-  primaryLight: "#A3B463",
-  primaryDark: "#75863C",
-  primaryMuted: "rgba(143, 160, 78, 0.12)",
+  // Brand colors (same as light mode)
+  primary: "#75863C",
+  primaryLight: "#8FA04E",
+  primaryDark: "#5E6B30",
+  primaryMuted: "rgba(117, 134, 60, 0.12)",
 
-  accent: "#8BB0C9",
-  accentLight: "#A3C3D6",
-  accentDark: "#6F98B8",
+  accent: "#6F98B8",
+  accentLight: "#8BB0C9",
+  accentDark: "#5A7D99",
 
   // Surfaces
   background: "#121212",
@@ -174,43 +174,43 @@ export const darkColors: ThemeColors = {
   cardShadowStrong: "rgba(0, 0, 0, 0.5)",
 
   // Semantic
-  success: "#8FA04E",
+  success: "#75863C",
   warning: "#EAB308",
-  error: "#EF4444",
-  errorLight: "rgba(239, 68, 68, 0.12)",
-  info: "#8BB0C9",
+  error: "#DC2626",
+  errorLight: "rgba(220, 38, 38, 0.12)",
+  info: "#6F98B8",
 
-  // Mood scale (same)
+  // Mood scale (same as light)
   mood: {
-    1: "#EF4444",
-    2: "#FB923C",
-    3: "#FACC15",
-    4: "#8FA04E",
-    5: "#5C9A3A",
+    1: "#DC2626",
+    2: "#F97316",
+    3: "#EAB308",
+    4: "#75863C",
+    5: "#4A7A2E",
   } as Record<number, string>,
 
   moodGlow: {
-    1: "rgba(239, 68, 68, 0.25)",
-    2: "rgba(251, 146, 60, 0.25)",
-    3: "rgba(250, 204, 21, 0.25)",
-    4: "rgba(143, 160, 78, 0.25)",
-    5: "rgba(92, 154, 58, 0.25)",
+    1: "rgba(220, 38, 38, 0.25)",
+    2: "rgba(249, 115, 22, 0.25)",
+    3: "rgba(234, 179, 8, 0.25)",
+    4: "rgba(117, 134, 60, 0.25)",
+    5: "rgba(74, 122, 46, 0.25)",
   } as Record<number, string>,
 
   moodMuted: {
-    1: "rgba(239, 68, 68, 0.15)",
-    2: "rgba(251, 146, 60, 0.15)",
-    3: "rgba(250, 204, 21, 0.15)",
-    4: "rgba(143, 160, 78, 0.15)",
-    5: "rgba(92, 154, 58, 0.15)",
+    1: "rgba(220, 38, 38, 0.15)",
+    2: "rgba(249, 115, 22, 0.15)",
+    3: "rgba(234, 179, 8, 0.15)",
+    4: "rgba(117, 134, 60, 0.15)",
+    5: "rgba(74, 122, 46, 0.15)",
   } as Record<number, string>,
 
   moodBg: {
-    1: "rgba(239, 68, 68, 0.15)",
-    2: "rgba(251, 146, 60, 0.15)",
-    3: "rgba(250, 204, 21, 0.15)",
-    4: "rgba(143, 160, 78, 0.15)",
-    5: "rgba(92, 154, 58, 0.15)",
+    1: "rgba(220, 38, 38, 0.15)",
+    2: "rgba(249, 115, 22, 0.15)",
+    3: "rgba(234, 179, 8, 0.15)",
+    4: "rgba(117, 134, 60, 0.15)",
+    5: "rgba(74, 122, 46, 0.15)",
   } as Record<number, string>,
 
   // Overlays
@@ -225,14 +225,14 @@ export const darkColors: ThemeColors = {
 
 export const darkGradients = {
   primary: ["#75863C", "#8FA04E"] as const,
-  primaryButton: ["#5E6B30", "#75863C"] as const,
-  authHeader: ["#2A2A2A", "#1E1E1E", "#121212"] as const,
-  heroCard: ["#3A3A3A", "#5E6B30", "#5A7D99"] as const,
+  primaryButton: ["#75863C", "#5E6B30"] as const,
+  authHeader: ["#1E1E1E", "#2A2A2A", "#121212"] as const,
+  heroCard: ["#5E6B30", "#75863C", "#6F98B8"] as const,
   danger: ["#DC2626", "#B91C1C"] as const,
   warmSurface: ["#1E1E1E", "#252525"] as const,
   warmBackground: ["#121212", "#1A1A1A"] as const,
-  accent: ["#5A7D99", "#6F98B8"] as const,
-  greetingCard: ["#5E6B30", "#5A7D99"] as const,
+  accent: ["#6F98B8", "#8BB0C9"] as const,
+  greetingCard: ["#75863C", "#6F98B8"] as const,
 
   mood1: ["#DC2626", "#EF4444"] as const,
   mood2: ["#F97316", "#FB923C"] as const,
