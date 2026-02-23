@@ -10,7 +10,8 @@ import {
   ViewStyle,
 } from "react-native";
 
-import { colors, gradients } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { gradients } from "../../theme/colors";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -89,6 +90,7 @@ function getGradientForName(name: string): readonly [string, string] {
 // ---------------------------------------------------------------------------
 
 export function Avatar({ name, size = "md", source, uri, style, testID }: AvatarProps) {
+  const { colors } = useTheme();
   const dimension = SIZE_MAP[size];
   const fontSize = FONT_SIZE_MAP[size];
   const borderRadius = dimension / 2;
@@ -149,7 +151,7 @@ export function Avatar({ name, size = "md", source, uri, style, testID }: Avatar
       ]}
       testID={testID}
     >
-      <Text style={[styles.initialsText, { fontSize }]}>{initials}</Text>
+      <Text style={[styles.initialsText, { fontSize, color: colors.textInverse }]}>{initials}</Text>
     </LinearGradient>
   );
 }
@@ -164,7 +166,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   initialsText: {
-    color: colors.textInverse,
     fontFamily: "SourceSerif4_700Bold",
     fontWeight: "700",
   },

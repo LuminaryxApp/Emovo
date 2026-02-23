@@ -10,7 +10,8 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 
-import { colors, gradients, cardShadow } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { cardShadow } from "../../theme/colors";
 import { spacing, radii } from "../../theme/spacing";
 
 interface MoodStreakProps {
@@ -19,6 +20,7 @@ interface MoodStreakProps {
 }
 
 export function MoodStreak({ currentStreak, longestStreak }: MoodStreakProps) {
+  const { colors, gradients } = useTheme();
   const isActive = currentStreak > 0;
   const isNewRecord = currentStreak >= longestStreak && currentStreak > 0;
 
@@ -73,7 +75,7 @@ export function MoodStreak({ currentStreak, longestStreak }: MoodStreakProps) {
           style={styles.gradientBg}
         />
       ) : (
-        <View style={styles.mutedBg} />
+        <View style={[styles.mutedBg, { backgroundColor: colors.inputBackground }]} />
       )}
 
       <View style={styles.content}>
@@ -85,7 +87,7 @@ export function MoodStreak({ currentStreak, longestStreak }: MoodStreakProps) {
           <Text
             style={[
               styles.streakNumber,
-              isActive ? styles.streakNumberActive : styles.streakNumberInactive,
+              isActive ? { color: colors.textInverse } : { color: colors.textTertiary },
             ]}
           >
             {currentStreak}
@@ -93,7 +95,7 @@ export function MoodStreak({ currentStreak, longestStreak }: MoodStreakProps) {
           <Text
             style={[
               styles.streakUnit,
-              isActive ? styles.streakUnitActive : styles.streakUnitInactive,
+              isActive ? styles.streakUnitActive : { color: colors.textTertiary },
             ]}
           >
             {currentStreak === 1 ? "day" : "days"}
@@ -104,7 +106,7 @@ export function MoodStreak({ currentStreak, longestStreak }: MoodStreakProps) {
         <Text
           style={[
             styles.bestStreak,
-            isActive ? styles.bestStreakActive : styles.bestStreakInactive,
+            isActive ? styles.bestStreakActive : { color: colors.textTertiary },
           ]}
         >
           Best: {longestStreak} {longestStreak === 1 ? "day" : "days"}
@@ -113,7 +115,7 @@ export function MoodStreak({ currentStreak, longestStreak }: MoodStreakProps) {
         {/* New record badge */}
         {isNewRecord && (
           <Animated.View style={[styles.recordBadge, badgeStyle]}>
-            <Text style={styles.recordBadgeText}>New record!</Text>
+            <Text style={[styles.recordBadgeText, { color: colors.textInverse }]}>New record!</Text>
           </Animated.View>
         )}
       </View>
@@ -132,7 +134,6 @@ const styles = StyleSheet.create({
   },
   mutedBg: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: colors.inputBackground,
   },
   content: {
     padding: spacing.md,
@@ -150,12 +151,6 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontFamily: "SourceSerif4_700Bold",
   },
-  streakNumberActive: {
-    color: colors.textInverse,
-  },
-  streakNumberInactive: {
-    color: colors.textTertiary,
-  },
   streakUnit: {
     fontSize: 16,
     fontFamily: "SourceSerif4_400Regular",
@@ -164,9 +159,6 @@ const styles = StyleSheet.create({
   streakUnitActive: {
     color: "rgba(255,255,255,0.85)",
   },
-  streakUnitInactive: {
-    color: colors.textTertiary,
-  },
   bestStreak: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
@@ -174,9 +166,6 @@ const styles = StyleSheet.create({
   },
   bestStreakActive: {
     color: "rgba(255,255,255,0.7)",
-  },
-  bestStreakInactive: {
-    color: colors.textTertiary,
   },
   recordBadge: {
     marginTop: spacing.sm,
@@ -188,7 +177,6 @@ const styles = StyleSheet.create({
   recordBadgeText: {
     fontSize: 12,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textInverse,
     letterSpacing: 0.5,
   },
 });

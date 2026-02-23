@@ -17,7 +17,7 @@ import Animated, {
   interpolateColor,
 } from "react-native-reanimated";
 
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { spacing, radii } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
 
@@ -82,6 +82,7 @@ export function Input({
   onSubmitEditing,
   autoFocus,
 }: InputProps) {
+  const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const focusAnim = useSharedValue(0);
 
@@ -112,14 +113,19 @@ export function Input({
   return (
     <View style={[styles.container, style]}>
       {/* Label */}
-      {label && <Text style={[styles.label, hasError && styles.labelError]}>{label}</Text>}
+      {label && (
+        <Text style={[styles.label, { color: colors.text }, hasError && { color: colors.error }]}>
+          {label}
+        </Text>
+      )}
 
       {/* Input container */}
       <AnimatedView
         style={[
           styles.inputContainer,
+          { backgroundColor: colors.inputBackground, borderColor: colors.border },
           multiline && styles.multilineContainer,
-          !editable && styles.disabledContainer,
+          !editable && [styles.disabledContainer, { backgroundColor: colors.borderLight }],
           animatedBorderStyle,
         ]}
       >
@@ -154,6 +160,7 @@ export function Input({
           autoFocus={autoFocus}
           style={[
             styles.input,
+            { color: colors.text },
             multiline && styles.multilineInput,
             leftIcon ? styles.inputWithLeftIcon : undefined,
             rightIcon ? styles.inputWithRightIcon : undefined,
@@ -174,7 +181,7 @@ export function Input({
 
       {/* Character count for multiline with maxLength */}
       {multiline && maxLength && (
-        <Text style={styles.charCount}>
+        <Text style={[styles.charCount, { color: colors.textTertiary }]}>
           {value.length}/{maxLength}
         </Text>
       )}
@@ -183,10 +190,10 @@ export function Input({
       {hasError ? (
         <View style={styles.errorRow}>
           <Ionicons name="alert-circle" size={14} color={colors.error} />
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
         </View>
       ) : hint ? (
-        <Text style={styles.hintText}>{hint}</Text>
+        <Text style={[styles.hintText, { color: colors.textSecondary }]}>{hint}</Text>
       ) : null}
     </View>
   );
@@ -204,19 +211,13 @@ const styles = StyleSheet.create({
     ...typography.caption,
     fontFamily: "SourceSerif4_600SemiBold",
     fontWeight: "600",
-    color: colors.text,
     marginBottom: spacing.xs + 2,
-  },
-  labelError: {
-    color: colors.error,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.inputBackground,
     borderRadius: radii.md,
     borderWidth: 1.5,
-    borderColor: colors.border,
     paddingHorizontal: spacing.md,
     minHeight: 48,
   },
@@ -227,7 +228,6 @@ const styles = StyleSheet.create({
   },
   disabledContainer: {
     opacity: 0.6,
-    backgroundColor: colors.borderLight,
   },
   leftIcon: {
     marginRight: spacing.sm,
@@ -235,7 +235,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     ...typography.body,
-    color: colors.text,
     paddingVertical: spacing.sm,
   },
   multilineInput: {
@@ -254,7 +253,6 @@ const styles = StyleSheet.create({
   },
   charCount: {
     ...typography.small,
-    color: colors.textTertiary,
     textAlign: "right",
     marginTop: spacing.xs,
   },
@@ -266,11 +264,9 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...typography.small,
-    color: colors.error,
   },
   hintText: {
     ...typography.small,
-    color: colors.textSecondary,
     marginTop: spacing.xs + 2,
   },
 });

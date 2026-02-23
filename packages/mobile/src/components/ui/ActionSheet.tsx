@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { spacing, radii } from "../../theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -29,6 +29,7 @@ interface ActionSheetProps {
 // ---------------------------------------------------------------------------
 
 export function ActionSheet({ visible, onClose, actions, title }: ActionSheetProps) {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(300)).current;
   const backdropAnim = useRef(new Animated.Value(0)).current;
@@ -106,7 +107,7 @@ export function ActionSheet({ visible, onClose, actions, title }: ActionSheetPro
           )}
 
           {/* Actions */}
-          <View style={styles.actionsGroup}>
+          <View style={[styles.actionsGroup, { backgroundColor: colors.surface }]}>
             {actions.map((action, index) => (
               <Pressable
                 key={index}
@@ -116,10 +117,13 @@ export function ActionSheet({ visible, onClose, actions, title }: ActionSheetPro
                 }}
                 style={({ pressed }) => [
                   styles.actionItem,
-                  pressed && styles.actionItemPressed,
+                  pressed && { backgroundColor: colors.inputBackground },
                   index === 0 && styles.actionItemFirst,
                   index === actions.length - 1 && styles.actionItemLast,
-                  index < actions.length - 1 && styles.actionItemBorder,
+                  index < actions.length - 1 && {
+                    borderBottomWidth: StyleSheet.hairlineWidth,
+                    borderBottomColor: colors.borderLight,
+                  },
                 ]}
               >
                 <Ionicons
@@ -129,7 +133,14 @@ export function ActionSheet({ visible, onClose, actions, title }: ActionSheetPro
                   style={styles.actionIcon}
                 />
                 <Text
-                  style={[styles.actionLabel, action.destructive && styles.actionLabelDestructive]}
+                  style={[
+                    styles.actionLabel,
+                    { color: colors.text },
+                    action.destructive && {
+                      color: colors.error,
+                      fontFamily: "SourceSerif4_600SemiBold",
+                    },
+                  ]}
                 >
                   {action.label}
                 </Text>
@@ -140,9 +151,13 @@ export function ActionSheet({ visible, onClose, actions, title }: ActionSheetPro
           {/* Cancel */}
           <Pressable
             onPress={handleClose}
-            style={({ pressed }) => [styles.cancelButton, pressed && styles.cancelButtonPressed]}
+            style={({ pressed }) => [
+              styles.cancelButton,
+              { backgroundColor: colors.surface },
+              pressed && { backgroundColor: colors.inputBackground },
+            ]}
           >
-            <Text style={styles.cancelLabel}>Cancel</Text>
+            <Text style={[styles.cancelLabel, { color: colors.primary }]}>Cancel</Text>
           </Pressable>
         </Animated.View>
       </View>
@@ -186,7 +201,6 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.7)",
   },
   actionsGroup: {
-    backgroundColor: colors.surface,
     borderRadius: radii.xl,
     overflow: "hidden",
     marginBottom: spacing.sm,
@@ -203,37 +217,20 @@ const styles = StyleSheet.create({
   actionItemLast: {
     // intentionally empty
   },
-  actionItemBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderLight,
-  },
-  actionItemPressed: {
-    backgroundColor: colors.inputBackground,
-  },
   actionIcon: {
     marginRight: spacing.md,
   },
   actionLabel: {
     fontSize: 16,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
-  },
-  actionLabelDestructive: {
-    color: colors.error,
-    fontFamily: "SourceSerif4_600SemiBold",
   },
   cancelButton: {
     alignItems: "center",
     paddingVertical: 16,
-    backgroundColor: colors.surface,
     borderRadius: radii.xl,
-  },
-  cancelButtonPressed: {
-    backgroundColor: colors.inputBackground,
   },
   cancelLabel: {
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.primary,
   },
 });

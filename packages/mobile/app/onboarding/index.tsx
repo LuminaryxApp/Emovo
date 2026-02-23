@@ -2,12 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet, Dimensions, Animated, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { colors, gradients } from "../../src/theme/colors";
+import { useTheme } from "../../src/theme/ThemeContext";
 import { spacing, radii } from "../../src/theme/spacing";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -18,40 +18,44 @@ interface OnboardingSlide {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   description: string;
-  gradient: readonly [string, string];
+  gradient: readonly [string, string, ...string[]];
 }
-
-const SLIDES: OnboardingSlide[] = [
-  {
-    id: "1",
-    icon: "leaf",
-    title: "Track Your Mood",
-    description: "Log how you feel throughout the day with our simple 5-point scale",
-    gradient: gradients.greetingCard,
-  },
-  {
-    id: "2",
-    icon: "analytics",
-    title: "Discover Patterns",
-    description: "Understand what influences your emotional well-being with insights",
-    gradient: ["#6F98B8", "#8BB0C9"] as const,
-  },
-  {
-    id: "3",
-    icon: "trending-up",
-    title: "Grow & Thrive",
-    description: "Build healthy habits and watch your emotional wellness flourish",
-    gradient: ["#4A7A2E", "#5C9A3A"] as const,
-  },
-];
 
 export default function OnboardingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const flatListRef = useRef<Animated.FlatList<(typeof SLIDES)[number]>>(null);
+  const { colors, gradients } = useTheme();
+  const flatListRef = useRef<Animated.FlatList<OnboardingSlide>>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
+
+  const slides: OnboardingSlide[] = useMemo(
+    () => [
+      {
+        id: "1",
+        icon: "leaf",
+        title: "Track Your Mood",
+        description: "Log how you feel throughout the day with our simple 5-point scale",
+        gradient: gradients.greetingCard,
+      },
+      {
+        id: "2",
+        icon: "analytics",
+        title: "Discover Patterns",
+        description: "Understand what influences your emotional well-being with insights",
+        gradient: ["#6F98B8", "#8BB0C9"] as const,
+      },
+      {
+        id: "3",
+        icon: "trending-up",
+        title: "Grow & Thrive",
+        description: "Build healthy habits and watch your emotional wellness flourish",
+        gradient: ["#4A7A2E", "#5C9A3A"] as const,
+      },
+    ],
+    [gradients],
+  );
 
   const onViewableItemsChanged = useRef(
     ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
@@ -69,26 +73,30 @@ export default function OnboardingScreen() {
   };
 
   const handleNext = () => {
-    if (currentIndex < SLIDES.length - 1) {
+    if (currentIndex < slides.length - 1) {
       flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
     } else {
       handleComplete();
     }
   };
 
-  const isLastSlide = currentIndex === SLIDES.length - 1;
+  const isLastSlide = currentIndex === slides.length - 1;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View
+      style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}
+    >
       {!isLastSlide && (
         <Pressable style={styles.skipButton} onPress={handleComplete}>
-          <Text style={styles.skipText}>{t("onboarding.skip", "Skip")}</Text>
+          <Text style={[styles.skipText, { color: colors.textSecondary }]}>
+            {t("onboarding.skip", "Skip")}
+          </Text>
         </Pressable>
       )}
 
       <Animated.FlatList
         ref={flatListRef}
-        data={SLIDES}
+        data={slides}
         renderItem={({ item, index }) => <SlideItem slide={item} index={index} scrollX={scrollX} />}
         keyExtractor={(item) => item.id}
         horizontal
@@ -104,7 +112,7 @@ export default function OnboardingScreen() {
 
       <View style={[styles.bottomSection, { paddingBottom: insets.bottom + spacing.lg }]}>
         <View style={styles.pagination}>
-          {SLIDES.map((_, i) => (
+          {slides.map((_, i) => (
             <PaginationDot key={i} index={i} currentIndex={currentIndex} />
           ))}
         </View>
@@ -116,7 +124,7 @@ export default function OnboardingScreen() {
             end={{ x: 1, y: 1 }}
             style={styles.nextButton}
           >
-            <Text style={styles.nextButtonText}>
+            <Text style={[styles.nextButtonText, { color: colors.textInverse }]}>
               {isLastSlide
                 ? t("onboarding.getStarted", "Get Started")
                 : t("onboarding.next", "Next")}
@@ -137,6 +145,7 @@ function SlideItem({
   index: number;
   scrollX: Animated.Value;
 }) {
+  const { colors } = useTheme();
   const inputRange = [(index - 1) * SCREEN_WIDTH, index * SCREEN_WIDTH, (index + 1) * SCREEN_WIDTH];
 
   const scale = scrollX.interpolate({
@@ -157,14 +166,17 @@ function SlideItem({
         <LinearGradient colors={[...slide.gradient]} style={styles.iconContainer}>
           <Ionicons name={slide.icon} size={48} color={colors.surface} />
         </LinearGradient>
-        <Text style={styles.slideTitle}>{slide.title}</Text>
-        <Text style={styles.slideDescription}>{slide.description}</Text>
+        <Text style={[styles.slideTitle, { color: colors.text }]}>{slide.title}</Text>
+        <Text style={[styles.slideDescription, { color: colors.textSecondary }]}>
+          {slide.description}
+        </Text>
       </Animated.View>
     </View>
   );
 }
 
 function PaginationDot({ index, currentIndex }: { index: number; currentIndex: number }) {
+  const { colors } = useTheme();
   const isActive = index === currentIndex;
   const widthAnim = useRef(new Animated.Value(isActive ? 24 : 8)).current;
 
@@ -177,13 +189,21 @@ function PaginationDot({ index, currentIndex }: { index: number; currentIndex: n
     }).start();
   }, [isActive, widthAnim]);
 
-  return <Animated.View style={[styles.dot, isActive && styles.dotActive, { width: widthAnim }]} />;
+  return (
+    <Animated.View
+      style={[
+        styles.dot,
+        { backgroundColor: colors.border },
+        isActive && { backgroundColor: colors.primary },
+        { width: widthAnim },
+      ]}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   skipButton: {
     position: "absolute",
@@ -195,7 +215,6 @@ const styles = StyleSheet.create({
   skipText: {
     fontFamily: "SourceSerif4_600SemiBold",
     fontSize: 14,
-    color: colors.textSecondary,
   },
   slide: {
     width: SCREEN_WIDTH,
@@ -218,13 +237,11 @@ const styles = StyleSheet.create({
   slideTitle: {
     fontFamily: "SourceSerif4_700Bold",
     fontSize: 36,
-    color: colors.text,
     textAlign: "center",
   },
   slideDescription: {
     fontFamily: "SourceSerif4_400Regular",
     fontSize: 18,
-    color: colors.textSecondary,
     textAlign: "center",
     maxWidth: 300,
     lineHeight: 28,
@@ -241,10 +258,6 @@ const styles = StyleSheet.create({
   dot: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.border,
-  },
-  dotActive: {
-    backgroundColor: colors.primary,
   },
   nextButton: {
     height: 56,
@@ -255,6 +268,5 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontFamily: "SourceSerif4_600SemiBold",
     fontSize: 16,
-    color: colors.textInverse,
   },
 });

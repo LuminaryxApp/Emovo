@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -34,6 +34,7 @@ export function ProgressBar({
   style,
   testID,
 }: ProgressBarProps) {
+  const { colors } = useTheme();
   const clampedProgress = Math.min(100, Math.max(0, progress));
   const widthAnim = useSharedValue(0);
 
@@ -53,7 +54,14 @@ export function ProgressBar({
   const fillColor = color ?? colors.primary;
 
   return (
-    <View style={[styles.track, { height, borderRadius: height / 2 }, style]} testID={testID}>
+    <View
+      style={[
+        styles.track,
+        { height, borderRadius: height / 2, backgroundColor: colors.borderLight },
+        style,
+      ]}
+      testID={testID}
+    >
       <Animated.View style={[styles.fill, { height, borderRadius: height / 2 }, animatedFillStyle]}>
         {useGradient ? (
           <LinearGradient
@@ -84,7 +92,6 @@ export function ProgressBar({
 
 const styles = StyleSheet.create({
   track: {
-    backgroundColor: colors.borderLight,
     overflow: "hidden",
     width: "100%",
   },

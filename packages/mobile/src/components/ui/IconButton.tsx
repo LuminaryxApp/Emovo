@@ -4,7 +4,8 @@ import React, { useCallback } from "react";
 import { Pressable, StyleProp, StyleSheet, ViewStyle } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
-import { colors, cardShadow } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { cardShadow } from "../../theme/colors";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,6 +49,7 @@ export function IconButton({
   style,
   testID,
 }: IconButtonProps) {
+  const { colors } = useTheme();
   const scale = useSharedValue(1);
   const sizeConfig = SIZE_CONFIG[size];
 

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
 
@@ -35,18 +35,20 @@ export function EmptyState({
   style,
   testID,
 }: EmptyStateProps) {
+  const { colors } = useTheme();
+
   return (
     <View style={[styles.container, style]} testID={testID}>
       {/* Icon circle */}
-      <View style={styles.iconCircle}>
+      <View style={[styles.iconCircle, { backgroundColor: colors.primaryMuted }]}>
         <Ionicons name={icon} size={32} color={colors.primary} />
       </View>
 
       {/* Title */}
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
 
       {/* Description */}
-      <Text style={styles.description}>{description}</Text>
+      <Text style={[styles.description, { color: colors.textSecondary }]}>{description}</Text>
 
       {/* Optional action button */}
       {actionLabel && onAction && (
@@ -77,20 +79,17 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: colors.primaryMuted,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.lg,
   },
   title: {
     ...typography.h3,
-    color: colors.text,
     textAlign: "center",
     marginBottom: spacing.sm,
   },
   description: {
     ...typography.caption,
-    color: colors.textSecondary,
     textAlign: "center",
     lineHeight: 20,
     maxWidth: 280,

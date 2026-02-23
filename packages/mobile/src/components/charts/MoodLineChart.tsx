@@ -2,7 +2,8 @@ import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 
-import { colors, cardShadow } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { cardShadow } from "../../theme/colors";
 import { spacing, radii } from "../../theme/spacing";
 
 interface DataPoint {
@@ -26,6 +27,7 @@ function formatLabel(dateStr: string, period: string): string {
 
 export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   if (dataPoints.length < 2) return null;
 
@@ -38,8 +40,10 @@ export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionLabel}>{t("charts.moodTrend")}</Text>
-      <View style={styles.card}>
+      <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+        {t("charts.moodTrend")}
+      </Text>
+      <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
         <View style={styles.chartWrapper}>
           <LineChart
             data={lineData}
@@ -63,8 +67,8 @@ export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
             startOpacity={0.35}
             endOpacity={0}
             areaChart
-            xAxisLabelTextStyle={styles.xLabel}
-            yAxisTextStyle={styles.yLabel}
+            xAxisLabelTextStyle={[styles.xLabel, { color: colors.textTertiary }]}
+            yAxisTextStyle={[styles.yLabel, { color: colors.textTertiary }]}
           />
         </View>
       </View>
@@ -79,13 +83,11 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.sectionLabel,
     letterSpacing: 1.5,
     marginBottom: spacing.sm,
     marginLeft: spacing.xs,
   },
   card: {
-    backgroundColor: colors.cardBackground,
     borderRadius: radii.xl,
     padding: spacing.md,
     ...cardShadow(),
@@ -97,11 +99,9 @@ const styles = StyleSheet.create({
   xLabel: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
   yLabel: {
     fontSize: 10,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
 });

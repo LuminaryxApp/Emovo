@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import { useTranslation } from "react-i18next";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { spacing, radii } from "../../theme/spacing";
 
 type Period = "week" | "month" | "year";
@@ -16,20 +16,30 @@ const PERIODS: Period[] = ["week", "month", "year"];
 
 export function PeriodSelector({ value, onChange }: PeriodSelectorProps) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.borderLight }]}>
       {PERIODS.map((p) => (
         <TouchableOpacity
           key={p}
-          style={[styles.segment, value === p && styles.segmentActive]}
+          style={[
+            styles.segment,
+            value === p && [styles.segmentActive, { backgroundColor: colors.surface }],
+          ]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onChange(p);
           }}
           activeOpacity={0.7}
         >
-          <Text style={[styles.label, value === p && styles.labelActive]}>
+          <Text
+            style={[
+              styles.label,
+              { color: colors.textTertiary },
+              value === p && [styles.labelActive, { color: colors.primary }],
+            ]}
+          >
             {t(`insights.periods.${p}`)}
           </Text>
         </TouchableOpacity>
@@ -54,7 +64,6 @@ const activeShadow = Platform.select({
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: colors.borderLight,
     borderRadius: radii.pill,
     padding: 3,
     height: 44,
@@ -67,16 +76,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   segmentActive: {
-    backgroundColor: colors.surface,
     ...activeShadow,
   },
   label: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textTertiary,
   },
   labelActive: {
     fontWeight: "700",
-    color: colors.primary,
   },
 });

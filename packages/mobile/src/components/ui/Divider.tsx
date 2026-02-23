@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { spacing } from "../../theme/spacing";
 import { typography } from "../../theme/typography";
 
@@ -28,6 +28,7 @@ export function Divider({
   label,
   style,
 }: DividerProps) {
+  const { colors } = useTheme();
   const marginValue = customSpacing ?? spacing.md;
 
   // Vertical divider
@@ -37,6 +38,7 @@ export function Divider({
         style={[
           styles.vertical,
           {
+            backgroundColor: colors.divider,
             marginHorizontal: marginValue,
           },
           style,
@@ -57,9 +59,9 @@ export function Divider({
           style,
         ]}
       >
-        <View style={styles.line} />
-        <Text style={styles.label}>{label}</Text>
-        <View style={styles.line} />
+        <View style={[styles.line, { backgroundColor: colors.divider }]} />
+        <Text style={[styles.label, { color: colors.textTertiary }]}>{label}</Text>
+        <View style={[styles.line, { backgroundColor: colors.divider }]} />
       </View>
     );
   }
@@ -70,6 +72,7 @@ export function Divider({
       style={[
         styles.horizontal,
         {
+          backgroundColor: colors.divider,
           marginVertical: marginValue,
         },
         style,
@@ -85,12 +88,10 @@ export function Divider({
 const styles = StyleSheet.create({
   horizontal: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.divider,
     alignSelf: "stretch",
   },
   vertical: {
     width: StyleSheet.hairlineWidth,
-    backgroundColor: colors.divider,
     alignSelf: "stretch",
   },
   labelContainer: {
@@ -101,12 +102,10 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.divider,
   },
   label: {
     ...typography.small,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textTertiary,
     marginHorizontal: spacing.md,
     letterSpacing: 0.5,
     textTransform: "uppercase",

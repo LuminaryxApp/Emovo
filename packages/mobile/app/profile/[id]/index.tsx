@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Avatar } from "../../../src/components/ui";
 import { getPublicName } from "../../../src/lib/display-name";
+import { createConversationApi } from "../../../src/services/community.api";
 import {
   getPublicProfileApi,
   followUserApi,
@@ -51,6 +52,7 @@ export default function PublicProfileScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [messageLoading, setMessageLoading] = useState(false);
 
   // ---------------------------------------------------------------------------
   // Data fetching
@@ -167,6 +169,26 @@ export default function PublicProfileScreen() {
       ],
     );
   }, [id, profile, followLoading, t]);
+
+  // ---------------------------------------------------------------------------
+  // Message action
+  // ---------------------------------------------------------------------------
+
+  const handleMessage = useCallback(async () => {
+    if (!id || !profile || messageLoading) return;
+    setMessageLoading(true);
+    try {
+      const conversation = await createConversationApi({ participantIds: [id] });
+      router.push({
+        pathname: "/conversation/[id]",
+        params: { id: conversation.id, name: getPublicName(profile) },
+      });
+    } catch {
+      Alert.alert(t("common.error"), t("publicProfile.messageError"));
+    } finally {
+      setMessageLoading(false);
+    }
+  }, [id, profile, messageLoading, router, t]);
 
   // ---------------------------------------------------------------------------
   // Follow button rendering
@@ -344,7 +366,13 @@ export default function PublicProfileScreen() {
           style={styles.avatarContainer}
         >
           <View style={[styles.avatarBorder, { backgroundColor: colors.background }]}>
-            <Avatar name={profile.displayName} size="3xl" uri={profile.avatarBase64 ?? undefined} />
+            <Avatar
+              name={profile.displayName}
+              size="3xl"
+              uri={
+                profile.avatarBase64 ? `data:image/jpeg;base64,${profile.avatarBase64}` : undefined
+              }
+            />
           </View>
         </Animated.View>
 
@@ -397,12 +425,32 @@ export default function PublicProfileScreen() {
           </Pressable>
         </Animated.View>
 
-        {/* Follow button */}
+        {/* Action buttons */}
         <Animated.View
           entering={FadeInDown.duration(400).delay(500)}
           style={styles.followButtonContainer}
         >
-          {renderFollowButton()}
+          <View style={styles.actionButtonsRow}>
+            {renderFollowButton()}
+            {profile.followStatus !== "self" && (
+              <Pressable
+                style={[styles.messageButton, { borderColor: colors.accent, borderWidth: 1 }]}
+                onPress={handleMessage}
+                disabled={messageLoading}
+              >
+                {messageLoading ? (
+                  <ActivityIndicator size="small" color={colors.accent} />
+                ) : (
+                  <>
+                    <Ionicons name="chatbubble-outline" size={16} color={colors.accent} />
+                    <Text style={[styles.followButtonText, { color: colors.accent }]}>
+                      {t("publicProfile.message")}
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+            )}
+          </View>
         </Animated.View>
 
         {/* Private account notice */}
@@ -573,6 +621,20 @@ const styles = StyleSheet.create({
   followButtonText: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
+  },
+  actionButtonsRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  messageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radii.pill,
+    minWidth: 120,
   },
 
   // Private notice

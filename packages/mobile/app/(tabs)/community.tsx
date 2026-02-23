@@ -25,11 +25,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Card, Avatar, Badge, ActionSheet, type ActionSheetItem } from "../../src/components/ui";
 import { getPublicName } from "../../src/lib/display-name";
+import { getUnreadCountApi } from "../../src/services/notification.api";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useCommunityStore } from "../../src/stores/community.store";
 import { moodEmojis } from "../../src/theme";
 import { useTheme } from "../../src/theme/ThemeContext";
-import { colors, cardShadow, type MoodLevel } from "../../src/theme/colors";
+import { cardShadow, type MoodLevel } from "../../src/theme/colors";
 import { spacing, radii, screenPadding, borderRadius, iconSizes } from "../../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -156,6 +157,9 @@ export default function CommunityScreen() {
 
   const postInputRef = useRef<TextInput>(null);
 
+  // Notification badge count
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+
   // Total unread count for the messages badge
   const totalUnread = useMemo(
     () => conversations.reduce((sum, c) => sum + c.unreadCount, 0),
@@ -203,6 +207,24 @@ export default function CommunityScreen() {
   useEffect(() => {
     loadTabData(activeTab);
   }, [activeTab, loadTabData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchUnreadCount() {
+      try {
+        const count = await getUnreadCountApi();
+        if (!cancelled) setUnreadNotifCount(count);
+      } catch {
+        /* silent */
+      }
+    }
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -435,10 +457,19 @@ export default function CommunityScreen() {
           <Ionicons name="search-outline" size={iconSizes.sm} color={colors.text} />
         </Pressable>
         <Pressable
-          onPress={showComingSoon}
+          onPress={() => router.push("/notifications")}
           style={[styles.headerIconBtn, cardShadow(), { backgroundColor: colors.surface }]}
         >
-          <Ionicons name="notifications-outline" size={iconSizes.sm} color={colors.text} />
+          <View style={styles.tabIconWrap}>
+            <Ionicons name="notifications-outline" size={iconSizes.sm} color={colors.text} />
+            {unreadNotifCount > 0 && (
+              <View style={[styles.tabBadge, { backgroundColor: colors.error }]}>
+                <Text style={[styles.tabBadgeText, { color: colors.textInverse }]}>
+                  {unreadNotifCount > 99 ? "99+" : unreadNotifCount}
+                </Text>
+              </View>
+            )}
+          </View>
         </Pressable>
       </View>
     </Animated.View>
@@ -620,7 +651,7 @@ export default function CommunityScreen() {
                   size={iconSizes.sm}
                   color={colors.textTertiary}
                 />
-                <Text style={styles.postActionCount}>
+                <Text style={[styles.postActionCount, { color: colors.textTertiary }]}>
                   {post.commentCount > 0 ? post.commentCount : ""}
                 </Text>
               </Pressable>
@@ -849,7 +880,9 @@ export default function CommunityScreen() {
           ) : (
             <View style={styles.conversationAvatarWrap}>
               <Avatar name={displayName} size="lg" />
-              {convo.isOnline && <View style={styles.onlineDot} />}
+              {convo.isOnline && (
+                <View style={[styles.onlineDot, { borderColor: colors.background }]} />
+              )}
             </View>
           )}
           <View style={styles.conversationInfo}>
@@ -938,7 +971,7 @@ export default function CommunityScreen() {
                 <Pressable key={c.id} style={styles.onlineItem}>
                   <View style={styles.onlineAvatarWrap}>
                     <Avatar name={c.name || "User"} size="lg" />
-                    <View style={styles.onlineDotLarge} />
+                    <View style={[styles.onlineDotLarge, { borderColor: colors.background }]} />
                   </View>
                   <Text
                     style={[styles.onlineName, { color: colors.textSecondary }]}
@@ -1007,7 +1040,7 @@ export default function CommunityScreen() {
           onPress={showComingSoon}
           style={[
             styles.newMessageFab,
-            { bottom: insets.bottom + 56, backgroundColor: colors.primary },
+            { bottom: insets.bottom + 8, backgroundColor: colors.primary },
           ]}
         >
           <Ionicons name="create-outline" size={22} color={colors.textInverse} />
@@ -1307,7 +1340,6 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   flex: {
     flex: 1,
@@ -1327,7 +1359,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
   },
   headerActions: {
     flexDirection: "row",
@@ -1337,7 +1368,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1345,7 +1375,6 @@ const styles = StyleSheet.create({
   // ── Tab Selector ────────────────────────────────────────────
   tabSelector: {
     flexDirection: "row",
-    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: spacing.xs,
     gap: spacing.xs,
@@ -1360,9 +1389,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     gap: spacing.xs + 2,
   },
-  tabButtonActive: {
-    backgroundColor: colors.primaryMuted,
-  },
+  tabButtonActive: {},
   tabIconWrap: {
     position: "relative",
   },
@@ -1370,7 +1397,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -4,
     right: -8,
-    backgroundColor: colors.error,
     borderRadius: borderRadius.full,
     minWidth: 16,
     height: 16,
@@ -1381,15 +1407,10 @@ const styles = StyleSheet.create({
   tabBadgeText: {
     fontSize: 9,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.textInverse,
   },
   tabLabel: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textTertiary,
-  },
-  tabLabelActive: {
-    color: colors.primary,
   },
 
   // ── Tab Content ─────────────────────────────────────────────
@@ -1408,7 +1429,6 @@ const styles = StyleSheet.create({
   },
   createPostInput: {
     flex: 1,
-    backgroundColor: colors.inputBackground,
     borderRadius: radii.pill,
     paddingVertical: spacing.sm + 2,
     paddingHorizontal: spacing.md,
@@ -1416,14 +1436,12 @@ const styles = StyleSheet.create({
   createPostPlaceholder: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
   createPostActions: {
     flexDirection: "row",
     marginTop: spacing.md,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
     gap: spacing.lg,
     justifyContent: "center",
   },
@@ -1435,7 +1453,6 @@ const styles = StyleSheet.create({
   createPostActionText: {
     fontSize: 12,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
   },
 
   // ── Feed: Post card ─────────────────────────────────────────
@@ -1460,12 +1477,10 @@ const styles = StyleSheet.create({
   postAuthorName: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
   },
   postTimestamp: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     marginTop: 1,
   },
   postTypeTag: {
@@ -1495,7 +1510,6 @@ const styles = StyleSheet.create({
   postContent: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
     lineHeight: 21,
     marginBottom: spacing.md,
   },
@@ -1504,7 +1518,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
     gap: spacing.lg,
   },
   postAction: {
@@ -1516,7 +1529,6 @@ const styles = StyleSheet.create({
   postActionCount: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
   postActionSpacer: {
     flex: 1,
@@ -1536,13 +1548,11 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.sectionLabel,
     letterSpacing: 1.5,
   },
   seeAllText: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.primary,
   },
 
   // ── Groups: My Groups scroll ────────────────────────────────
@@ -1568,7 +1578,6 @@ const styles = StyleSheet.create({
   myGroupName: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     textAlign: "center",
   },
   createGroupCircle: {
@@ -1576,7 +1585,6 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: colors.border,
     borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
@@ -1608,22 +1616,18 @@ const styles = StyleSheet.create({
   discoverGroupName: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
   },
   discoverGroupDesc: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     marginTop: 1,
   },
   discoverGroupMembers: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     marginTop: 2,
   },
   joinButton: {
-    backgroundColor: colors.primary,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
@@ -1631,11 +1635,9 @@ const styles = StyleSheet.create({
   joinButtonText: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textInverse,
   },
   leaveButton: {
     borderWidth: 1,
-    borderColor: colors.error,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
@@ -1643,14 +1645,12 @@ const styles = StyleSheet.create({
   leaveButtonText: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.error,
   },
 
   // ── Messages: Search ────────────────────────────────────────
   messageSearchWrap: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.inputBackground,
     borderRadius: radii.pill,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 2,
@@ -1660,7 +1660,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
     padding: 0,
   },
 
@@ -1686,12 +1685,10 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     backgroundColor: "#22C55E",
     borderWidth: 2,
-    borderColor: colors.background,
   },
   onlineName: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     textAlign: "center",
   },
 
@@ -1701,7 +1698,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.sm + 4,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
     gap: spacing.md,
   },
   conversationAvatarWrap: {
@@ -1716,7 +1712,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     backgroundColor: "#22C55E",
     borderWidth: 2,
-    borderColor: colors.background,
   },
   groupAvatarWrap: {
     width: 48,
@@ -1741,7 +1736,6 @@ const styles = StyleSheet.create({
   conversationName: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     flex: 1,
     marginRight: spacing.sm,
   },
@@ -1751,7 +1745,6 @@ const styles = StyleSheet.create({
   conversationTime: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
   conversationBottomRow: {
     flexDirection: "row",
@@ -1761,16 +1754,13 @@ const styles = StyleSheet.create({
   conversationLastMsg: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     flex: 1,
     marginRight: spacing.sm,
   },
   conversationLastMsgUnread: {
-    color: colors.textSecondary,
     fontFamily: "SourceSerif4_600SemiBold",
   },
   unreadBadge: {
-    backgroundColor: colors.primary,
     borderRadius: borderRadius.full,
     minWidth: 20,
     height: 20,
@@ -1781,7 +1771,6 @@ const styles = StyleSheet.create({
   unreadBadgeText: {
     fontSize: 11,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.textInverse,
   },
 
   // ── Modals ─────────────────────────────────────────────────
@@ -1794,7 +1783,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.4)",
   },
   modalSheet: {
-    backgroundColor: colors.surface,
     borderTopLeftRadius: radii.xl,
     borderTopRightRadius: radii.xl,
     paddingHorizontal: screenPadding.horizontal,
@@ -1810,15 +1798,12 @@ const styles = StyleSheet.create({
   modalCancel: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
   },
   modalTitle: {
     fontSize: 17,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
   },
   modalPostButton: {
-    backgroundColor: colors.primary,
     paddingHorizontal: spacing.md + 4,
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
@@ -1831,7 +1816,6 @@ const styles = StyleSheet.create({
   modalPostButtonText: {
     fontSize: 14,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textInverse,
   },
   postTypePills: {
     flexDirection: "row",
@@ -1845,23 +1829,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
-    backgroundColor: colors.inputBackground,
   },
-  postTypePillActive: {
-    backgroundColor: colors.primary,
-  },
+  postTypePillActive: {},
   postTypePillText: {
     fontSize: 12,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
   },
-  postTypePillTextActive: {
-    color: colors.textInverse,
-  },
+  postTypePillTextActive: {},
   postTextInput: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
     minHeight: 100,
     textAlignVertical: "top",
     padding: 0,
@@ -1873,7 +1850,6 @@ const styles = StyleSheet.create({
   moodSelectorLabel: {
     fontSize: 12,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.sectionLabel,
     letterSpacing: 1,
     marginBottom: spacing.sm,
   },
@@ -1887,12 +1863,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.inputBackground,
   },
   moodEmojiBtnActive: {
-    backgroundColor: colors.primaryMuted,
     borderWidth: 2,
-    borderColor: colors.primary,
   },
   moodEmoji: {
     fontSize: 20,
@@ -1900,7 +1873,6 @@ const styles = StyleSheet.create({
   charCount: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     textAlign: "right",
     marginBottom: spacing.sm,
   },
@@ -1910,8 +1882,6 @@ const styles = StyleSheet.create({
   groupInput: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
-    backgroundColor: colors.inputBackground,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 4,
@@ -1935,12 +1905,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
   },
   emptySubtitle: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     textAlign: "center",
   },
   inlineLoader: {
@@ -1952,7 +1920,6 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
     ...Platform.select({
@@ -1977,8 +1944,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.lg,
     borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: colors.border,
-    backgroundColor: colors.inputBackground,
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
@@ -1986,7 +1951,6 @@ const styles = StyleSheet.create({
   photoPickerText: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.primary,
   },
   photoPreviewWrap: {
     position: "relative",

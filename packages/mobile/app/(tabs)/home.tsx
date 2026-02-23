@@ -18,7 +18,7 @@ import { useAuthStore } from "../../src/stores/auth.store";
 import { useMoodStore } from "../../src/stores/mood.store";
 import { useTheme } from "../../src/theme/ThemeContext";
 import type { MoodLevel } from "../../src/theme/colors";
-import { colors, cardShadow, cardShadowStrong } from "../../src/theme/colors";
+import { cardShadow, cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii, screenPadding, iconSizes } from "../../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -318,7 +318,7 @@ export default function HomeScreen() {
       {/* ------------------------------------------------------------------ */}
       <Animated.View
         entering={FadeInDown.delay(600).duration(400).springify()}
-        style={[styles.fabContainer, { bottom: insets.bottom + 56 }]}
+        style={[styles.fabContainer, { bottom: insets.bottom + 8 }]}
       >
         <Pressable onPress={goToLogMood}>
           <LinearGradient
@@ -363,25 +363,21 @@ const styles = StyleSheet.create({
   dateLabel: {
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.sectionLabel,
     letterSpacing: 1.5,
     marginBottom: spacing.xs,
   },
   greetingText: {
     fontSize: 26,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
     lineHeight: 34,
   },
   nameText: {
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.primary,
   },
   notificationButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
     marginTop: spacing.xs,
@@ -403,7 +399,6 @@ const styles = StyleSheet.create({
   offlineText: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
   },
 
   // Sections
@@ -413,7 +408,6 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.sectionLabel,
     letterSpacing: 1.5,
     marginBottom: spacing.sm,
   },
@@ -426,7 +420,6 @@ const styles = StyleSheet.create({
   seeAllText: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.primary,
   },
 
   // Quick stats
@@ -450,13 +443,11 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 28,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
     marginBottom: 2,
   },
   statLabel: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
   },
 
   // Insight preview
@@ -478,13 +469,11 @@ const styles = StyleSheet.create({
   insightTitle: {
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     marginBottom: 2,
   },
   insightDescription: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     lineHeight: 18,
   },
 

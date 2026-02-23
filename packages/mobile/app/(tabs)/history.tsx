@@ -35,7 +35,7 @@ import { getDateLocale } from "../../src/i18n/date-locale";
 import { getMoodCalendarApi, listMoodsApi } from "../../src/services/mood.api";
 import { moodEmojis } from "../../src/theme";
 import { useTheme } from "../../src/theme/ThemeContext";
-import { colors, type MoodLevel } from "../../src/theme/colors";
+import type { MoodLevel } from "../../src/theme/colors";
 import { spacing, radii, screenPadding } from "../../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -335,7 +335,6 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scroll: {
     flex: 1,
@@ -347,7 +346,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
     paddingTop: spacing.md,
     paddingBottom: spacing.md,
   },
@@ -366,7 +364,6 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontSize: 18,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     textTransform: "capitalize",
   },
 
@@ -383,7 +380,6 @@ const styles = StyleSheet.create({
   dayHeaderText: {
     fontSize: 12,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textTertiary,
     textTransform: "uppercase",
   },
 
@@ -405,22 +401,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  dayCircleSelected: {
-    backgroundColor: colors.primary,
-  },
-  dayCircleToday: {
-    backgroundColor: colors.primaryMuted,
-  },
+  dayCircleSelected: {},
+  dayCircleToday: {},
   dayNumber: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
   },
-  dayNumberMuted: {
-    color: colors.textTertiary,
-  },
+  dayNumberMuted: {},
   dayNumberSelected: {
-    color: colors.textInverse,
     fontFamily: "SourceSerif4_700Bold",
   },
   moodDot: {
@@ -437,7 +425,6 @@ const styles = StyleSheet.create({
   // Calendar loading
   calendarLoading: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,255,255,0.5)",
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radii.xl,
@@ -447,7 +434,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     marginBottom: spacing.md,
     textTransform: "capitalize",
   },

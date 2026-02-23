@@ -7,7 +7,8 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import Toast from "react-native-toast-message";
 
 import { useMoodStore } from "../../stores/mood.store";
-import { colors, type MoodLevel } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { type MoodLevel } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 import { GradientButton } from "../ui/GradientButton";
 
@@ -17,6 +18,7 @@ import { TriggerPicker } from "./TriggerPicker";
 
 export function MoodLogForm() {
   const { t } = useTranslation();
+  const { colors } = useTheme();
   const [moodScore, setMoodScore] = useState<MoodLevel | null>(null);
   const [selectedTriggerIds, setSelectedTriggerIds] = useState<string[]>([]);
   const [note, setNote] = useState("");
@@ -82,7 +84,9 @@ export function MoodLogForm() {
     <View style={styles.container}>
       {/* Mood Section */}
       <Animated.View entering={FadeInDown.delay(0).springify()}>
-        <Text style={styles.sectionLabel}>{t("mood.howFeeling")}</Text>
+        <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+          {t("mood.howFeeling")}
+        </Text>
         <MoodSelector value={moodScore ?? undefined} onChange={setMoodScore} />
       </Animated.View>
 
@@ -90,7 +94,9 @@ export function MoodLogForm() {
 
       {/* Triggers Section */}
       <Animated.View entering={FadeInDown.delay(100).springify()}>
-        <Text style={styles.sectionLabel}>{t("mood.whatsOnMind")}</Text>
+        <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+          {t("mood.whatsOnMind")}
+        </Text>
         <TriggerPicker
           triggers={triggers}
           selectedIds={selectedTriggerIds}
@@ -129,7 +135,6 @@ const styles = StyleSheet.create({
     fontFamily: "SourceSerif4_600SemiBold",
     letterSpacing: 1.5,
     textTransform: "uppercase",
-    color: colors.sectionLabel,
     marginBottom: spacing.md,
   },
   sectionSpacer: {

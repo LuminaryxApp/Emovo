@@ -15,7 +15,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { listNotificationsApi, markNotificationReadApi } from "../src/services/notification.api";
-import { colors } from "../src/theme/colors";
+import { useTheme } from "../src/theme/ThemeContext";
 import { spacing, screenPadding, iconSizes } from "../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -52,6 +52,7 @@ export default function NotificationsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const [items, setItems] = useState<Notification[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -109,10 +110,20 @@ export default function NotificationsScreen() {
   const renderItem = useCallback(
     ({ item }: { item: Notification }) => (
       <Pressable
-        style={[styles.notifItem, !item.readAt && styles.notifItemUnread]}
+        style={[
+          styles.notifItem,
+          { borderBottomColor: colors.borderLight },
+          !item.readAt && { backgroundColor: `${colors.primary}06` },
+        ]}
         onPress={() => handlePress(item)}
       >
-        <View style={[styles.notifIcon, !item.readAt && styles.notifIconUnread]}>
+        <View
+          style={[
+            styles.notifIcon,
+            { backgroundColor: colors.inputBackground },
+            !item.readAt && { backgroundColor: colors.primary },
+          ]}
+        >
           <Ionicons
             name={TYPE_ICONS[item.type] ?? "notifications"}
             size={iconSizes.sm}
@@ -120,27 +131,29 @@ export default function NotificationsScreen() {
           />
         </View>
         <View style={styles.notifContent}>
-          <Text style={styles.notifTitle} numberOfLines={1}>
+          <Text style={[styles.notifTitle, { color: colors.text }]} numberOfLines={1}>
             {item.title}
           </Text>
-          <Text style={styles.notifBody} numberOfLines={2}>
+          <Text style={[styles.notifBody, { color: colors.textSecondary }]} numberOfLines={2}>
             {item.body}
           </Text>
         </View>
-        <Text style={styles.notifTime}>{formatRelativeTime(item.createdAt)}</Text>
+        <Text style={[styles.notifTime, { color: colors.textTertiary }]}>
+          {formatRelativeTime(item.createdAt)}
+        </Text>
       </Pressable>
     ),
-    [handlePress],
+    [handlePress, colors],
   );
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { borderBottomColor: colors.borderLight }]}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t("notifications.title")}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t("notifications.title")}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -151,8 +164,12 @@ export default function NotificationsScreen() {
       ) : items.length === 0 ? (
         <View style={styles.centered}>
           <Ionicons name="notifications-off-outline" size={48} color={colors.textTertiary} />
-          <Text style={styles.emptyTitle}>{t("notifications.empty")}</Text>
-          <Text style={styles.emptySubtitle}>{t("notifications.emptySubtitle")}</Text>
+          <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+            {t("notifications.empty")}
+          </Text>
+          <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
+            {t("notifications.emptySubtitle")}
+          </Text>
         </View>
       ) : (
         <FlatList
@@ -184,7 +201,6 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   headerBar: {
     flexDirection: "row",
@@ -193,7 +209,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: screenPadding.horizontal,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
   },
   backButton: {
     width: 40,
@@ -204,7 +219,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
   },
   listContent: {
     paddingTop: spacing.sm,
@@ -219,12 +233,10 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
   },
   emptySubtitle: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     textAlign: "center",
   },
   notifItem: {
@@ -234,21 +246,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     gap: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
-  },
-  notifItemUnread: {
-    backgroundColor: `${colors.primary}06`,
   },
   notifIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.inputBackground,
     alignItems: "center",
     justifyContent: "center",
-  },
-  notifIconUnread: {
-    backgroundColor: colors.primary,
   },
   notifContent: {
     flex: 1,
@@ -256,18 +260,15 @@ const styles = StyleSheet.create({
   notifTitle: {
     fontSize: 14,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     marginBottom: 2,
   },
   notifBody: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     lineHeight: 18,
   },
   notifTime: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
 });

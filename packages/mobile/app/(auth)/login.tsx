@@ -19,13 +19,15 @@ import { Button } from "../../src/components/ui/Button";
 import { Divider } from "../../src/components/ui/Divider";
 import { Input } from "../../src/components/ui/Input";
 import { useAuthStore } from "../../src/stores/auth.store";
-import { colors, gradients, cardShadowStrong } from "../../src/theme/colors";
+import { useTheme } from "../../src/theme/ThemeContext";
+import { cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii } from "../../src/theme/spacing";
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const iconImage = require("../../assets/icon.png");
 
 export default function LoginScreen() {
+  const { colors, gradients } = useTheme();
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,11 +69,16 @@ export default function LoginScreen() {
         >
           <View style={styles.header}>
             <Image source={iconImage} style={styles.logoImage} resizeMode="contain" />
-            <Text style={styles.logo}>Emovo</Text>
-            <Text style={styles.subtitle}>{t("auth.login.subtitle")}</Text>
+            <Text style={[styles.logo, { color: colors.textInverse }]}>Emovo</Text>
+            <Text style={[styles.subtitle, { color: colors.textInverse }]}>
+              {t("auth.login.subtitle")}
+            </Text>
           </View>
 
-          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.card}>
+          <Animated.View
+            entering={FadeInDown.delay(200).springify()}
+            style={[styles.card, { backgroundColor: colors.surface }]}
+          >
             <Input
               label={t("auth.login.email")}
               value={email}
@@ -105,7 +112,9 @@ export default function LoginScreen() {
 
             <Link href="/(auth)/forgot-password" asChild>
               <TouchableOpacity style={styles.forgotButton} hitSlop={{ top: 8, bottom: 8 }}>
-                <Text style={styles.forgotText}>{t("auth.login.forgotPassword")}</Text>
+                <Text style={[styles.forgotText, { color: colors.accent }]}>
+                  {t("auth.login.forgotPassword")}
+                </Text>
               </TouchableOpacity>
             </Link>
 
@@ -150,18 +159,15 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 40,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.textInverse,
     letterSpacing: -1,
   },
   subtitle: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textInverse,
     marginTop: spacing.xs,
     opacity: 0.9,
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: radii.xxl,
     padding: 24,
     ...cardShadowStrong(),
@@ -176,7 +182,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   forgotText: {
-    color: colors.accent,
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
   },

@@ -445,7 +445,9 @@
     "unfollowError": "Failed to unfollow user.",
     "cancelRequestError": "Failed to cancel request.",
     "noFollowers": "No followers yet",
-    "noFollowing": "Not following anyone yet"
+    "noFollowing": "Not following anyone yet",
+    "message": "Message",
+    "messageError": "Could not start conversation"
   },
   "errors": {
     "somethingWrong": "Something went wrong",

@@ -33,7 +33,9 @@ import {
   getReportStatsApi,
   unbanUserApi,
 } from "../src/services/moderation.api";
-import { colors, cardShadow, cardShadowStrong } from "../src/theme/colors";
+import { useTheme } from "../src/theme/ThemeContext";
+import { cardShadow, cardShadowStrong } from "../src/theme/colors";
+import type { ThemeColors } from "../src/theme/colors";
 import { spacing, radii, screenPadding } from "../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -71,35 +73,39 @@ const REASON_CONFIG: Record<
   other: { icon: "flag-outline", color: "#6B7280", label: "Other" },
 };
 
-const STATUS_CONFIG: Record<
+function getStatusConfig(
+  colors: ThemeColors,
+): Record<
   string,
   { color: string; bg: string; icon: keyof typeof Ionicons.glyphMap; label: string }
-> = {
-  pending: {
-    color: "#D97706",
-    bg: "rgba(217, 119, 6, 0.10)",
-    icon: "hourglass-outline",
-    label: "Pending",
-  },
-  reviewed: {
-    color: colors.info,
-    bg: "rgba(111, 152, 184, 0.10)",
-    icon: "eye-outline",
-    label: "Reviewed",
-  },
-  actioned: {
-    color: colors.error,
-    bg: "rgba(220, 38, 38, 0.08)",
-    icon: "checkmark-done-outline",
-    label: "Actioned",
-  },
-  dismissed: {
-    color: colors.textTertiary,
-    bg: "rgba(138, 138, 138, 0.08)",
-    icon: "close-circle-outline",
-    label: "Dismissed",
-  },
-};
+> {
+  return {
+    pending: {
+      color: "#D97706",
+      bg: "rgba(217, 119, 6, 0.10)",
+      icon: "hourglass-outline",
+      label: "Pending",
+    },
+    reviewed: {
+      color: colors.info,
+      bg: "rgba(111, 152, 184, 0.10)",
+      icon: "eye-outline",
+      label: "Reviewed",
+    },
+    actioned: {
+      color: colors.error,
+      bg: "rgba(220, 38, 38, 0.08)",
+      icon: "checkmark-done-outline",
+      label: "Actioned",
+    },
+    dismissed: {
+      color: colors.textTertiary,
+      bg: "rgba(138, 138, 138, 0.08)",
+      icon: "close-circle-outline",
+      label: "Dismissed",
+    },
+  };
+}
 
 const TARGET_TYPE_CONFIG: Record<string, { icon: keyof typeof Ionicons.glyphMap; label: string }> =
   {
@@ -150,13 +156,16 @@ function ReportCard({
   report,
   index,
   onPress,
+  statusConfig,
 }: {
   report: ReportWithContext;
   index: number;
   onPress: () => void;
+  statusConfig: ReturnType<typeof getStatusConfig>;
 }) {
+  const { colors } = useTheme();
   const reason = REASON_CONFIG[report.reason] ?? REASON_CONFIG.other;
-  const status = STATUS_CONFIG[report.status] ?? STATUS_CONFIG.pending;
+  const status = statusConfig[report.status] ?? statusConfig.pending;
   const targetType = TARGET_TYPE_CONFIG[report.targetType] ?? TARGET_TYPE_CONFIG.post;
 
   const scale = useSharedValue(1);
@@ -180,7 +189,14 @@ function ReportCard({
         .damping(20)}
     >
       <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
-        <Animated.View style={[s.reportCard, isPending && s.reportCardPending, animStyle]}>
+        <Animated.View
+          style={[
+            s.reportCard,
+            { backgroundColor: colors.surface },
+            isPending && s.reportCardPending,
+            animStyle,
+          ]}
+        >
           {/* Accent stripe */}
           <View style={[s.reportStripe, { backgroundColor: reason.color }]} />
 
@@ -205,8 +221,8 @@ function ReportCard({
             {/* Content preview */}
             {report.targetContent ? (
               <View style={s.contentPreviewWrap}>
-                <View style={s.contentPreviewQuote} />
-                <Text style={s.contentPreviewText} numberOfLines={3}>
+                <View style={[s.contentPreviewQuote, { backgroundColor: colors.border }]} />
+                <Text style={[s.contentPreviewText, { color: colors.text }]} numberOfLines={3}>
                   {report.targetContent}
                 </Text>
               </View>
@@ -216,15 +232,17 @@ function ReportCard({
             <View style={s.reportBottomRow}>
               <View style={s.reportMetaLeft}>
                 {/* Target type badge */}
-                <View style={s.targetBadge}>
+                <View style={[s.targetBadge, { backgroundColor: colors.inputBackground }]}>
                   <Ionicons name={targetType.icon} size={11} color={colors.textSecondary} />
-                  <Text style={s.targetBadgeText}>{targetType.label}</Text>
+                  <Text style={[s.targetBadgeText, { color: colors.textSecondary }]}>
+                    {targetType.label}
+                  </Text>
                 </View>
 
                 {report.targetAuthor ? (
                   <>
-                    <Text style={s.metaDot}>·</Text>
-                    <Text style={s.metaAuthor} numberOfLines={1}>
+                    <Text style={[s.metaDot, { color: colors.textTertiary }]}>·</Text>
+                    <Text style={[s.metaAuthor, { color: colors.textSecondary }]} numberOfLines={1}>
                       {report.targetAuthor.displayName}
                     </Text>
                   </>
@@ -233,25 +251,35 @@ function ReportCard({
 
               <View style={s.reportMetaRight}>
                 <Ionicons name="time-outline" size={11} color={colors.textTertiary} />
-                <Text style={s.metaTime}>{formatRelativeTime(report.createdAt)}</Text>
+                <Text style={[s.metaTime, { color: colors.textTertiary }]}>
+                  {formatRelativeTime(report.createdAt)}
+                </Text>
               </View>
             </View>
 
             {/* Reporter line */}
             <View style={s.reporterLine}>
               <Ionicons name="flag-outline" size={10} color={colors.textTertiary} />
-              <Text style={s.reporterText}>
-                Reported by <Text style={s.reporterName}>{report.reporter.displayName}</Text>
+              <Text style={[s.reporterText, { color: colors.textTertiary }]}>
+                Reported by{" "}
+                <Text style={[s.reporterName, { color: colors.textSecondary }]}>
+                  {report.reporter.displayName}
+                </Text>
               </Text>
             </View>
 
             {/* Action taken (if resolved) */}
             {report.actionTaken && report.actionTaken !== "none" ? (
-              <View style={s.actionTakenStrip}>
+              <View style={[s.actionTakenStrip, { borderTopColor: colors.borderLight }]}>
                 <Ionicons name="checkmark-circle" size={13} color={colors.primary} />
-                <Text style={s.actionTakenLabel}>{report.actionTaken.replace(/_/g, " ")}</Text>
+                <Text style={[s.actionTakenLabel, { color: colors.primary }]}>
+                  {report.actionTaken.replace(/_/g, " ")}
+                </Text>
                 {report.adminNote ? (
-                  <Text style={s.actionTakenNote} numberOfLines={1}>
+                  <Text
+                    style={[s.actionTakenNote, { color: colors.textTertiary }]}
+                    numberOfLines={1}
+                  >
                     — {report.adminNote}
                   </Text>
                 ) : null}
@@ -260,8 +288,10 @@ function ReportCard({
 
             {/* Pending action hint */}
             {isPending ? (
-              <View style={s.actionHint}>
-                <Text style={s.actionHintText}>Tap to take action</Text>
+              <View style={[s.actionHint, { borderTopColor: colors.borderLight }]}>
+                <Text style={[s.actionHintText, { color: colors.primary }]}>
+                  Tap to take action
+                </Text>
                 <Ionicons name="chevron-forward" size={12} color={colors.primary} />
               </View>
             ) : null}
@@ -280,6 +310,9 @@ export default function AdminScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+
+  const statusConfig = useMemo(() => getStatusConfig(colors), [colors]);
 
   const [reports, setReports] = useState<ReportWithContext[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -507,7 +540,7 @@ export default function AdminScreen() {
   // -------------------------------------------------------------------------
 
   return (
-    <View style={[s.screen, { paddingTop: insets.top }]}>
+    <View style={[s.screen, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* ── Header ── */}
       <LinearGradient
         colors={["#3D4420", "#5E6B30", "#75863C"]}
@@ -574,7 +607,11 @@ export default function AdminScreen() {
             return (
               <Pressable
                 key={f.key ?? "all"}
-                style={[s.filterChip, isActive && s.filterChipActive]}
+                style={[
+                  s.filterChip,
+                  { backgroundColor: colors.surface, borderColor: colors.borderLight },
+                  isActive && { backgroundColor: colors.primary, borderColor: colors.primary },
+                ]}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setStatusFilter(f.key);
@@ -586,7 +623,13 @@ export default function AdminScreen() {
                   color={isActive ? colors.textInverse : colors.textSecondary}
                   style={{ marginRight: 4 }}
                 />
-                <Text style={[s.filterChipText, isActive && s.filterChipTextActive]}>
+                <Text
+                  style={[
+                    s.filterChipText,
+                    { color: colors.textSecondary },
+                    isActive && { color: colors.textInverse },
+                  ]}
+                >
                   {f.label}
                 </Text>
                 {f.key === "pending" && pendingCount > 0 ? (
@@ -619,15 +662,17 @@ export default function AdminScreen() {
         {isLoading ? (
           <Animated.View entering={FadeIn.duration(300)} style={s.centered}>
             <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={s.loadingText}>Loading reports...</Text>
+            <Text style={[s.loadingText, { color: colors.textTertiary }]}>Loading reports...</Text>
           </Animated.View>
         ) : reports.length === 0 ? (
           <Animated.View entering={FadeInDown.springify().damping(20)} style={s.emptyState}>
-            <View style={s.emptyIconWrap}>
+            <View style={[s.emptyIconWrap, { backgroundColor: `${colors.primary}10` }]}>
               <Ionicons name="shield-checkmark" size={40} color={colors.primary} />
             </View>
-            <Text style={s.emptyTitle}>{t("admin.noReports")}</Text>
-            <Text style={s.emptySubtitle}>{t("admin.noReportsMessage")}</Text>
+            <Text style={[s.emptyTitle, { color: colors.text }]}>{t("admin.noReports")}</Text>
+            <Text style={[s.emptySubtitle, { color: colors.textTertiary }]}>
+              {t("admin.noReportsMessage")}
+            </Text>
           </Animated.View>
         ) : (
           <>
@@ -637,13 +682,19 @@ export default function AdminScreen() {
                 report={report}
                 index={index}
                 onPress={() => handleReportPress(report)}
+                statusConfig={statusConfig}
               />
             ))}
 
             {cursor ? (
-              <Pressable onPress={() => loadReports(false)} style={s.loadMoreBtn}>
+              <Pressable
+                onPress={() => loadReports(false)}
+                style={[s.loadMoreBtn, { backgroundColor: colors.surface }]}
+              >
                 <Ionicons name="arrow-down-outline" size={16} color={colors.primary} />
-                <Text style={s.loadMoreText}>{t("admin.loadMore")}</Text>
+                <Text style={[s.loadMoreText, { color: colors.primary }]}>
+                  {t("admin.loadMore")}
+                </Text>
               </Pressable>
             ) : null}
           </>
@@ -668,7 +719,10 @@ export default function AdminScreen() {
         onRequestClose={() => setSuspendModalVisible(false)}
       >
         <Pressable style={s.modalOverlay} onPress={() => setSuspendModalVisible(false)}>
-          <Pressable style={s.modalCard} onPress={(e) => e.stopPropagation()}>
+          <Pressable
+            style={[s.modalCard, { backgroundColor: colors.surface }]}
+            onPress={(e) => e.stopPropagation()}
+          >
             {/* Header accent */}
             <View style={s.modalAccent}>
               <View style={s.modalAccentIconWrap}>
@@ -676,12 +730,14 @@ export default function AdminScreen() {
               </View>
             </View>
 
-            <Text style={s.modalTitle}>{t("admin.suspendDays")}</Text>
-            <Text style={s.modalSubtitle}>{t("admin.suspendDaysMessage")}</Text>
+            <Text style={[s.modalTitle, { color: colors.text }]}>{t("admin.suspendDays")}</Text>
+            <Text style={[s.modalSubtitle, { color: colors.textSecondary }]}>
+              {t("admin.suspendDaysMessage")}
+            </Text>
 
-            <View style={s.modalInputWrap}>
+            <View style={[s.modalInputWrap, { backgroundColor: colors.inputBackground }]}>
               <TextInput
-                style={s.modalInput}
+                style={[s.modalInput, { color: colors.text }]}
                 value={suspendDays}
                 onChangeText={setSuspendDays}
                 keyboardType="number-pad"
@@ -690,7 +746,7 @@ export default function AdminScreen() {
                 placeholder="7"
                 placeholderTextColor={colors.textTertiary}
               />
-              <Text style={s.modalInputUnit}>days</Text>
+              <Text style={[s.modalInputUnit, { color: colors.textTertiary }]}>days</Text>
             </View>
 
             {/* Quick presets */}
@@ -698,11 +754,22 @@ export default function AdminScreen() {
               {[1, 3, 7, 14, 30].map((d) => (
                 <Pressable
                   key={d}
-                  style={[s.presetChip, suspendDays === String(d) && s.presetChipActive]}
+                  style={[
+                    s.presetChip,
+                    { backgroundColor: colors.inputBackground },
+                    suspendDays === String(d) && {
+                      borderColor: colors.primary,
+                      backgroundColor: `${colors.primary}10`,
+                    },
+                  ]}
                   onPress={() => setSuspendDays(String(d))}
                 >
                   <Text
-                    style={[s.presetChipText, suspendDays === String(d) && s.presetChipTextActive]}
+                    style={[
+                      s.presetChipText,
+                      { color: colors.textSecondary },
+                      suspendDays === String(d) && { color: colors.primary },
+                    ]}
                   >
                     {d}d
                   </Text>
@@ -712,7 +779,9 @@ export default function AdminScreen() {
 
             <View style={s.modalActions}>
               <Pressable style={s.modalCancelBtn} onPress={() => setSuspendModalVisible(false)}>
-                <Text style={s.modalCancelText}>{t("common.cancel")}</Text>
+                <Text style={[s.modalCancelText, { color: colors.textSecondary }]}>
+                  {t("common.cancel")}
+                </Text>
               </Pressable>
               <Pressable style={s.modalConfirmBtn} onPress={handleSubmitSuspend}>
                 <Ionicons
@@ -738,7 +807,6 @@ export default function AdminScreen() {
 const s = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   flex: { flex: 1 },
   scrollContent: {
@@ -848,22 +916,12 @@ const s = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.borderLight,
     ...cardShadow(),
-  },
-  filterChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   filterChipText: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
-  },
-  filterChipTextActive: {
-    color: colors.textInverse,
   },
   filterBadgeDot: {
     width: 6,
@@ -875,7 +933,6 @@ const s = StyleSheet.create({
 
   // ── Report Card ──
   reportCard: {
-    backgroundColor: colors.surface,
     borderRadius: 16,
     marginBottom: spacing.sm + 2,
     overflow: "hidden",
@@ -946,14 +1003,12 @@ const s = StyleSheet.create({
   contentPreviewQuote: {
     width: 3,
     borderRadius: 2,
-    backgroundColor: colors.border,
     marginRight: spacing.sm,
   },
   contentPreviewText: {
     flex: 1,
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
     lineHeight: 19,
     fontStyle: "italic",
   },
@@ -979,7 +1034,6 @@ const s = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    backgroundColor: colors.inputBackground,
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: radii.sm,
@@ -987,23 +1041,19 @@ const s = StyleSheet.create({
   targetBadgeText: {
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
   },
   metaDot: {
     fontSize: 11,
-    color: colors.textTertiary,
     marginHorizontal: 5,
   },
   metaAuthor: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     flexShrink: 1,
   },
   metaTime: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
 
   // Reporter line
@@ -1016,11 +1066,9 @@ const s = StyleSheet.create({
   reporterText: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
   reporterName: {
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
   },
 
   // Action taken strip
@@ -1031,18 +1079,15 @@ const s = StyleSheet.create({
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.borderLight,
   },
   actionTakenLabel: {
     fontSize: 12,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.primary,
     textTransform: "capitalize",
   },
   actionTakenNote: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     flex: 1,
   },
 
@@ -1055,12 +1100,10 @@ const s = StyleSheet.create({
     marginTop: spacing.sm - 2,
     paddingTop: spacing.sm - 2,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.borderLight,
   },
   actionHintText: {
     fontSize: 12,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.primary,
   },
 
   // ── Load more ──
@@ -1071,14 +1114,12 @@ const s = StyleSheet.create({
     gap: 6,
     paddingVertical: spacing.md,
     marginTop: spacing.xs,
-    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     ...cardShadow(),
   },
   loadMoreText: {
     fontSize: 14,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.primary,
   },
 
   // ── Loading / Empty ──
@@ -1090,7 +1131,6 @@ const s = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
   emptyState: {
     alignItems: "center",
@@ -1101,7 +1141,6 @@ const s = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: `${colors.primary}10`,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.sm,
@@ -1109,12 +1148,10 @@ const s = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
   },
   emptySubtitle: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     textAlign: "center",
     maxWidth: 260,
     lineHeight: 20,
@@ -1129,7 +1166,6 @@ const s = StyleSheet.create({
     padding: spacing.lg,
   },
   modalCard: {
-    backgroundColor: colors.surface,
     borderRadius: 24,
     width: "100%",
     maxWidth: 340,
@@ -1153,7 +1189,6 @@ const s = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
     textAlign: "center",
     marginTop: spacing.md,
     paddingHorizontal: spacing.lg,
@@ -1161,7 +1196,6 @@ const s = StyleSheet.create({
   modalSubtitle: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     textAlign: "center",
     marginTop: spacing.xs,
     marginBottom: spacing.md,
@@ -1173,7 +1207,6 @@ const s = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: spacing.lg,
-    backgroundColor: colors.inputBackground,
     borderRadius: 14,
     paddingHorizontal: spacing.md,
   },
@@ -1181,14 +1214,12 @@ const s = StyleSheet.create({
     height: 52,
     fontSize: 24,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
     textAlign: "center",
     minWidth: 60,
   },
   modalInputUnit: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     marginLeft: 4,
   },
   presetRow: {
@@ -1202,21 +1233,12 @@ const s = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
     borderRadius: radii.pill,
-    backgroundColor: colors.inputBackground,
     borderWidth: 1,
     borderColor: "transparent",
-  },
-  presetChipActive: {
-    borderColor: colors.primary,
-    backgroundColor: `${colors.primary}10`,
   },
   presetChipText: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
-  },
-  presetChipTextActive: {
-    color: colors.primary,
   },
   modalActions: {
     flexDirection: "row",
@@ -1233,7 +1255,6 @@ const s = StyleSheet.create({
   modalCancelText: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
   },
   modalConfirmBtn: {
     flexDirection: "row",

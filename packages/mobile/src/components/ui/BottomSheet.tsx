@@ -19,7 +19,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { colors, cardShadow } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { cardShadow } from "../../theme/colors";
 import { spacing, radii } from "../../theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -56,6 +57,7 @@ export function BottomSheet({
   style,
   testID,
 }: BottomSheetProps) {
+  const { colors } = useTheme();
   const snapPoints = useMemo(
     () => (snapPointsProp && snapPointsProp.length > 0 ? snapPointsProp : [300]),
     [snapPointsProp],
@@ -178,10 +180,12 @@ export function BottomSheet({
 
         {/* Sheet */}
         <GestureDetector gesture={panGesture}>
-          <Animated.View style={[styles.sheet, style, sheetAnimatedStyle]}>
+          <Animated.View
+            style={[styles.sheet, { backgroundColor: colors.surface }, style, sheetAnimatedStyle]}
+          >
             {/* Drag handle */}
             <View style={styles.handleContainer}>
-              <View style={styles.handle} />
+              <View style={[styles.handle, { backgroundColor: colors.borderLight }]} />
             </View>
 
             {/* Content */}
@@ -210,7 +214,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: SCREEN_HEIGHT,
-    backgroundColor: colors.surface,
     borderTopLeftRadius: radii.xxl,
     borderTopRightRadius: radii.xxl,
     ...cardShadow(),
@@ -229,7 +232,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.borderLight,
   },
   content: {
     flex: 1,

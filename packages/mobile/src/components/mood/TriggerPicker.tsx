@@ -9,7 +9,7 @@ import Animated, {
   withSequence,
 } from "react-native-reanimated";
 
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { spacing, radii } from "../../theme/spacing";
 import { AnimatedPressable } from "../ui/AnimatedPressable";
 
@@ -56,6 +56,7 @@ interface TriggerChipProps {
 }
 
 function TriggerChip({ trigger, isSelected, onToggle }: TriggerChipProps) {
+  const { colors } = useTheme();
   const bounceScale = useSharedValue(1);
 
   useEffect(() => {
@@ -80,13 +81,35 @@ function TriggerChip({ trigger, isSelected, onToggle }: TriggerChipProps) {
 
   return (
     <AnimatedPressable onPress={handleToggle} scaleDown={0.95}>
-      <Animated.View style={[styles.chip, isSelected && styles.chipSelected, bounceStyle]}>
+      <Animated.View
+        style={[
+          styles.chip,
+          {
+            borderColor: colors.borderLight,
+            backgroundColor: colors.surface,
+          },
+          isSelected && {
+            backgroundColor: colors.primaryMuted,
+            borderWidth: 1.5,
+            borderColor: colors.primary,
+          },
+          bounceStyle,
+        ]}
+      >
         <Ionicons
           name={iconName as keyof typeof Ionicons.glyphMap}
           size={16}
           color={isSelected ? colors.primary : colors.textSecondary}
         />
-        <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>{trigger.name}</Text>
+        <Text
+          style={[
+            styles.chipText,
+            { color: colors.textSecondary },
+            isSelected && { color: colors.primary, fontFamily: "SourceSerif4_600SemiBold" },
+          ]}
+        >
+          {trigger.name}
+        </Text>
       </Animated.View>
     </AnimatedPressable>
   );
@@ -105,6 +128,8 @@ export function TriggerPicker({
   onChange,
   maxSelections,
 }: TriggerPickerProps) {
+  const { colors } = useTheme();
+
   const handleToggle = useCallback(
     (id: string) => {
       const isCurrentlySelected = selectedIds.includes(id);
@@ -135,7 +160,7 @@ export function TriggerPicker({
         ))}
       </View>
       {maxSelections != null && (
-        <Text style={styles.counter}>
+        <Text style={[styles.counter, { color: colors.textTertiary }]}>
           {selectedIds.length}/{maxSelections} selected
         </Text>
       )}
@@ -160,27 +185,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: radii.pill,
     borderWidth: 1,
-    borderColor: colors.borderLight,
-    backgroundColor: colors.surface,
-  },
-  chipSelected: {
-    backgroundColor: colors.primaryMuted,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
   },
   chipText: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
-  },
-  chipTextSelected: {
-    color: colors.primary,
-    fontFamily: "SourceSerif4_600SemiBold",
   },
   counter: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     textAlign: "right",
   },
 });

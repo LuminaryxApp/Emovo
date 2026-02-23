@@ -6,7 +6,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import Animated, { FadeInDown, Layout } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { colors } from "../src/theme/colors";
+import { useTheme } from "../src/theme/ThemeContext";
 import { spacing, radii, screenPadding, iconSizes } from "../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -23,6 +23,7 @@ export default function FAQScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
 
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -31,13 +32,13 @@ export default function FAQScreen() {
   }, []);
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { borderBottomColor: colors.borderLight }]}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t("faq.title")}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t("faq.title")}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -51,11 +52,17 @@ export default function FAQScreen() {
               layout={Layout.springify()}
             >
               <Pressable
-                style={[styles.faqItem, isOpen && styles.faqItemOpen]}
+                style={[
+                  styles.faqItem,
+                  { backgroundColor: colors.surface, borderColor: colors.borderLight },
+                  isOpen && { borderColor: colors.primary, backgroundColor: `${colors.primary}08` },
+                ]}
                 onPress={() => toggle(key)}
               >
                 <View style={styles.questionRow}>
-                  <Text style={styles.questionText}>{t(`faq.items.${key}`)}</Text>
+                  <Text style={[styles.questionText, { color: colors.text }]}>
+                    {t(`faq.items.${key}`)}
+                  </Text>
                   <Ionicons
                     name={isOpen ? "chevron-up" : "chevron-down"}
                     size={iconSizes.sm}
@@ -64,7 +71,14 @@ export default function FAQScreen() {
                 </View>
                 {isOpen && (
                   <Animated.View entering={FadeInDown.duration(250)}>
-                    <Text style={styles.answerText}>{t(`faq.items.${key.replace("q", "a")}`)}</Text>
+                    <Text
+                      style={[
+                        styles.answerText,
+                        { color: colors.textSecondary, borderTopColor: colors.borderLight },
+                      ]}
+                    >
+                      {t(`faq.items.${key.replace("q", "a")}`)}
+                    </Text>
                   </Animated.View>
                 )}
               </Pressable>
@@ -85,7 +99,6 @@ export default function FAQScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   headerBar: {
     flexDirection: "row",
@@ -94,7 +107,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: screenPadding.horizontal,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
   },
   backButton: {
     width: 40,
@@ -105,23 +117,16 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
   },
   scrollContent: {
     paddingHorizontal: screenPadding.horizontal,
     paddingTop: spacing.lg,
   },
   faqItem: {
-    backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
     borderWidth: 1,
-    borderColor: colors.borderLight,
-  },
-  faqItemOpen: {
-    borderColor: colors.primary,
-    backgroundColor: `${colors.primary}08`,
   },
   questionRow: {
     flexDirection: "row",
@@ -133,17 +138,14 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     lineHeight: 22,
   },
   answerText: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     lineHeight: 21,
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
   },
 });

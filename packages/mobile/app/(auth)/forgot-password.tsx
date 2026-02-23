@@ -10,10 +10,12 @@ import Toast from "react-native-toast-message";
 import { Button } from "../../src/components/ui/Button";
 import { Input } from "../../src/components/ui/Input";
 import { forgotPasswordApi } from "../../src/services/auth.api";
-import { colors, gradients, cardShadowStrong } from "../../src/theme/colors";
+import { useTheme } from "../../src/theme/ThemeContext";
+import { cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii } from "../../src/theme/spacing";
 
 export default function ForgotPasswordScreen() {
+  const { colors, gradients } = useTheme();
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -49,7 +51,10 @@ export default function ForgotPasswordScreen() {
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
-          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.card}>
+          <Animated.View
+            entering={FadeInDown.delay(200).springify()}
+            style={[styles.card, { backgroundColor: colors.surface }]}
+          >
             <View style={styles.sentContent}>
               <LinearGradient
                 colors={[...gradients.primaryButton]}
@@ -59,8 +64,10 @@ export default function ForgotPasswordScreen() {
               >
                 <Ionicons name="mail-outline" size={28} color={colors.textInverse} />
               </LinearGradient>
-              <Text style={styles.sentTitle}>{t("auth.forgotPassword.checkEmail")}</Text>
-              <Text style={styles.sentDescription}>
+              <Text style={[styles.sentTitle, { color: colors.text }]}>
+                {t("auth.forgotPassword.checkEmail")}
+              </Text>
+              <Text style={[styles.sentDescription, { color: colors.textSecondary }]}>
                 {t("auth.forgotPassword.emailSentDescription", { email })}
               </Text>
             </View>
@@ -93,11 +100,18 @@ export default function ForgotPasswordScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.title}>{t("auth.forgotPassword.title")}</Text>
-            <Text style={styles.subtitle}>{t("auth.forgotPassword.description")}</Text>
+            <Text style={[styles.title, { color: colors.textInverse }]}>
+              {t("auth.forgotPassword.title")}
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textInverse }]}>
+              {t("auth.forgotPassword.description")}
+            </Text>
           </View>
 
-          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.card}>
+          <Animated.View
+            entering={FadeInDown.delay(200).springify()}
+            style={[styles.card, { backgroundColor: colors.surface }]}
+          >
             <Input
               label={t("auth.forgotPassword.email")}
               value={email}
@@ -157,19 +171,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.textInverse,
     letterSpacing: -0.5,
     marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textInverse,
     lineHeight: 22,
     opacity: 0.9,
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: radii.xxl,
     padding: 24,
     ...cardShadowStrong(),
@@ -195,7 +206,6 @@ const styles = StyleSheet.create({
   sentTitle: {
     fontSize: 24,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
     letterSpacing: -0.5,
     marginBottom: spacing.sm,
     textAlign: "center",
@@ -203,7 +213,6 @@ const styles = StyleSheet.create({
   sentDescription: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     lineHeight: 22,
     textAlign: "center",
   },

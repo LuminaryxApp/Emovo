@@ -3,7 +3,7 @@ import React, { Component, type ErrorInfo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { spacing } from "../../theme/spacing";
 
 interface ErrorFallbackProps {
@@ -12,15 +12,23 @@ interface ErrorFallbackProps {
 
 function ErrorFallback({ onRetry }: ErrorFallbackProps) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
-      <Text style={styles.title}>{t("errors.somethingWrong")}</Text>
-      <Text style={styles.message}>{t("errors.unexpectedError")}</Text>
-      <TouchableOpacity style={styles.button} onPress={onRetry}>
+      <Text style={[styles.title, { color: colors.text }]}>{t("errors.somethingWrong")}</Text>
+      <Text style={[styles.message, { color: colors.textSecondary }]}>
+        {t("errors.unexpectedError")}
+      </Text>
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: colors.primary }]}
+        onPress={onRetry}
+      >
         <Ionicons name="refresh-outline" size={16} color={colors.textInverse} />
-        <Text style={styles.buttonText}>{t("common.tryAgain")}</Text>
+        <Text style={[styles.buttonText, { color: colors.textInverse }]}>
+          {t("common.tryAgain")}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -67,7 +75,6 @@ export class ErrorBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
     padding: spacing.xl,
@@ -75,13 +82,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
     marginTop: spacing.md,
   },
   message: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     textAlign: "center",
     marginTop: spacing.sm,
     lineHeight: 20,
@@ -90,7 +95,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
-    backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderRadius: 12,
@@ -99,6 +103,5 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textInverse,
   },
 });

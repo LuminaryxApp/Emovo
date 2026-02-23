@@ -9,7 +9,8 @@ import Animated, {
   interpolateColor,
 } from "react-native-reanimated";
 
-import { colors, type MoodLevel } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { type MoodLevel } from "../../theme/colors";
 import { spacing } from "../../theme/spacing";
 
 const MOOD_DATA: {
@@ -18,11 +19,11 @@ const MOOD_DATA: {
   label: string;
   color: string;
 }[] = [
-  { score: 1, emoji: "\u{1F622}", label: "Very Low", color: colors.mood[1] },
-  { score: 2, emoji: "\u{1F61F}", label: "Low", color: colors.mood[2] },
-  { score: 3, emoji: "\u{1F610}", label: "Neutral", color: colors.mood[3] },
-  { score: 4, emoji: "\u{1F60A}", label: "Good", color: colors.mood[4] },
-  { score: 5, emoji: "\u{1F604}", label: "Great", color: colors.mood[5] },
+  { score: 1, emoji: "\u{1F622}", label: "Very Low", color: "#DC2626" },
+  { score: 2, emoji: "\u{1F61F}", label: "Low", color: "#F97316" },
+  { score: 3, emoji: "\u{1F610}", label: "Neutral", color: "#EAB308" },
+  { score: 4, emoji: "\u{1F60A}", label: "Good", color: "#75863C" },
+  { score: 5, emoji: "\u{1F604}", label: "Great", color: "#4A7A2E" },
 ];
 
 const SIZES = {
@@ -47,6 +48,7 @@ interface MoodItemProps {
 }
 
 function MoodItem({ mood, isSelected, onSelect, showLabels, sizeConfig }: MoodItemProps) {
+  const { colors } = useTheme();
   const scale = useSharedValue(1);
   const glowOpacity = useSharedValue(0);
   const glowScale = useSharedValue(0.8);
@@ -70,7 +72,7 @@ function MoodItem({ mood, isSelected, onSelect, showLabels, sizeConfig }: MoodIt
 
   const circleAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    backgroundColor: interpolateColor(bgProgress.value, [0, 1], ["#FFFFFF", mood.color]),
+    backgroundColor: interpolateColor(bgProgress.value, [0, 1], [colors.surface, mood.color]),
     borderColor: interpolateColor(bgProgress.value, [0, 1], [mood.color + "60", mood.color]),
   }));
 
@@ -135,7 +137,7 @@ function MoodItem({ mood, isSelected, onSelect, showLabels, sizeConfig }: MoodIt
         <Text
           style={[
             styles.label,
-            { fontSize: sizeConfig.label },
+            { fontSize: sizeConfig.label, color: colors.textTertiary },
             isSelected && { color: mood.color, fontFamily: "SourceSerif4_600SemiBold" },
           ]}
         >
@@ -189,14 +191,12 @@ const styles = StyleSheet.create({
   },
   circle: {
     borderWidth: 2,
-    backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
   },
   label: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     textAlign: "center",
     marginTop: spacing.xs,
   },

@@ -18,10 +18,12 @@ import { Button } from "../../src/components/ui/Button";
 import { Input } from "../../src/components/ui/Input";
 import { getCurrentLanguage } from "../../src/i18n/config";
 import { useAuthStore } from "../../src/stores/auth.store";
-import { colors, gradients, cardShadowStrong } from "../../src/theme/colors";
+import { useTheme } from "../../src/theme/ThemeContext";
+import { cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii } from "../../src/theme/spacing";
 
 export default function RegisterScreen() {
+  const { colors, gradients } = useTheme();
   const { t } = useTranslation();
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
@@ -87,11 +89,18 @@ export default function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <Text style={styles.title}>{t("auth.register.title")}</Text>
-            <Text style={styles.subtitle}>{t("auth.register.subtitle")}</Text>
+            <Text style={[styles.title, { color: colors.textInverse }]}>
+              {t("auth.register.title")}
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textInverse }]}>
+              {t("auth.register.subtitle")}
+            </Text>
           </View>
 
-          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.card}>
+          <Animated.View
+            entering={FadeInDown.delay(200).springify()}
+            style={[styles.card, { backgroundColor: colors.surface }]}
+          >
             <Input
               label={t("auth.register.displayName")}
               value={displayName}
@@ -155,10 +164,14 @@ export default function RegisterScreen() {
             />
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>{t("auth.register.alreadyHaveAccount")} </Text>
+              <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+                {t("auth.register.alreadyHaveAccount")}{" "}
+              </Text>
               <Link href="/(auth)/login" asChild>
                 <TouchableOpacity style={styles.footerLink} hitSlop={{ top: 8, bottom: 8 }}>
-                  <Text style={styles.linkText}>{t("auth.register.signIn")}</Text>
+                  <Text style={[styles.linkText, { color: colors.accent }]}>
+                    {t("auth.register.signIn")}
+                  </Text>
                 </TouchableOpacity>
               </Link>
             </View>
@@ -189,18 +202,15 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.textInverse,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textInverse,
     marginTop: spacing.xs,
     opacity: 0.9,
   },
   card: {
-    backgroundColor: colors.surface,
     borderRadius: radii.xxl,
     padding: 24,
     ...cardShadowStrong(),
@@ -216,7 +226,6 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   footerText: {
-    color: colors.textSecondary,
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
   },
@@ -225,7 +234,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   linkText: {
-    color: colors.accent,
     fontSize: 14,
     fontFamily: "SourceSerif4_600SemiBold",
   },

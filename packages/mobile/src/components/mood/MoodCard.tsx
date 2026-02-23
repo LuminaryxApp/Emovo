@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { LinearGradient } from "expo-linear-gradient";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import Animated, {
   useSharedValue,
@@ -12,19 +12,9 @@ import Animated, {
   withSequence,
 } from "react-native-reanimated";
 
-import { colors, gradients, type MoodLevel, cardShadow } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { type MoodLevel, cardShadow } from "../../theme/colors";
 import { spacing, radii } from "../../theme/spacing";
-
-const MOOD_DATA: Record<
-  MoodLevel,
-  { emoji: string; label: string; gradient: readonly [string, string] }
-> = {
-  1: { emoji: "\u{1F622}", label: "Very Low", gradient: gradients.mood1 },
-  2: { emoji: "\u{1F61F}", label: "Low", gradient: gradients.mood2 },
-  3: { emoji: "\u{1F610}", label: "Neutral", gradient: gradients.mood3 },
-  4: { emoji: "\u{1F60A}", label: "Good", gradient: gradients.mood4 },
-  5: { emoji: "\u{1F604}", label: "Great", gradient: gradients.mood5 },
-};
 
 interface MoodCardProps {
   mood?: MoodLevel;
@@ -34,6 +24,7 @@ interface MoodCardProps {
 }
 
 function EmptyState({ onLogMood }: { onLogMood?: () => void }) {
+  const { colors } = useTheme();
   const pulseScale = useSharedValue(1);
 
   useEffect(() => {
@@ -50,12 +41,24 @@ function EmptyState({ onLogMood }: { onLogMood?: () => void }) {
 
   return (
     <Pressable onPress={onLogMood} style={({ pressed }) => [pressed && { opacity: 0.9 }]}>
-      <View style={[styles.card, styles.emptyCard, cardShadow()]}>
+      <View
+        style={[
+          styles.card,
+          styles.emptyCard,
+          cardShadow(),
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+          },
+        ]}
+      >
         <Animated.View style={[styles.emptyIconContainer, pulseStyle]}>
           <Ionicons name="add-circle-outline" size={40} color={colors.primary} />
         </Animated.View>
-        <Text style={styles.emptyTitle}>How are you feeling?</Text>
-        <Text style={styles.emptySubtitle}>Tap to log your mood</Text>
+        <Text style={[styles.emptyTitle, { color: colors.text }]}>How are you feeling?</Text>
+        <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
+          Tap to log your mood
+        </Text>
       </View>
     </Pressable>
   );
@@ -70,6 +73,22 @@ function FilledState({
   loggedAt?: string;
   onPress?: () => void;
 }) {
+  const { gradients } = useTheme();
+
+  const MOOD_DATA: Record<
+    MoodLevel,
+    { emoji: string; label: string; gradient: readonly [string, string, ...string[]] }
+  > = useMemo(
+    () => ({
+      1: { emoji: "\u{1F622}", label: "Very Low", gradient: gradients.mood1 },
+      2: { emoji: "\u{1F61F}", label: "Low", gradient: gradients.mood2 },
+      3: { emoji: "\u{1F610}", label: "Neutral", gradient: gradients.mood3 },
+      4: { emoji: "\u{1F60A}", label: "Good", gradient: gradients.mood4 },
+      5: { emoji: "\u{1F604}", label: "Great", gradient: gradients.mood5 },
+    }),
+    [gradients],
+  );
+
   const moodInfo = MOOD_DATA[mood];
   const entryScale = useSharedValue(0.95);
 
@@ -125,10 +144,8 @@ const styles = StyleSheet.create({
   },
   // Empty state
   emptyCard: {
-    backgroundColor: colors.surface,
     borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: colors.border,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: spacing.xl,
@@ -140,13 +157,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     marginBottom: spacing.xs,
   },
   emptySubtitle: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
   // Filled state
   gradientOverlay: {
@@ -167,7 +182,7 @@ const styles = StyleSheet.create({
   filledLabel: {
     fontSize: 22,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.textInverse,
+    color: "#FFFFFF",
   },
   filledTime: {
     fontSize: 13,

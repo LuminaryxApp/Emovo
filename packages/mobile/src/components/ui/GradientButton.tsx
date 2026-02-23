@@ -2,7 +2,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { ReactNode } from "react";
 import { Text, StyleSheet, ActivityIndicator, StyleProp, ViewStyle } from "react-native";
 
-import { colors, gradients, cardShadow } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { cardShadow } from "../../theme/colors";
 import { radii } from "../../theme/spacing";
 
 import { AnimatedPressable } from "./AnimatedPressable";
@@ -28,6 +29,7 @@ export function GradientButton({
   style,
   testID,
 }: GradientButtonProps) {
+  const { colors, gradients } = useTheme();
   const gradientColors = variant === "danger" ? gradients.danger : gradients.primaryButton;
 
   return (
@@ -50,7 +52,7 @@ export function GradientButton({
         ) : children ? (
           children
         ) : (
-          <Text style={styles.text}>{title}</Text>
+          <Text style={[styles.text, { color: colors.textInverse }]}>{title}</Text>
         )}
       </LinearGradient>
     </AnimatedPressable>
@@ -74,6 +76,5 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textInverse,
   },
 });

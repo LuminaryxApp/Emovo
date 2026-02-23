@@ -3,7 +3,8 @@ import { format } from "date-fns";
 import { LinearGradient } from "expo-linear-gradient";
 import { View, Text, StyleSheet } from "react-native";
 
-import { colors, type MoodLevel, cardShadow } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { type MoodLevel, cardShadow } from "../../theme/colors";
 import { spacing, radii } from "../../theme/spacing";
 import { AnimatedPressable } from "../ui/AnimatedPressable";
 
@@ -14,27 +15,27 @@ const MOOD_INFO: Record<
   1: {
     emoji: "\u{1F622}",
     label: "Very Low",
-    color: colors.mood[1],
-    colorFaded: colors.mood[1] + "80",
+    color: "#DC2626",
+    colorFaded: "#DC262680",
   },
-  2: { emoji: "\u{1F61F}", label: "Low", color: colors.mood[2], colorFaded: colors.mood[2] + "80" },
+  2: { emoji: "\u{1F61F}", label: "Low", color: "#F97316", colorFaded: "#F9731680" },
   3: {
     emoji: "\u{1F610}",
     label: "Neutral",
-    color: colors.mood[3],
-    colorFaded: colors.mood[3] + "80",
+    color: "#EAB308",
+    colorFaded: "#EAB30880",
   },
   4: {
     emoji: "\u{1F60A}",
     label: "Good",
-    color: colors.mood[4],
-    colorFaded: colors.mood[4] + "80",
+    color: "#75863C",
+    colorFaded: "#75863C80",
   },
   5: {
     emoji: "\u{1F604}",
     label: "Great",
-    color: colors.mood[5],
-    colorFaded: colors.mood[5] + "80",
+    color: "#4A7A2E",
+    colorFaded: "#4A7A2E80",
   },
 };
 
@@ -59,6 +60,7 @@ interface MoodEntryCardProps {
 }
 
 export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
+  const { colors } = useTheme();
   const mood = MOOD_INFO[entry.moodScore as MoodLevel] ?? MOOD_INFO[3];
   const loggedDate = new Date(entry.loggedAt);
   const triggers = entry.triggers ?? [];
@@ -70,7 +72,7 @@ export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
       onPress={onPress}
       scaleDown={0.98}
       disabled={!onPress}
-      style={[styles.card, cardShadow()]}
+      style={[styles.card, cardShadow(), { backgroundColor: colors.cardBackground }]}
     >
       {/* Left gradient strip */}
       <LinearGradient
@@ -86,14 +88,16 @@ export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
           <View style={styles.topRow}>
             <View style={styles.moodInfo}>
               <Text style={styles.emoji}>{mood.emoji}</Text>
-              <Text style={styles.moodLabel}>{mood.label}</Text>
+              <Text style={[styles.moodLabel, { color: colors.text }]}>{mood.label}</Text>
             </View>
-            <Text style={styles.time}>{format(loggedDate, "h:mm a")}</Text>
+            <Text style={[styles.time, { color: colors.textTertiary }]}>
+              {format(loggedDate, "h:mm a")}
+            </Text>
           </View>
 
           {/* Note preview */}
           {entry.note ? (
-            <Text style={styles.note} numberOfLines={2}>
+            <Text style={[styles.note, { color: colors.textSecondary }]} numberOfLines={2}>
               {entry.note}
             </Text>
           ) : null}
@@ -133,7 +137,6 @@ export function MoodEntryCard({ entry, onPress }: MoodEntryCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.cardBackground,
     borderRadius: radii.lg,
     overflow: "hidden",
     position: "relative",
@@ -169,17 +172,14 @@ const styles = StyleSheet.create({
   moodLabel: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
   },
   time: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
   note: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     marginTop: spacing.sm,
     lineHeight: 18,
   },

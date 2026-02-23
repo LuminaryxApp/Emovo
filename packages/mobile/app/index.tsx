@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
 
 import { useAuthStore } from "../src/stores/auth.store";
-import { colors } from "../src/theme/colors";
+import { useTheme } from "../src/theme/ThemeContext";
 
 const ONBOARDING_KEY = "hasSeenOnboarding";
 
 export default function Index() {
+  const { colors } = useTheme();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
@@ -23,7 +24,7 @@ export default function Index() {
 
   if (isLoading || !onboardingChecked) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
@@ -45,6 +46,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.background,
   },
 });

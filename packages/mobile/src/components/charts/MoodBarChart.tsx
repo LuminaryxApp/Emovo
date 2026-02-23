@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 
-import { colors, cardShadow } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { cardShadow } from "../../theme/colors";
 import { spacing, radii } from "../../theme/spacing";
 
 interface MoodBarChartProps {
@@ -12,6 +13,7 @@ interface MoodBarChartProps {
 
 export function MoodBarChart({ distribution }: MoodBarChartProps) {
   const { t } = useTranslation();
+  const { colors } = useTheme();
 
   const barData = MOOD_SCALE.map((mood) => ({
     value: distribution[mood.score] || 0,
@@ -24,8 +26,10 @@ export function MoodBarChart({ distribution }: MoodBarChartProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.sectionLabel}>{t("charts.moodDistribution")}</Text>
-      <View style={styles.card}>
+      <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+        {t("charts.moodDistribution")}
+      </Text>
+      <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
         <View style={styles.chartWrapper}>
           <BarChart
             data={barData}
@@ -55,13 +59,11 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.sectionLabel,
     letterSpacing: 1.5,
     marginBottom: spacing.sm,
     marginLeft: spacing.xs,
   },
   card: {
-    backgroundColor: colors.cardBackground,
     borderRadius: radii.xl,
     padding: 20,
     ...cardShadow(),

@@ -22,7 +22,7 @@ import { MoodSelector } from "../src/components/mood/MoodSelector";
 import { NoteInput } from "../src/components/mood/NoteInput";
 import { TriggerPicker } from "../src/components/mood/TriggerPicker";
 import { useMoodStore } from "../src/stores/mood.store";
-import { colors, gradients } from "../src/theme/colors";
+import { useTheme } from "../src/theme/ThemeContext";
 import { spacing, radii } from "../src/theme/spacing";
 
 type MoodLevel = 1 | 2 | 3 | 4 | 5;
@@ -31,6 +31,7 @@ export default function LogMoodScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, gradients } = useTheme();
 
   const triggers = useMoodStore((s) => s.triggers);
   const fetchTriggers = useMoodStore((s) => s.fetchTriggers);
@@ -95,13 +96,15 @@ export default function LogMoodScreen() {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.surface }]}
     >
-      <View style={styles.handleBar} />
+      <View style={[styles.handleBar, { backgroundColor: colors.border }]} />
 
-      <View style={[styles.header, { paddingTop: spacing.sm }]}>
+      <View style={[styles.header, { paddingTop: spacing.sm, borderBottomColor: colors.border }]}>
         <View style={styles.headerLeft} />
-        <Text style={styles.headerTitle}>{t("logMood.title", "Log Mood")}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          {t("logMood.title", "Log Mood")}
+        </Text>
         <Pressable onPress={() => router.back()} hitSlop={8}>
           <Ionicons name="close" size={24} color={colors.text} />
         </Pressable>
@@ -117,7 +120,9 @@ export default function LogMoodScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t("logMood.howFeeling", "How are you feeling?")}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            {t("logMood.howFeeling", "How are you feeling?")}
+          </Text>
           <MoodSelector value={mood} onChange={handleMoodSelect} showLabels size="lg" />
         </View>
 
@@ -149,13 +154,15 @@ export default function LogMoodScreen() {
               {isSubmitting ? (
                 <ActivityIndicator color={colors.textInverse} />
               ) : (
-                <Text style={styles.submitText}>{t("logMood.saveEntry", "Save Entry")}</Text>
+                <Text style={[styles.submitText, { color: colors.textInverse }]}>
+                  {t("logMood.saveEntry", "Save Entry")}
+                </Text>
               )}
             </LinearGradient>
           </Pressable>
 
           {!mood && (
-            <Text style={styles.hint}>
+            <Text style={[styles.hint, { color: colors.textTertiary }]}>
               {t("logMood.selectMoodHint", "Select a mood level to continue")}
             </Text>
           )}
@@ -168,12 +175,10 @@ export default function LogMoodScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
   handleBar: {
     width: 36,
     height: 4,
-    backgroundColor: colors.border,
     borderRadius: 2,
     alignSelf: "center",
     marginTop: spacing.sm + 4,
@@ -185,7 +190,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm + 4,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
   headerLeft: {
     width: 24,
@@ -193,7 +197,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: "SourceSerif4_600SemiBold",
     fontSize: 20,
-    color: colors.text,
   },
   scrollView: {
     flex: 1,
@@ -209,7 +212,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: "SourceSerif4_600SemiBold",
     fontSize: 24,
-    color: colors.text,
     textAlign: "center",
   },
   submitSection: {
@@ -228,12 +230,10 @@ const styles = StyleSheet.create({
   submitText: {
     fontFamily: "SourceSerif4_600SemiBold",
     fontSize: 16,
-    color: colors.textInverse,
   },
   hint: {
     fontFamily: "SourceSerif4_400Regular",
     fontSize: 12,
-    color: colors.textTertiary,
     textAlign: "center",
   },
 });

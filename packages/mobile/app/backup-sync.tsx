@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Card } from "../src/components/ui";
 import { useAuthStore } from "../src/stores/auth.store";
-import { colors } from "../src/theme/colors";
+import { useTheme } from "../src/theme/ThemeContext";
 import { spacing, screenPadding, iconSizes } from "../src/theme/spacing";
 
 export default function BackupSyncScreen() {
@@ -14,6 +14,7 @@ export default function BackupSyncScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const user = useAuthStore((s) => s.user);
+  const { colors } = useTheme();
 
   const lastSyncDate = user?.updatedAt
     ? new Date(user.updatedAt).toLocaleString(undefined, {
@@ -23,13 +24,13 @@ export default function BackupSyncScreen() {
     : t("backupSync.never");
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
-      <View style={styles.headerBar}>
+      <View style={[styles.headerBar, { borderBottomColor: colors.borderLight }]}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
-        <Text style={styles.headerTitle}>{t("backupSync.title")}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t("backupSync.title")}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -37,8 +38,10 @@ export default function BackupSyncScreen() {
         {/* Sync status card */}
         <Card variant="elevated" padding="lg" style={styles.statusCard}>
           <Ionicons name="cloud-done-outline" size={48} color={colors.primary} />
-          <Text style={styles.statusTitle}>{t("backupSync.allSynced")}</Text>
-          <Text style={styles.statusSubtitle}>
+          <Text style={[styles.statusTitle, { color: colors.text }]}>
+            {t("backupSync.allSynced")}
+          </Text>
+          <Text style={[styles.statusSubtitle, { color: colors.textTertiary }]}>
             {t("backupSync.lastSync", { date: lastSyncDate })}
           </Text>
         </Card>
@@ -48,24 +51,36 @@ export default function BackupSyncScreen() {
           <View style={styles.infoRow}>
             <Ionicons name="shield-checkmark-outline" size={iconSizes.md} color={colors.primary} />
             <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>{t("backupSync.encrypted")}</Text>
-              <Text style={styles.infoDesc}>{t("backupSync.encryptedDesc")}</Text>
+              <Text style={[styles.infoTitle, { color: colors.text }]}>
+                {t("backupSync.encrypted")}
+              </Text>
+              <Text style={[styles.infoDesc, { color: colors.textTertiary }]}>
+                {t("backupSync.encryptedDesc")}
+              </Text>
             </View>
           </View>
 
           <View style={styles.infoRow}>
             <Ionicons name="sync-outline" size={iconSizes.md} color={colors.primary} />
             <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>{t("backupSync.automatic")}</Text>
-              <Text style={styles.infoDesc}>{t("backupSync.automaticDesc")}</Text>
+              <Text style={[styles.infoTitle, { color: colors.text }]}>
+                {t("backupSync.automatic")}
+              </Text>
+              <Text style={[styles.infoDesc, { color: colors.textTertiary }]}>
+                {t("backupSync.automaticDesc")}
+              </Text>
             </View>
           </View>
 
           <View style={styles.infoRow}>
             <Ionicons name="phone-portrait-outline" size={iconSizes.md} color={colors.primary} />
             <View style={styles.infoContent}>
-              <Text style={styles.infoTitle}>{t("backupSync.crossDevice")}</Text>
-              <Text style={styles.infoDesc}>{t("backupSync.crossDeviceDesc")}</Text>
+              <Text style={[styles.infoTitle, { color: colors.text }]}>
+                {t("backupSync.crossDevice")}
+              </Text>
+              <Text style={[styles.infoDesc, { color: colors.textTertiary }]}>
+                {t("backupSync.crossDeviceDesc")}
+              </Text>
             </View>
           </View>
         </View>
@@ -77,7 +92,6 @@ export default function BackupSyncScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   headerBar: {
     flexDirection: "row",
@@ -86,7 +100,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: screenPadding.horizontal,
     paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
   },
   backButton: {
     width: 40,
@@ -97,7 +110,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
   },
   content: {
     flex: 1,
@@ -112,13 +124,11 @@ const styles = StyleSheet.create({
   statusTitle: {
     fontSize: 18,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
     marginTop: spacing.sm,
   },
   statusSubtitle: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     textAlign: "center",
   },
   infoSection: {
@@ -135,13 +145,11 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     marginBottom: 2,
   },
   infoDesc: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     lineHeight: 19,
   },
 });

@@ -22,7 +22,7 @@ import { Card, Badge, ProgressBar } from "../../src/components/ui";
 import { useMoodStats } from "../../src/hooks/useMoodStats";
 import { moodEmojis, moodLabels, type MoodLevel } from "../../src/theme";
 import { useTheme } from "../../src/theme/ThemeContext";
-import { colors, cardShadow, cardShadowStrong } from "../../src/theme/colors";
+import { cardShadow, cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii, screenPadding, iconSizes } from "../../src/theme/spacing";
 
 type Period = "week" | "month" | "year";
@@ -279,7 +279,9 @@ export default function InsightsScreen() {
                       end={{ x: 1, y: 1 }}
                       style={styles.avgMoodGradient}
                     >
-                      <Text style={styles.avgMoodNumber}>{summary.avgMood.toFixed(1)}</Text>
+                      <Text style={[styles.avgMoodNumber, { color: colors.textInverse }]}>
+                        {summary.avgMood.toFixed(1)}
+                      </Text>
                       <Text style={styles.avgMoodEmoji}>
                         {getMoodForScore(summary.avgMood).emoji}
                       </Text>
@@ -433,7 +435,6 @@ export default function InsightsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     paddingHorizontal: screenPadding.horizontal,
@@ -442,21 +443,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
     paddingTop: spacing.md,
     marginBottom: spacing.xs,
   },
   subtitle: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     marginBottom: spacing.md,
     lineHeight: 20,
   },
   periodHint: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     textAlign: "center",
     marginTop: spacing.sm,
   },
@@ -472,7 +470,6 @@ const styles = StyleSheet.create({
   overviewTitle: {
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.sectionLabel,
     letterSpacing: 1,
     textTransform: "uppercase",
     marginBottom: spacing.md,
@@ -497,7 +494,6 @@ const styles = StyleSheet.create({
   avgMoodNumber: {
     fontSize: 28,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.textInverse,
     lineHeight: 32,
   },
   avgMoodEmoji: {
@@ -507,13 +503,11 @@ const styles = StyleSheet.create({
   avgMoodLabel: {
     fontSize: 13,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     marginTop: spacing.sm,
   },
   avgMoodSub: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     marginTop: 2,
   },
   entriesBadge: {
@@ -521,7 +515,6 @@ const styles = StyleSheet.create({
   },
   overviewDivider: {
     width: 1,
-    backgroundColor: colors.border,
     alignSelf: "stretch",
     marginVertical: spacing.xs,
   },
@@ -532,7 +525,6 @@ const styles = StyleSheet.create({
   distributionTitle: {
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.sectionLabel,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     marginBottom: spacing.sm,
@@ -549,7 +541,6 @@ const styles = StyleSheet.create({
   distLabel: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     width: 48,
   },
   distBarWrap: {
@@ -559,7 +550,6 @@ const styles = StyleSheet.create({
   distPercent: {
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     width: 32,
     textAlign: "right",
   },
@@ -580,12 +570,10 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
   },
   statLabel: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     marginTop: spacing.xs,
   },
 
@@ -601,13 +589,11 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
     marginBottom: spacing.xs,
   },
   sectionSubtitle: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     marginBottom: spacing.md,
     lineHeight: 18,
   },
@@ -632,13 +618,11 @@ const styles = StyleSheet.create({
   insightTitle: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     marginBottom: 2,
   },
   insightDesc: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     lineHeight: 18,
   },
 
@@ -654,13 +638,11 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     marginBottom: spacing.sm,
   },
   emptySubtitle: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     textAlign: "center",
     maxWidth: 260,
     lineHeight: 20,

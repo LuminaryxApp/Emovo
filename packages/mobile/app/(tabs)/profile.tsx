@@ -5,7 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Linking from "expo-linking";
 import { router, useFocusEffect } from "expo-router";
 import * as StoreReview from "expo-store-review";
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   View,
@@ -47,7 +47,7 @@ import {
 } from "../../src/services/user.api";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useTheme, type ThemeMode } from "../../src/theme/ThemeContext";
-import { colors, cardShadowStrong } from "../../src/theme/colors";
+import { cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii, screenPadding, iconSizes } from "../../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -142,43 +142,46 @@ export default function ProfileScreen() {
   // Fetch stats on mount
   // -------------------------------------------------------------------------
 
-  useEffect(() => {
-    let cancelled = false;
+  // Fetch stats every time the tab gains focus (not just once on mount)
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
 
-    async function fetchStats() {
-      try {
-        const [streakData, summaryData] = await Promise.all([
-          getStreakApi(),
-          getStatsSummaryApi({ period: "year" }),
-        ]);
-        if (cancelled) return;
-        setStreak({
-          currentStreak: streakData.currentStreak,
-          longestStreak: streakData.longestStreak,
-          lastLogDate: streakData.lastLogDate,
-        });
-        setEntryCount(summaryData.entryCount ?? 0);
-      } catch {
-        // Silently fail — stats are non-critical
+      async function fetchStats() {
+        try {
+          const [streakData, summaryData] = await Promise.all([
+            getStreakApi(),
+            getStatsSummaryApi({ period: "year" }),
+          ]);
+          if (cancelled) return;
+          setStreak({
+            currentStreak: streakData.currentStreak,
+            longestStreak: streakData.longestStreak,
+            lastLogDate: streakData.lastLogDate,
+          });
+          setEntryCount(summaryData.entryCount ?? 0);
+        } catch {
+          // Silently fail — stats are non-critical
+        }
+
+        // Fetch follow counts
+        try {
+          if (!user?.id) return;
+          const profile = await getPublicProfileApi(user.id);
+          if (cancelled) return;
+          setFollowerCount(profile.followerCount);
+          setFollowingCount(profile.followingCount);
+        } catch {
+          // Non-critical
+        }
       }
 
-      // Fetch follow counts
-      try {
-        if (!user?.id) return;
-        const profile = await getPublicProfileApi(user.id);
-        if (cancelled) return;
-        setFollowerCount(profile.followerCount);
-        setFollowingCount(profile.followingCount);
-      } catch {
-        // Non-critical
-      }
-    }
-
-    fetchStats();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+      fetchStats();
+      return () => {
+        cancelled = true;
+      };
+    }, [user?.id]),
+  );
 
   // -------------------------------------------------------------------------
   // Handlers (all preserved from original)
@@ -513,11 +516,13 @@ export default function ProfileScreen() {
                 uri={user?.avatarBase64 ? `data:image/jpeg;base64,${user.avatarBase64}` : undefined}
                 style={styles.avatar}
               />
-              <View style={styles.avatarCameraOverlay}>
+              <View style={[styles.avatarCameraOverlay, { backgroundColor: colors.primary }]}>
                 <Ionicons name="camera" size={16} color={colors.textInverse} />
               </View>
             </Pressable>
-            <Text style={styles.name}>{user?.displayName || "User"}</Text>
+            <Text style={[styles.name, { color: colors.textInverse }]}>
+              {user?.displayName || "User"}
+            </Text>
             {user?.username ? <Text style={styles.username}>@{user.username}</Text> : null}
             <Text style={styles.email}>{user?.email || ""}</Text>
             {user?.bio ? <Text style={styles.bio}>{user.bio}</Text> : null}
@@ -953,14 +958,14 @@ export default function ProfileScreen() {
                   {t("profile.activeSessions")}
                 </Text>
                 {!sessionsLoading && sessions.length > 0 && (
-                  <Text style={sessionStyles.sessionCount}>
+                  <Text style={[sessionStyles.sessionCount, { color: colors.textTertiary }]}>
                     {sessions.length} {sessions.length === 1 ? "device" : "devices"}
                   </Text>
                 )}
               </View>
               <TouchableOpacity
                 onPress={() => setSessionsVisible(false)}
-                style={sessionStyles.closeBtn}
+                style={[sessionStyles.closeBtn, { backgroundColor: colors.inputBackground }]}
               >
                 <Ionicons name="close" size={20} color={colors.textSecondary} />
               </TouchableOpacity>
@@ -975,7 +980,9 @@ export default function ProfileScreen() {
             ) : sessions.length === 0 ? (
               <View style={sessionStyles.emptyState}>
                 <Ionicons name="shield-checkmark-outline" size={40} color={colors.textTertiary} />
-                <Text style={modalStyles.emptyText}>{t("profile.noSessionsFound")}</Text>
+                <Text style={[modalStyles.emptyText, { color: colors.textTertiary }]}>
+                  {t("profile.noSessionsFound")}
+                </Text>
               </View>
             ) : (
               <>
@@ -998,9 +1005,15 @@ export default function ProfileScreen() {
 
                 {/* Log out other devices button */}
                 {sessions.filter((s) => !s.current).length > 0 && (
-                  <View style={sessionStyles.footerActions}>
+                  <View style={[sessionStyles.footerActions, { borderTopColor: colors.divider }]}>
                     <TouchableOpacity
-                      style={sessionStyles.logoutOtherBtn}
+                      style={[
+                        sessionStyles.logoutOtherBtn,
+                        {
+                          backgroundColor: `${colors.error}08`,
+                          borderColor: `${colors.error}20`,
+                        },
+                      ]}
                       onPress={() => {
                         Alert.alert(
                           t("profile.logoutOtherTitle"),
@@ -1035,7 +1048,7 @@ export default function ProfileScreen() {
                         color={colors.error}
                         style={{ marginRight: spacing.xs }}
                       />
-                      <Text style={sessionStyles.logoutOtherText}>
+                      <Text style={[sessionStyles.logoutOtherText, { color: colors.error }]}>
                         {t("profile.logoutOtherDevices")}
                       </Text>
                     </TouchableOpacity>
@@ -1224,9 +1237,13 @@ function SessionCard({
               {session.deviceName || t("profile.unknownDevice")}
             </Text>
             {session.current && (
-              <View style={sessionStyles.currentBadge}>
-                <View style={sessionStyles.currentDot} />
-                <Text style={sessionStyles.currentBadgeText}>{t("profile.currentSession")}</Text>
+              <View
+                style={[sessionStyles.currentBadge, { backgroundColor: `${colors.success}18` }]}
+              >
+                <View style={[sessionStyles.currentDot, { backgroundColor: colors.success }]} />
+                <Text style={[sessionStyles.currentBadgeText, { color: colors.success }]}>
+                  {t("profile.currentSession")}
+                </Text>
               </View>
             )}
           </View>
@@ -1244,7 +1261,7 @@ function SessionCard({
             {session.expiresAt && (
               <View style={sessionStyles.metaItem}>
                 <Ionicons name="hourglass-outline" size={12} color={colors.textTertiary} />
-                <Text style={sessionStyles.metaText}>
+                <Text style={[sessionStyles.metaText, { color: colors.textTertiary }]}>
                   {t("profile.sessionExpires", {
                     date: new Date(session.expiresAt).toLocaleDateString(undefined, {
                       month: "short",
@@ -1259,7 +1276,7 @@ function SessionCard({
         {!session.current && (
           <TouchableOpacity
             onPress={onRevoke}
-            style={sessionStyles.revokeBtn}
+            style={[sessionStyles.revokeBtn, { backgroundColor: `${colors.error}10` }]}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Ionicons name="trash-outline" size={18} color={colors.error} />
@@ -1355,7 +1372,6 @@ function SettingsRow({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   content: {
     paddingBottom: spacing.xxl + spacing.xl,
@@ -1384,7 +1400,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
@@ -1393,7 +1408,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.textInverse,
   },
   username: {
     fontSize: 15,
@@ -1448,7 +1462,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
     letterSpacing: 1.5,
-    color: colors.sectionLabel,
     textTransform: "uppercase",
     marginBottom: spacing.sm,
     marginLeft: screenPadding.horizontal + spacing.xs,
@@ -1471,7 +1484,6 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.error,
   },
 
   // ---- Delete Account ----
@@ -1484,7 +1496,6 @@ const styles = StyleSheet.create({
   deleteText: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.error,
     textDecorationLine: "underline",
   },
 
@@ -1493,7 +1504,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     marginTop: spacing.lg,
   },
 });
@@ -1508,12 +1518,10 @@ const statStyles = StyleSheet.create({
   value: {
     fontSize: 24,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
   },
   label: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     marginTop: 2,
     textAlign: "center",
   },
@@ -1533,12 +1541,10 @@ const settingsStyles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
   },
   value: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textSecondary,
     marginRight: spacing.sm,
   },
 });
@@ -1552,7 +1558,6 @@ const modalStyles = StyleSheet.create({
     padding: spacing.lg,
   },
   container: {
-    backgroundColor: colors.surface,
     borderRadius: radii.xxl,
     padding: spacing.lg,
     width: "100%",
@@ -1567,7 +1572,6 @@ const modalStyles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontFamily: "SourceSerif4_700Bold",
-    color: colors.text,
   },
   input: {
     height: 52,
@@ -1576,8 +1580,6 @@ const modalStyles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: 16,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
-    backgroundColor: colors.inputBackground,
   },
   actions: {
     flexDirection: "row",
@@ -1593,10 +1595,8 @@ const modalStyles = StyleSheet.create({
   cancelText: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textSecondary,
   },
   saveBtn: {
-    backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm + 2,
     borderRadius: 14,
@@ -1604,12 +1604,10 @@ const modalStyles = StyleSheet.create({
   saveText: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.textInverse,
   },
   emptyText: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     textAlign: "center",
     marginVertical: spacing.xl,
   },
@@ -1624,19 +1622,16 @@ const sessionStyles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
   },
   sessionCount: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     marginTop: 2,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.inputBackground,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1646,15 +1641,12 @@ const sessionStyles = StyleSheet.create({
     gap: spacing.md,
   },
   card: {
-    backgroundColor: colors.inputBackground,
     borderRadius: radii.lg,
     padding: spacing.md,
     marginTop: spacing.sm,
   },
   cardCurrent: {
-    backgroundColor: `${colors.primary}08`,
     borderWidth: 1,
-    borderColor: `${colors.primary}20`,
   },
   cardTop: {
     flexDirection: "row",
@@ -1668,12 +1660,8 @@ const sessionStyles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  iconContainerCurrent: {
-    backgroundColor: `${colors.primary}15`,
-  },
-  iconContainerOther: {
-    backgroundColor: colors.surface,
-  },
+  iconContainerCurrent: {},
+  iconContainerOther: {},
   cardInfo: {
     flex: 1,
   },
@@ -1686,16 +1674,12 @@ const sessionStyles = StyleSheet.create({
   deviceName: {
     fontSize: 14,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
     flexShrink: 1,
   },
-  deviceNameCurrent: {
-    color: colors.primary,
-  },
+  deviceNameCurrent: {},
   currentBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: `${colors.success}18`,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: radii.pill,
@@ -1705,12 +1689,10 @@ const sessionStyles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.success,
   },
   currentBadgeText: {
     fontSize: 11,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.success,
   },
   metaRow: {
     flexDirection: "row",
@@ -1726,13 +1708,11 @@ const sessionStyles = StyleSheet.create({
   metaText: {
     fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
   },
   revokeBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: `${colors.error}10`,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -1740,7 +1720,6 @@ const sessionStyles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.divider,
   },
   logoutOtherBtn: {
     flexDirection: "row",
@@ -1748,14 +1727,11 @@ const sessionStyles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: spacing.sm + 2,
     borderRadius: radii.lg,
-    backgroundColor: `${colors.error}08`,
     borderWidth: 1,
-    borderColor: `${colors.error}20`,
   },
   logoutOtherText: {
     fontSize: 14,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.error,
   },
 });
 
@@ -1767,24 +1743,17 @@ const langStyles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
     borderRadius: 12,
   },
-  rowSelected: {
-    backgroundColor: `${colors.primary}10`,
-  },
+  rowSelected: {},
   nativeLabel: {
     fontSize: 16,
     fontFamily: "SourceSerif4_600SemiBold",
-    color: colors.text,
   },
-  labelSelected: {
-    color: colors.primary,
-  },
+  labelSelected: {},
   label: {
     fontSize: 13,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     marginTop: 2,
   },
 });

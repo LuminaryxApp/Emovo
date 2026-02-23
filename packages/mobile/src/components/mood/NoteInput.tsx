@@ -6,7 +6,8 @@ import Animated, {
   interpolateColor,
 } from "react-native-reanimated";
 
-import { colors, cardShadow } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { cardShadow } from "../../theme/colors";
 import { spacing, radii } from "../../theme/spacing";
 
 const DEFAULT_MAX_LENGTH = 500;
@@ -25,6 +26,7 @@ export function NoteInput({
   placeholder = "Write about how you're feeling...",
   maxLength = DEFAULT_MAX_LENGTH,
 }: NoteInputProps) {
+  const { colors } = useTheme();
   const borderProgress = useSharedValue(0);
   const charRatio = value.length / maxLength;
   const isNearLimit = charRatio > WARNING_THRESHOLD;
@@ -46,9 +48,16 @@ export function NoteInput({
   }));
 
   return (
-    <Animated.View style={[styles.card, cardShadow(), animatedCardStyle]}>
+    <Animated.View
+      style={[
+        styles.card,
+        cardShadow(),
+        { backgroundColor: colors.cardBackground, borderColor: colors.borderLight },
+        animatedCardStyle,
+      ]}
+    >
       <TextInput
-        style={styles.input}
+        style={[styles.input, { color: colors.text }]}
         value={value}
         onChangeText={onChange}
         placeholder={placeholder}
@@ -60,7 +69,13 @@ export function NoteInput({
         onBlur={handleBlur}
       />
       {value.length > 0 && (
-        <Text style={[styles.charCount, isNearLimit && styles.charCountWarning]}>
+        <Text
+          style={[
+            styles.charCount,
+            { color: colors.textTertiary },
+            isNearLimit && { color: colors.warning, fontFamily: "SourceSerif4_600SemiBold" },
+          ]}
+        >
           {value.length}/{maxLength}
         </Text>
       )}
@@ -70,16 +85,13 @@ export function NoteInput({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.cardBackground,
     borderRadius: radii.xl,
     borderWidth: 1,
-    borderColor: colors.borderLight,
     padding: spacing.md,
   },
   input: {
     fontSize: 15,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.text,
     minHeight: 100,
     padding: 0,
     lineHeight: 22,
@@ -87,12 +99,7 @@ const styles = StyleSheet.create({
   charCount: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
-    color: colors.textTertiary,
     textAlign: "right",
     marginTop: spacing.sm,
-  },
-  charCountWarning: {
-    color: colors.warning,
-    fontFamily: "SourceSerif4_600SemiBold",
   },
 });

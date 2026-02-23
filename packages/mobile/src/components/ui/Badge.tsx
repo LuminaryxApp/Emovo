@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import { StyleProp, StyleSheet, Text, View, ViewStyle } from "react-native";
 
-import { colors } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
 import { spacing, radii } from "../../theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -21,41 +21,8 @@ interface BadgeProps {
 }
 
 // ---------------------------------------------------------------------------
-// Color configs
+// Size configs
 // ---------------------------------------------------------------------------
-
-const VARIANT_COLORS: Record<BadgeVariant, { bg: string; text: string; dot: string }> = {
-  primary: {
-    bg: "rgba(117, 134, 60, 0.12)",
-    text: colors.primary,
-    dot: colors.primary,
-  },
-  secondary: {
-    bg: "rgba(111, 152, 184, 0.12)",
-    text: colors.accent,
-    dot: colors.accent,
-  },
-  success: {
-    bg: "rgba(117, 134, 60, 0.12)",
-    text: colors.success,
-    dot: colors.success,
-  },
-  warning: {
-    bg: "rgba(234, 179, 8, 0.12)",
-    text: "#A16207",
-    dot: colors.warning,
-  },
-  error: {
-    bg: "rgba(220, 38, 38, 0.10)",
-    text: colors.error,
-    dot: colors.error,
-  },
-  info: {
-    bg: "rgba(111, 152, 184, 0.12)",
-    text: colors.info,
-    dot: colors.info,
-  },
-};
 
 const SIZE_CONFIG: Record<
   BadgeSize,
@@ -77,6 +44,41 @@ export function Badge({
   style,
   testID,
 }: BadgeProps) {
+  const { colors } = useTheme();
+
+  const VARIANT_COLORS: Record<BadgeVariant, { bg: string; text: string; dot: string }> = {
+    primary: {
+      bg: "rgba(117, 134, 60, 0.12)",
+      text: colors.primary,
+      dot: colors.primary,
+    },
+    secondary: {
+      bg: "rgba(111, 152, 184, 0.12)",
+      text: colors.accent,
+      dot: colors.accent,
+    },
+    success: {
+      bg: "rgba(117, 134, 60, 0.12)",
+      text: colors.success,
+      dot: colors.success,
+    },
+    warning: {
+      bg: "rgba(234, 179, 8, 0.12)",
+      text: "#A16207",
+      dot: colors.warning,
+    },
+    error: {
+      bg: "rgba(220, 38, 38, 0.10)",
+      text: colors.error,
+      dot: colors.error,
+    },
+    info: {
+      bg: "rgba(111, 152, 184, 0.12)",
+      text: colors.info,
+      dot: colors.info,
+    },
+  };
+
   const variantColors = VARIANT_COLORS[variant];
   const sizeConfig = SIZE_CONFIG[size];
 

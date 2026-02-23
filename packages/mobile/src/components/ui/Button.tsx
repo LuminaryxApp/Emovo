@@ -6,7 +6,8 @@ import { ActivityIndicator, StyleProp, StyleSheet, Text, ViewStyle } from "react
 import { Pressable } from "react-native";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 
-import { colors, gradients, cardShadow } from "../../theme/colors";
+import { useTheme } from "../../theme/ThemeContext";
+import { cardShadow } from "../../theme/colors";
 import { spacing, radii } from "../../theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -64,6 +65,7 @@ export function Button({
   style,
   testID,
 }: ButtonProps) {
+  const { colors, gradients } = useTheme();
   const scale = useSharedValue(1);
   const sizeConfig = SIZE_CONFIG[size];
   const isDisabled = disabled || loading;
@@ -185,6 +187,7 @@ export function Button({
           style={[
             baseContainerStyle,
             styles.secondary,
+            { borderColor: colors.primary },
             isDisabled && styles.disabled,
             fullWidth && styles.fullWidth,
             style,
@@ -236,7 +239,6 @@ const styles = StyleSheet.create({
   secondary: {
     backgroundColor: "transparent",
     borderWidth: 1.5,
-    borderColor: colors.primary,
   },
   ghost: {
     backgroundColor: "transparent",
