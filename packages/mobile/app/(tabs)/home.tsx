@@ -16,8 +16,9 @@ import { getDateLocale } from "../../src/i18n/date-locale";
 import { getStreakApi } from "../../src/services/stats.api";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useMoodStore } from "../../src/stores/mood.store";
+import { useTheme } from "../../src/theme/ThemeContext";
 import type { MoodLevel } from "../../src/theme/colors";
-import { colors, gradients, cardShadow, cardShadowStrong } from "../../src/theme/colors";
+import { colors, cardShadow, cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii, screenPadding, iconSizes } from "../../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -39,6 +40,7 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { colors, gradients } = useTheme();
 
   // Stores
   const user = useAuthStore((s) => s.user);
@@ -139,15 +141,19 @@ export default function HomeScreen() {
           style={styles.header}
         >
           <View style={styles.headerTextBlock}>
-            <Text style={styles.dateLabel}>{todayStr.toUpperCase()}</Text>
-            <Text style={styles.greetingText}>
+            <Text style={[styles.dateLabel, { color: colors.sectionLabel }]}>
+              {todayStr.toUpperCase()}
+            </Text>
+            <Text style={[styles.greetingText, { color: colors.text }]}>
               {greeting},{"\n"}
-              <Text style={styles.nameText}>{user?.displayName || "there"}</Text>
+              <Text style={[styles.nameText, { color: colors.primary }]}>
+                {user?.displayName || "there"}
+              </Text>
             </Text>
           </View>
           <Pressable
             onPress={() => Alert.alert(t("community.comingSoon"), t("community.comingSoonMessage"))}
-            style={styles.notificationButton}
+            style={[styles.notificationButton, { backgroundColor: colors.surface }]}
           >
             <Ionicons name="notifications-outline" size={iconSizes.md} color={colors.text} />
           </Pressable>
@@ -165,7 +171,7 @@ export default function HomeScreen() {
               style={styles.offlineBanner}
             >
               <Ionicons name="cloud-upload-outline" size={16} color={colors.warning} />
-              <Text style={styles.offlineText}>
+              <Text style={[styles.offlineText, { color: colors.textSecondary }]}>
                 {t("home.offlineSync", { count: offlineCount })}
               </Text>
             </LinearGradient>
@@ -176,7 +182,9 @@ export default function HomeScreen() {
         {/* Today's Mood Card */}
         {/* ---------------------------------------------------------------- */}
         <Animated.View entering={FadeInDown.delay(100).duration(500).springify()}>
-          <Text style={styles.sectionLabel}>{t("home.todaysMood").toUpperCase()}</Text>
+          <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+            {t("home.todaysMood").toUpperCase()}
+          </Text>
           <MoodCard
             mood={todayMood}
             loggedAt={todayLoggedAt}
@@ -192,7 +200,9 @@ export default function HomeScreen() {
           entering={FadeInDown.delay(200).duration(500).springify()}
           style={styles.section}
         >
-          <Text style={styles.sectionLabel}>{t("home.moodStreak").toUpperCase()}</Text>
+          <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+            {t("home.moodStreak").toUpperCase()}
+          </Text>
           <MoodStreak currentStreak={streak.currentStreak} longestStreak={streak.longestStreak} />
         </Animated.View>
 
@@ -203,7 +213,9 @@ export default function HomeScreen() {
           entering={FadeInDown.delay(300).duration(500).springify()}
           style={styles.section}
         >
-          <Text style={styles.sectionLabel}>{t("home.thisWeek").toUpperCase()}</Text>
+          <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+            {t("home.thisWeek").toUpperCase()}
+          </Text>
           <View style={styles.statsRow}>
             {/* Average Mood */}
             <Card variant="elevated" padding="md" style={styles.statCard}>
@@ -212,8 +224,12 @@ export default function HomeScreen() {
                   <Ionicons name="analytics-outline" size={iconSizes.sm} color={colors.primary} />
                 </View>
               </View>
-              <Text style={styles.statValue}>{avgMood > 0 ? avgMood.toFixed(1) : "--"}</Text>
-              <Text style={styles.statLabel}>{t("home.avgMood")}</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {avgMood > 0 ? avgMood.toFixed(1) : "--"}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                {t("home.avgMood")}
+              </Text>
             </Card>
 
             {/* Entry Count */}
@@ -225,8 +241,12 @@ export default function HomeScreen() {
                   <Ionicons name="journal-outline" size={iconSizes.sm} color={colors.accent} />
                 </View>
               </View>
-              <Text style={styles.statValue}>{entryCount > 0 ? entryCount : "--"}</Text>
-              <Text style={styles.statLabel}>{t("home.entries")}</Text>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {entryCount > 0 ? entryCount : "--"}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                {t("home.entries")}
+              </Text>
             </Card>
           </View>
         </Animated.View>
@@ -239,9 +259,11 @@ export default function HomeScreen() {
           style={styles.section}
         >
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionLabel}>{t("home.recentInsight").toUpperCase()}</Text>
+            <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+              {t("home.recentInsight").toUpperCase()}
+            </Text>
             <Pressable onPress={goToInsights} hitSlop={8}>
-              <Text style={styles.seeAllText}>{t("home.seeAll")}</Text>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>{t("home.seeAll")}</Text>
             </Pressable>
           </View>
           <Card variant="elevated" padding="lg" onPress={goToInsights}>
@@ -252,8 +274,13 @@ export default function HomeScreen() {
                 <Ionicons name="bulb-outline" size={iconSizes.md} color={colors.warning} />
               </View>
               <View style={styles.insightTextBlock}>
-                <Text style={styles.insightTitle}>{t("home.insightTitle")}</Text>
-                <Text style={styles.insightDescription} numberOfLines={2}>
+                <Text style={[styles.insightTitle, { color: colors.text }]}>
+                  {t("home.insightTitle")}
+                </Text>
+                <Text
+                  style={[styles.insightDescription, { color: colors.textSecondary }]}
+                  numberOfLines={2}
+                >
                   {t("home.insightDescription")}
                 </Text>
               </View>
@@ -291,7 +318,7 @@ export default function HomeScreen() {
       {/* ------------------------------------------------------------------ */}
       <Animated.View
         entering={FadeInDown.delay(600).duration(400).springify()}
-        style={[styles.fabContainer, { bottom: insets.bottom + 76 }]}
+        style={[styles.fabContainer, { bottom: insets.bottom + 56 }]}
       >
         <Pressable onPress={goToLogMood}>
           <LinearGradient

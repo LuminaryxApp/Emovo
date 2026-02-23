@@ -34,6 +34,7 @@ import { getCurrentLanguage } from "../../src/i18n/config";
 import { getDateLocale } from "../../src/i18n/date-locale";
 import { getMoodCalendarApi, listMoodsApi } from "../../src/services/mood.api";
 import { moodEmojis } from "../../src/theme";
+import { useTheme } from "../../src/theme/ThemeContext";
 import { colors, type MoodLevel } from "../../src/theme/colors";
 import { spacing, radii, screenPadding } from "../../src/theme/spacing";
 
@@ -81,6 +82,7 @@ function getDayOfWeekHeaders(locale: ReturnType<typeof getDateLocale>): string[]
 export default function HistoryScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   // State
   const [currentMonth, setCurrentMonth] = useState(() => startOfMonth(new Date()));
@@ -178,7 +180,9 @@ export default function HistoryScreen() {
   // ---------------------------------------------------------------------------
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View
+      style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}
+    >
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
@@ -194,7 +198,7 @@ export default function HistoryScreen() {
       >
         {/* Header */}
         <Animated.View entering={FadeIn.duration(400)}>
-          <Text style={styles.title}>{t("history.title")}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{t("history.title")}</Text>
         </Animated.View>
 
         {/* Calendar Card */}
@@ -203,7 +207,7 @@ export default function HistoryScreen() {
             {/* Month navigation */}
             <View style={styles.monthNav}>
               <IconButton icon="chevron-back" onPress={goToPrevMonth} variant="ghost" size="sm" />
-              <Text style={styles.monthTitle}>{monthTitle}</Text>
+              <Text style={[styles.monthTitle, { color: colors.text }]}>{monthTitle}</Text>
               <IconButton
                 icon="chevron-forward"
                 onPress={goToNextMonth}
@@ -216,7 +220,7 @@ export default function HistoryScreen() {
             <View style={styles.weekRow}>
               {dayHeaders.map((day, i) => (
                 <View key={i} style={styles.dayHeaderCell}>
-                  <Text style={styles.dayHeaderText}>{day}</Text>
+                  <Text style={[styles.dayHeaderText, { color: colors.textTertiary }]}>{day}</Text>
                 </View>
               ))}
             </View>
@@ -243,15 +247,26 @@ export default function HistoryScreen() {
                     <View
                       style={[
                         styles.dayCircle,
-                        isSelected && styles.dayCircleSelected,
-                        !isSelected && isDayToday && styles.dayCircleToday,
+                        isSelected && [
+                          styles.dayCircleSelected,
+                          { backgroundColor: colors.primary },
+                        ],
+                        !isSelected &&
+                          isDayToday && [
+                            styles.dayCircleToday,
+                            { backgroundColor: colors.primaryMuted },
+                          ],
                       ]}
                     >
                       <Text
                         style={[
                           styles.dayNumber,
-                          !cell.isCurrentMonth && styles.dayNumberMuted,
-                          isSelected && styles.dayNumberSelected,
+                          { color: colors.text },
+                          !cell.isCurrentMonth && [
+                            styles.dayNumberMuted,
+                            { color: colors.textTertiary },
+                          ],
+                          isSelected && [styles.dayNumberSelected, { color: colors.textInverse }],
                         ]}
                       >
                         {dayNumber}
@@ -269,7 +284,12 @@ export default function HistoryScreen() {
 
             {/* Loading overlay for calendar */}
             {isLoadingCalendar && (
-              <View style={styles.calendarLoading}>
+              <View
+                style={[
+                  styles.calendarLoading,
+                  { backgroundColor: isDark ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.5)" },
+                ]}
+              >
                 <ActivityIndicator size="small" color={colors.primary} />
               </View>
             )}
@@ -278,7 +298,7 @@ export default function HistoryScreen() {
 
         {/* Selected Day Entries */}
         <Animated.View entering={FadeInDown.duration(500).delay(200)}>
-          <Text style={styles.sectionTitle}>{selectedDateLabel}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{selectedDateLabel}</Text>
 
           {isLoadingEntries ? (
             <View style={styles.entriesLoading}>

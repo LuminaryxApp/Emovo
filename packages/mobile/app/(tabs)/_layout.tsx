@@ -6,7 +6,7 @@ import { Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuthStore } from "../../src/stores/auth.store";
-import { colors } from "../../src/theme/colors";
+import { useTheme } from "../../src/theme/ThemeContext";
 
 const TAB_BAR_HEIGHT = 56;
 
@@ -14,6 +14,7 @@ export default function TabsLayout() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const { colors } = useTheme();
   const barHeight = TAB_BAR_HEIGHT + insets.bottom;
 
   useEffect(() => {

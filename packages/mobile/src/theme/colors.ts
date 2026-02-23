@@ -3,11 +3,13 @@ import { Platform } from "react-native";
 export type MoodLevel = 1 | 2 | 3 | 4 | 5;
 
 // Widen literal types to string for theme switching compatibility
+// Note: string must be checked before Record<number, string> because
+// TypeScript considers string assignable to Record<number, string>.
 type DeepWritable<T> = {
-  -readonly [P in keyof T]: T[P] extends Record<number, string>
-    ? Record<number, string>
-    : T[P] extends string
-      ? string
+  -readonly [P in keyof T]: T[P] extends string
+    ? string
+    : T[P] extends Record<number, string>
+      ? Record<number, string>
       : DeepWritable<T[P]>;
 };
 

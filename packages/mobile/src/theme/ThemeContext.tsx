@@ -17,7 +17,7 @@ import {
 export type ThemeMode = "light" | "dark" | "system";
 
 type ThemeGradients = {
-  [K in keyof typeof lightGradients]: readonly string[];
+  [K in keyof typeof lightGradients]: readonly [string, string, ...string[]];
 };
 
 interface ThemeContextValue {

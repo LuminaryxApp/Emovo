@@ -21,13 +21,15 @@ import { TriggerPieChart } from "../../src/components/charts/TriggerPieChart";
 import { Card, Badge, ProgressBar } from "../../src/components/ui";
 import { useMoodStats } from "../../src/hooks/useMoodStats";
 import { moodEmojis, moodLabels, type MoodLevel } from "../../src/theme";
-import { colors, gradients, cardShadow, cardShadowStrong } from "../../src/theme/colors";
+import { useTheme } from "../../src/theme/ThemeContext";
+import { colors, cardShadow, cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii, screenPadding, iconSizes } from "../../src/theme/spacing";
 
 type Period = "week" | "month" | "year";
 
 export default function InsightsScreen() {
   const { t } = useTranslation();
+  const { colors, gradients } = useTheme();
   const [period, setPeriod] = useState<Period>("week");
   const { summary, trend, triggers, isLoading, refresh } = useMoodStats(period);
 
@@ -218,7 +220,10 @@ export default function InsightsScreen() {
   }, [summary, trend, triggers, period, t]);
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
@@ -232,16 +237,24 @@ export default function InsightsScreen() {
         }
       >
         {/* Header */}
-        <Animated.Text entering={FadeIn.duration(400)} style={styles.title}>
+        <Animated.Text
+          entering={FadeIn.duration(400)}
+          style={[styles.title, { color: colors.text }]}
+        >
           {t("insights.title")}
         </Animated.Text>
-        <Animated.Text entering={FadeIn.duration(400).delay(50)} style={styles.subtitle}>
+        <Animated.Text
+          entering={FadeIn.duration(400).delay(50)}
+          style={[styles.subtitle, { color: colors.textSecondary }]}
+        >
           {t("insights.subtitle")}
         </Animated.Text>
 
         <Animated.View entering={FadeInDown.delay(100).springify()}>
           <PeriodSelector value={period} onChange={setPeriod} />
-          <Text style={styles.periodHint}>{PERIOD_HINT[period]}</Text>
+          <Text style={[styles.periodHint, { color: colors.textTertiary }]}>
+            {PERIOD_HINT[period]}
+          </Text>
         </Animated.View>
 
         {isLoading && !summary ? (
@@ -253,7 +266,9 @@ export default function InsightsScreen() {
             {/* Mood Overview Card */}
             <Animated.View entering={FadeInDown.delay(200).springify()}>
               <Card variant="elevated" padding="lg" style={styles.overviewCard}>
-                <Text style={styles.overviewTitle}>{t("insights.moodOverview")}</Text>
+                <Text style={[styles.overviewTitle, { color: colors.sectionLabel }]}>
+                  {t("insights.moodOverview")}
+                </Text>
 
                 <View style={styles.overviewContent}>
                   {/* Left side: Average mood */}
@@ -269,23 +284,31 @@ export default function InsightsScreen() {
                         {getMoodForScore(summary.avgMood).emoji}
                       </Text>
                     </LinearGradient>
-                    <Text style={styles.avgMoodLabel}>{t("insights.avgMood")}</Text>
-                    <Text style={styles.avgMoodSub}>{t("insights.outOf5")}</Text>
+                    <Text style={[styles.avgMoodLabel, { color: colors.text }]}>
+                      {t("insights.avgMood")}
+                    </Text>
+                    <Text style={[styles.avgMoodSub, { color: colors.textTertiary }]}>
+                      {t("insights.outOf5")}
+                    </Text>
                     <Badge variant="primary" size="sm" style={styles.entriesBadge}>
                       {`${summary.entryCount} ${t("insights.entries")}`}
                     </Badge>
                   </View>
 
                   {/* Divider */}
-                  <View style={styles.overviewDivider} />
+                  <View style={[styles.overviewDivider, { backgroundColor: colors.border }]} />
 
                   {/* Right side: Mood distribution */}
                   <View style={styles.overviewRight}>
-                    <Text style={styles.distributionTitle}>{t("insights.moodDistribution")}</Text>
+                    <Text style={[styles.distributionTitle, { color: colors.sectionLabel }]}>
+                      {t("insights.moodDistribution")}
+                    </Text>
                     {getMoodDistributionRows().map((row) => (
                       <View key={row.level} style={styles.distRow}>
                         <Text style={styles.distEmoji}>{moodEmojis[row.level]}</Text>
-                        <Text style={styles.distLabel}>{moodLabels[row.level]}</Text>
+                        <Text style={[styles.distLabel, { color: colors.textSecondary }]}>
+                          {moodLabels[row.level]}
+                        </Text>
                         <View style={styles.distBarWrap}>
                           <ProgressBar
                             progress={row.percentage}
@@ -293,7 +316,9 @@ export default function InsightsScreen() {
                             color={colors.mood[row.level]}
                           />
                         </View>
-                        <Text style={styles.distPercent}>{Math.round(row.percentage)}%</Text>
+                        <Text style={[styles.distPercent, { color: colors.text }]}>
+                          {Math.round(row.percentage)}%
+                        </Text>
                       </View>
                     ))}
                   </View>
@@ -309,8 +334,10 @@ export default function InsightsScreen() {
                 end={{ x: 0, y: 1 }}
                 style={styles.statCard}
               >
-                <Text style={styles.statValue}>{summary.entryCount}</Text>
-                <Text style={styles.statLabel}>{t("insights.entries")}</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>{summary.entryCount}</Text>
+                <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
+                  {t("insights.entries")}
+                </Text>
               </LinearGradient>
               <LinearGradient
                 colors={[...gradients.warmSurface]}
@@ -318,8 +345,12 @@ export default function InsightsScreen() {
                 end={{ x: 0, y: 1 }}
                 style={styles.statCard}
               >
-                <Text style={styles.statValue}>{getMoodForScore(summary.avgMood).emoji}</Text>
-                <Text style={styles.statLabel}>{PERIOD_LABELS[period]}</Text>
+                <Text style={[styles.statValue, { color: colors.text }]}>
+                  {getMoodForScore(summary.avgMood).emoji}
+                </Text>
+                <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
+                  {PERIOD_LABELS[period]}
+                </Text>
               </LinearGradient>
             </Animated.View>
 
@@ -351,8 +382,12 @@ export default function InsightsScreen() {
             {/* Data-Driven Insights Section */}
             {computedInsights.length > 0 && (
               <Animated.View entering={FadeInDown.delay(700).springify()} style={styles.aiSection}>
-                <Text style={styles.sectionTitle}>{t("insights.aiInsights")}</Text>
-                <Text style={styles.sectionSubtitle}>{t("insights.aiInsightsSubtitle")}</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                  {t("insights.aiInsights")}
+                </Text>
+                <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+                  {t("insights.aiInsightsSubtitle")}
+                </Text>
 
                 {computedInsights.map((insight, index) => (
                   <Animated.View
@@ -367,8 +402,12 @@ export default function InsightsScreen() {
                           <Ionicons name={insight.icon} size={iconSizes.md} color={insight.color} />
                         </View>
                         <View style={styles.insightTextWrap}>
-                          <Text style={styles.insightTitle}>{insight.title}</Text>
-                          <Text style={styles.insightDesc}>{insight.description}</Text>
+                          <Text style={[styles.insightTitle, { color: colors.text }]}>
+                            {insight.title}
+                          </Text>
+                          <Text style={[styles.insightDesc, { color: colors.textSecondary }]}>
+                            {insight.description}
+                          </Text>
                         </View>
                       </View>
                     </Card>
@@ -380,8 +419,10 @@ export default function InsightsScreen() {
         ) : (
           <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.emptyContainer}>
             <Text style={styles.emptyEmoji}>📊</Text>
-            <Text style={styles.emptyTitle}>{t("insights.noData")}</Text>
-            <Text style={styles.emptySubtitle}>{t("insights.noDataSubtitle")}</Text>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("insights.noData")}</Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+              {t("insights.noDataSubtitle")}
+            </Text>
           </Animated.View>
         )}
       </ScrollView>
