@@ -13,6 +13,7 @@ import requestIdPlugin from "./plugins/request-id.plugin.js";
 import { authRoutes } from "./routes/auth.routes.js";
 import { communityRoutes } from "./routes/community.routes.js";
 import { exportRoutes } from "./routes/export.routes.js";
+import { followRoutes } from "./routes/follow.routes.js";
 import { healthRoutes } from "./routes/health.routes.js";
 import { moderationRoutes } from "./routes/moderation.routes.js";
 import { moodRoutes } from "./routes/mood.routes.js";
@@ -186,6 +187,7 @@ export async function buildApp() {
   await fastify.register(authRoutes, { prefix: "/api/v1" });
   await fastify.register(sessionsRoutes, { prefix: "/api/v1/sessions" });
   await fastify.register(userRoutes, { prefix: "/api/v1" });
+  await fastify.register(followRoutes, { prefix: "/api/v1" });
   await fastify.register(moodRoutes, { prefix: "/api/v1" });
   await fastify.register(triggerRoutes, { prefix: "/api/v1" });
   await fastify.register(statsRoutes, { prefix: "/api/v1" });

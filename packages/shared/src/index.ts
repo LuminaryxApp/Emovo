@@ -4,7 +4,13 @@ export { MOOD_SCALE, MIN_MOOD_SCORE, MAX_MOOD_SCORE, MAX_NOTE_LENGTH } from "./c
 export { DEFAULT_TRIGGERS } from "./constants/triggers.js";
 
 // Types
-export type { User, UserProfile } from "./types/user.js";
+export type {
+  User,
+  UserProfile,
+  PublicProfile,
+  FollowListItem,
+  FollowRequest,
+} from "./types/user.js";
 export type {
   MoodEntry,
   Trigger,
@@ -70,6 +76,8 @@ export type {
   UpdateMoodInput,
   CreateTriggerInput,
 } from "./schemas/mood.schema.js";
+
+export { followListQuerySchema } from "./schemas/follow.schema.js";
 
 export {
   createPostSchema,

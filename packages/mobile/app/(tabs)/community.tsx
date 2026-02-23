@@ -28,7 +28,8 @@ import { getPublicName } from "../../src/lib/display-name";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useCommunityStore } from "../../src/stores/community.store";
 import { moodEmojis } from "../../src/theme";
-import { colors, gradients, cardShadow, type MoodLevel } from "../../src/theme/colors";
+import { useTheme } from "../../src/theme/ThemeContext";
+import { colors, cardShadow, type MoodLevel } from "../../src/theme/colors";
 import { spacing, radii, screenPadding, borderRadius, iconSizes } from "../../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -91,6 +92,7 @@ function getMoodBadgeVariant(moodScore: number): "success" | "primary" | "warnin
 export default function CommunityScreen() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { colors, gradients } = useTheme();
 
   // Stores
   const user = useAuthStore((s) => s.user);
@@ -424,12 +426,18 @@ export default function CommunityScreen() {
 
   const renderHeader = () => (
     <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
-      <Text style={styles.title}>{t("community.title")}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t("community.title")}</Text>
       <View style={styles.headerActions}>
-        <Pressable onPress={showComingSoon} style={[styles.headerIconBtn, cardShadow()]}>
+        <Pressable
+          onPress={showComingSoon}
+          style={[styles.headerIconBtn, cardShadow(), { backgroundColor: colors.surface }]}
+        >
           <Ionicons name="search-outline" size={iconSizes.sm} color={colors.text} />
         </Pressable>
-        <Pressable onPress={showComingSoon} style={[styles.headerIconBtn, cardShadow()]}>
+        <Pressable
+          onPress={showComingSoon}
+          style={[styles.headerIconBtn, cardShadow(), { backgroundColor: colors.surface }]}
+        >
           <Ionicons name="notifications-outline" size={iconSizes.sm} color={colors.text} />
         </Pressable>
       </View>
@@ -441,7 +449,10 @@ export default function CommunityScreen() {
   // ---------------------------------------------------------------------------
 
   const renderTabSelector = () => (
-    <Animated.View entering={FadeInDown.delay(50).duration(400)} style={styles.tabSelector}>
+    <Animated.View
+      entering={FadeInDown.delay(50).duration(400)}
+      style={[styles.tabSelector, { backgroundColor: colors.surface }]}
+    >
       {TABS.map((tab) => {
         const isActive = activeTab === tab.key;
         const showBadge = tab.key === "messages" && totalUnread > 0;
@@ -450,7 +461,10 @@ export default function CommunityScreen() {
           <Pressable
             key={tab.key}
             onPress={() => handleTabChange(tab.key)}
-            style={[styles.tabButton, isActive && styles.tabButtonActive]}
+            style={[
+              styles.tabButton,
+              isActive && [styles.tabButtonActive, { backgroundColor: colors.primaryMuted }],
+            ]}
           >
             <View style={styles.tabIconWrap}>
               <Ionicons
@@ -459,12 +473,16 @@ export default function CommunityScreen() {
                 color={isActive ? colors.primary : colors.textTertiary}
               />
               {showBadge && (
-                <View style={styles.tabBadge}>
-                  <Text style={styles.tabBadgeText}>{totalUnread > 99 ? "99+" : totalUnread}</Text>
+                <View style={[styles.tabBadge, { backgroundColor: colors.error }]}>
+                  <Text style={[styles.tabBadgeText, { color: colors.textInverse }]}>
+                    {totalUnread > 99 ? "99+" : totalUnread}
+                  </Text>
                 </View>
               )}
             </View>
-            <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>
+            <Text
+              style={[styles.tabLabel, { color: isActive ? colors.primary : colors.textTertiary }]}
+            >
               {t(tab.labelKey)}
             </Text>
           </Pressable>
@@ -484,26 +502,34 @@ export default function CommunityScreen() {
           <Avatar name={user?.displayName ?? "User"} size="md" />
           <Pressable
             onPress={() => handleOpenCreatePost("mood_update")}
-            style={styles.createPostInput}
+            style={[styles.createPostInput, { backgroundColor: colors.inputBackground }]}
           >
-            <Text style={styles.createPostPlaceholder}>{t("community.sharePlaceholder")}</Text>
+            <Text style={[styles.createPostPlaceholder, { color: colors.textTertiary }]}>
+              {t("community.sharePlaceholder")}
+            </Text>
           </Pressable>
         </View>
-        <View style={styles.createPostActions}>
+        <View style={[styles.createPostActions, { borderTopColor: colors.borderLight }]}>
           <Pressable
             onPress={() => handleOpenCreatePost("mood_update")}
             style={styles.createPostAction}
           >
             <Ionicons name="happy-outline" size={iconSizes.xs} color={colors.primary} />
-            <Text style={styles.createPostActionText}>{t("community.mood")}</Text>
+            <Text style={[styles.createPostActionText, { color: colors.textSecondary }]}>
+              {t("community.mood")}
+            </Text>
           </Pressable>
           <Pressable onPress={() => handleOpenCreatePost("tip")} style={styles.createPostAction}>
             <Ionicons name="bulb-outline" size={iconSizes.xs} color={colors.accent} />
-            <Text style={styles.createPostActionText}>{t("community.tip")}</Text>
+            <Text style={[styles.createPostActionText, { color: colors.textSecondary }]}>
+              {t("community.tip")}
+            </Text>
           </Pressable>
           <Pressable onPress={() => handleOpenCreatePost("photo")} style={styles.createPostAction}>
             <Ionicons name="image-outline" size={iconSizes.xs} color={colors.warning} />
-            <Text style={styles.createPostActionText}>{t("community.photo")}</Text>
+            <Text style={[styles.createPostActionText, { color: colors.textSecondary }]}>
+              {t("community.photo")}
+            </Text>
           </Pressable>
         </View>
       </Card>
@@ -522,11 +548,20 @@ export default function CommunityScreen() {
           <Card variant="elevated" padding="md" style={styles.postCard}>
             {/* Author row */}
             <View style={styles.postAuthorRow}>
-              <Avatar name={post.author.displayName} size="md" />
-              <View style={styles.postAuthorInfo}>
-                <Text style={styles.postAuthorName}>{getPublicName(post.author)}</Text>
-                <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
-              </View>
+              <Pressable
+                onPress={() => router.push(`/profile/${post.author.id}`)}
+                style={styles.postAuthorTap}
+              >
+                <Avatar name={post.author.displayName} size="md" />
+                <View style={styles.postAuthorInfo}>
+                  <Text style={[styles.postAuthorName, { color: colors.text }]}>
+                    {getPublicName(post.author)}
+                  </Text>
+                  <Text style={[styles.postTimestamp, { color: colors.textTertiary }]}>
+                    {formatRelativeTime(post.createdAt)}
+                  </Text>
+                </View>
+              </Pressable>
               {post.moodScore != null && (
                 <Badge variant={getMoodBadgeVariant(post.moodScore)} size="sm">
                   {`${moodEmojis[post.moodScore as MoodLevel] ?? ""} ${post.moodScore}/5`}
@@ -564,10 +599,10 @@ export default function CommunityScreen() {
             )}
 
             {/* Content */}
-            <Text style={styles.postContent}>{post.content}</Text>
+            <Text style={[styles.postContent, { color: colors.text }]}>{post.content}</Text>
 
             {/* Actions row */}
-            <View style={styles.postActionsRow}>
+            <View style={[styles.postActionsRow, { borderTopColor: colors.borderLight }]}>
               <Pressable onPress={() => handleToggleLike(post.id)} style={styles.postAction}>
                 <Ionicons
                   name={post.isLiked ? "heart" : "heart-outline"}
@@ -621,8 +656,12 @@ export default function CommunityScreen() {
           {renderCreatePostCard()}
           <View style={styles.emptyContainer}>
             <Ionicons name="newspaper-outline" size={48} color={colors.textTertiary} />
-            <Text style={styles.emptyTitle}>{t("community.noEntries")}</Text>
-            <Text style={styles.emptySubtitle}>{t("community.beFirstToPost")}</Text>
+            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+              {t("community.noEntries")}
+            </Text>
+            <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
+              {t("community.beFirstToPost")}
+            </Text>
           </View>
         </>
       );
@@ -657,7 +696,7 @@ export default function CommunityScreen() {
         >
           <Text style={styles.myGroupIcon}>{group.icon || "🌿"}</Text>
         </LinearGradient>
-        <Text style={styles.myGroupName} numberOfLines={1}>
+        <Text style={[styles.myGroupName, { color: colors.textSecondary }]} numberOfLines={1}>
           {group.name}
         </Text>
       </Pressable>
@@ -666,10 +705,10 @@ export default function CommunityScreen() {
 
   const renderCreateGroupCard = () => (
     <Pressable onPress={() => setShowCreateGroup(true)} style={styles.myGroupCard}>
-      <View style={styles.createGroupCircle}>
+      <View style={[styles.createGroupCircle, { borderColor: colors.border }]}>
         <Ionicons name="add" size={iconSizes.md} color={colors.primary} />
       </View>
-      <Text style={styles.myGroupName} numberOfLines={1}>
+      <Text style={[styles.myGroupName, { color: colors.textSecondary }]} numberOfLines={1}>
         {t("community.createGroup")}
       </Text>
     </Pressable>
@@ -692,23 +731,36 @@ export default function CommunityScreen() {
               <Text style={styles.discoverGroupEmoji}>{group.icon || "🌿"}</Text>
             </LinearGradient>
             <View style={styles.discoverGroupInfo}>
-              <Text style={styles.discoverGroupName}>{group.name}</Text>
+              <Text style={[styles.discoverGroupName, { color: colors.text }]}>{group.name}</Text>
               {group.description && (
-                <Text style={styles.discoverGroupDesc} numberOfLines={1}>
+                <Text
+                  style={[styles.discoverGroupDesc, { color: colors.textSecondary }]}
+                  numberOfLines={1}
+                >
                   {group.description}
                 </Text>
               )}
-              <Text style={styles.discoverGroupMembers}>
+              <Text style={[styles.discoverGroupMembers, { color: colors.textTertiary }]}>
                 {group.memberCount} {t("community.members")}
               </Text>
             </View>
             {!group.isMember ? (
-              <Pressable onPress={() => handleJoinGroup(group.id)} style={styles.joinButton}>
-                <Text style={styles.joinButtonText}>{t("community.join")}</Text>
+              <Pressable
+                onPress={() => handleJoinGroup(group.id)}
+                style={[styles.joinButton, { backgroundColor: colors.primary }]}
+              >
+                <Text style={[styles.joinButtonText, { color: colors.textInverse }]}>
+                  {t("community.join")}
+                </Text>
               </Pressable>
             ) : (
-              <Pressable onPress={() => handleLeaveGroup(group.id)} style={styles.leaveButton}>
-                <Text style={styles.leaveButtonText}>{t("community.leave")}</Text>
+              <Pressable
+                onPress={() => handleLeaveGroup(group.id)}
+                style={[styles.leaveButton, { borderColor: colors.error }]}
+              >
+                <Text style={[styles.leaveButtonText, { color: colors.error }]}>
+                  {t("community.leave")}
+                </Text>
               </Pressable>
             )}
           </View>
@@ -731,9 +783,13 @@ export default function CommunityScreen() {
         {/* My Groups */}
         <Animated.View entering={FadeInDown.delay(100).duration(400)}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionLabel}>{t("community.myGroups").toUpperCase()}</Text>
+            <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+              {t("community.myGroups").toUpperCase()}
+            </Text>
             <Pressable hitSlop={8}>
-              <Text style={styles.seeAllText}>{t("community.seeAll")}</Text>
+              <Text style={[styles.seeAllText, { color: colors.primary }]}>
+                {t("community.seeAll")}
+              </Text>
             </Pressable>
           </View>
           <ScrollView
@@ -749,12 +805,16 @@ export default function CommunityScreen() {
         {/* Discover Groups */}
         <Animated.View entering={FadeInDown.delay(150).duration(400)}>
           <View style={[styles.sectionHeader, { marginTop: spacing.lg }]}>
-            <Text style={styles.sectionLabel}>{t("community.discoverGroups").toUpperCase()}</Text>
+            <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+              {t("community.discoverGroups").toUpperCase()}
+            </Text>
           </View>
           {discoverGroups.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Ionicons name="compass-outline" size={48} color={colors.textTertiary} />
-              <Text style={styles.emptyTitle}>{t("community.noEntries")}</Text>
+              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+                {t("community.noEntries")}
+              </Text>
             </View>
           ) : (
             discoverGroups.map((g, i) => renderDiscoverGroupItem(g, i))
@@ -774,7 +834,7 @@ export default function CommunityScreen() {
 
     return (
       <Animated.View key={convo.id} entering={FadeInDown.delay(150 + index * 50).duration(400)}>
-        <Pressable style={styles.conversationItem}>
+        <Pressable style={[styles.conversationItem, { borderBottomColor: colors.borderLight }]}>
           {isGroup ? (
             <View style={styles.groupAvatarWrap}>
               <LinearGradient
@@ -797,6 +857,7 @@ export default function CommunityScreen() {
               <Text
                 style={[
                   styles.conversationName,
+                  { color: colors.text },
                   convo.unreadCount > 0 && styles.conversationNameUnread,
                 ]}
                 numberOfLines={1}
@@ -804,7 +865,7 @@ export default function CommunityScreen() {
                 {displayName}
               </Text>
               {convo.lastMessageAt && (
-                <Text style={styles.conversationTime}>
+                <Text style={[styles.conversationTime, { color: colors.textTertiary }]}>
                   {formatRelativeTime(convo.lastMessageAt)}
                 </Text>
               )}
@@ -813,15 +874,19 @@ export default function CommunityScreen() {
               <Text
                 style={[
                   styles.conversationLastMsg,
-                  convo.unreadCount > 0 && styles.conversationLastMsgUnread,
+                  { color: colors.textTertiary },
+                  convo.unreadCount > 0 && [
+                    styles.conversationLastMsgUnread,
+                    { color: colors.textSecondary },
+                  ],
                 ]}
                 numberOfLines={1}
               >
                 {convo.lastMessage ?? ""}
               </Text>
               {convo.unreadCount > 0 && (
-                <View style={styles.unreadBadge}>
-                  <Text style={styles.unreadBadgeText}>
+                <View style={[styles.unreadBadge, { backgroundColor: colors.primary }]}>
+                  <Text style={[styles.unreadBadgeText, { color: colors.textInverse }]}>
                     {convo.unreadCount > 99 ? "99+" : convo.unreadCount}
                   </Text>
                 </View>
@@ -846,10 +911,10 @@ export default function CommunityScreen() {
       <>
         {/* Search */}
         <Animated.View entering={FadeInDown.delay(100).duration(400)}>
-          <View style={styles.messageSearchWrap}>
+          <View style={[styles.messageSearchWrap, { backgroundColor: colors.inputBackground }]}>
             <Ionicons name="search-outline" size={iconSizes.xs} color={colors.textTertiary} />
             <TextInput
-              style={styles.messageSearchInput}
+              style={[styles.messageSearchInput, { color: colors.text }]}
               placeholder={t("community.searchMessages")}
               placeholderTextColor={colors.textTertiary}
               value={messageSearch}
@@ -875,7 +940,10 @@ export default function CommunityScreen() {
                     <Avatar name={c.name || "User"} size="lg" />
                     <View style={styles.onlineDotLarge} />
                   </View>
-                  <Text style={styles.onlineName} numberOfLines={1}>
+                  <Text
+                    style={[styles.onlineName, { color: colors.textSecondary }]}
+                    numberOfLines={1}
+                  >
                     {(c.name || "User").split(" ")[0]}
                   </Text>
                 </Pressable>
@@ -889,7 +957,9 @@ export default function CommunityScreen() {
           {filteredConversations.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Ionicons name="chatbubbles-outline" size={48} color={colors.textTertiary} />
-              <Text style={styles.emptyTitle}>{t("community.noEntries")}</Text>
+              <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+                {t("community.noEntries")}
+              </Text>
             </View>
           ) : (
             filteredConversations.map((c, i) => renderConversationItem(c, i))
@@ -904,7 +974,7 @@ export default function CommunityScreen() {
   // ---------------------------------------------------------------------------
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top }]}>
+    <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       <ScrollView
         style={styles.flex}
         contentContainerStyle={styles.scrollContent}
@@ -935,7 +1005,10 @@ export default function CommunityScreen() {
       {activeTab === "messages" && (
         <Pressable
           onPress={showComingSoon}
-          style={[styles.newMessageFab, { bottom: insets.bottom + spacing.xxl + 48 }]}
+          style={[
+            styles.newMessageFab,
+            { bottom: insets.bottom + 56, backgroundColor: colors.primary },
+          ]}
         >
           <Ionicons name="create-outline" size={22} color={colors.textInverse} />
         </Pressable>
@@ -950,25 +1023,37 @@ export default function CommunityScreen() {
           style={styles.modalOverlay}
         >
           <Pressable style={styles.modalBackdrop} onPress={() => setShowCreatePost(false)} />
-          <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.md }]}>
+          <View
+            style={[
+              styles.modalSheet,
+              { paddingBottom: insets.bottom + spacing.md, backgroundColor: colors.surface },
+            ]}
+          >
             {/* Modal header */}
             <View style={styles.modalHeader}>
               <Pressable onPress={() => setShowCreatePost(false)}>
-                <Text style={styles.modalCancel}>{t("common.cancel")}</Text>
+                <Text style={[styles.modalCancel, { color: colors.textSecondary }]}>
+                  {t("common.cancel")}
+                </Text>
               </Pressable>
-              <Text style={styles.modalTitle}>{t("community.createPost")}</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {t("community.createPost")}
+              </Text>
               <Pressable
                 onPress={handleSubmitPost}
                 disabled={!postContent.trim() || isSubmittingPost}
                 style={[
                   styles.modalPostButton,
+                  { backgroundColor: colors.primary },
                   (!postContent.trim() || isSubmittingPost) && styles.modalPostButtonDisabled,
                 ]}
               >
                 {isSubmittingPost ? (
                   <ActivityIndicator size="small" color={colors.textInverse} />
                 ) : (
-                  <Text style={styles.modalPostButtonText}>{t("community.post")}</Text>
+                  <Text style={[styles.modalPostButtonText, { color: colors.textInverse }]}>
+                    {t("community.post")}
+                  </Text>
                 )}
               </Pressable>
             </View>
@@ -980,7 +1065,14 @@ export default function CommunityScreen() {
                   <Pressable
                     key={type}
                     onPress={() => setPostType(type)}
-                    style={[styles.postTypePill, postType === type && styles.postTypePillActive]}
+                    style={[
+                      styles.postTypePill,
+                      { backgroundColor: colors.inputBackground },
+                      postType === type && [
+                        styles.postTypePillActive,
+                        { backgroundColor: colors.primary },
+                      ],
+                    ]}
                   >
                     <Ionicons
                       name={
@@ -996,7 +1088,11 @@ export default function CommunityScreen() {
                     <Text
                       style={[
                         styles.postTypePillText,
-                        postType === type && styles.postTypePillTextActive,
+                        { color: colors.textSecondary },
+                        postType === type && [
+                          styles.postTypePillTextActive,
+                          { color: colors.textInverse },
+                        ],
                       ]}
                     >
                       {t(`community.${type === "mood_update" ? "mood" : type}`)}
@@ -1023,9 +1119,17 @@ export default function CommunityScreen() {
                       </Pressable>
                     </View>
                   ) : (
-                    <Pressable onPress={handlePickImage} style={styles.photoPickerBtn}>
+                    <Pressable
+                      onPress={handlePickImage}
+                      style={[
+                        styles.photoPickerBtn,
+                        { borderColor: colors.border, backgroundColor: colors.inputBackground },
+                      ]}
+                    >
                       <Ionicons name="camera-outline" size={28} color={colors.primary} />
-                      <Text style={styles.photoPickerText}>{t("community.addPhoto")}</Text>
+                      <Text style={[styles.photoPickerText, { color: colors.primary }]}>
+                        {t("community.addPhoto")}
+                      </Text>
                     </Pressable>
                   )}
                 </View>
@@ -1034,7 +1138,7 @@ export default function CommunityScreen() {
               {/* Content input */}
               <TextInput
                 ref={postInputRef}
-                style={styles.postTextInput}
+                style={[styles.postTextInput, { color: colors.text }]}
                 placeholder={t("community.sharePlaceholder")}
                 placeholderTextColor={colors.textTertiary}
                 value={postContent}
@@ -1046,7 +1150,9 @@ export default function CommunityScreen() {
 
               {/* Mood score selector */}
               <View style={styles.moodSelector}>
-                <Text style={styles.moodSelectorLabel}>{t("community.howAreYouFeeling")}</Text>
+                <Text style={[styles.moodSelectorLabel, { color: colors.sectionLabel }]}>
+                  {t("community.howAreYouFeeling")}
+                </Text>
                 <View style={styles.moodEmojiRow}>
                   {([1, 2, 3, 4, 5] as const).map((score) => (
                     <Pressable
@@ -1054,7 +1160,11 @@ export default function CommunityScreen() {
                       onPress={() => setPostMoodScore(postMoodScore === score ? null : score)}
                       style={[
                         styles.moodEmojiBtn,
-                        postMoodScore === score && styles.moodEmojiBtnActive,
+                        { backgroundColor: colors.inputBackground },
+                        postMoodScore === score && [
+                          styles.moodEmojiBtnActive,
+                          { backgroundColor: colors.primaryMuted, borderColor: colors.primary },
+                        ],
                       ]}
                     >
                       <Text style={styles.moodEmoji}>{moodEmojis[score]}</Text>
@@ -1063,7 +1173,9 @@ export default function CommunityScreen() {
                 </View>
               </View>
 
-              <Text style={styles.charCount}>{postContent.length}/2000</Text>
+              <Text style={[styles.charCount, { color: colors.textTertiary }]}>
+                {postContent.length}/2000
+              </Text>
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -1078,38 +1190,59 @@ export default function CommunityScreen() {
           style={styles.modalOverlay}
         >
           <Pressable style={styles.modalBackdrop} onPress={() => setShowCreateGroup(false)} />
-          <View style={[styles.modalSheet, { paddingBottom: insets.bottom + spacing.md }]}>
+          <View
+            style={[
+              styles.modalSheet,
+              { paddingBottom: insets.bottom + spacing.md, backgroundColor: colors.surface },
+            ]}
+          >
             {/* Modal header */}
             <View style={styles.modalHeader}>
               <Pressable onPress={() => setShowCreateGroup(false)}>
-                <Text style={styles.modalCancel}>{t("common.cancel")}</Text>
+                <Text style={[styles.modalCancel, { color: colors.textSecondary }]}>
+                  {t("common.cancel")}
+                </Text>
               </Pressable>
-              <Text style={styles.modalTitle}>{t("community.createGroup")}</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {t("community.createGroup")}
+              </Text>
               <Pressable
                 onPress={handleSubmitGroup}
                 disabled={!groupName.trim() || isSubmittingGroup}
                 style={[
                   styles.modalPostButton,
+                  { backgroundColor: colors.primary },
                   (!groupName.trim() || isSubmittingGroup) && styles.modalPostButtonDisabled,
                 ]}
               >
                 {isSubmittingGroup ? (
                   <ActivityIndicator size="small" color={colors.textInverse} />
                 ) : (
-                  <Text style={styles.modalPostButtonText}>{t("community.create")}</Text>
+                  <Text style={[styles.modalPostButtonText, { color: colors.textInverse }]}>
+                    {t("community.create")}
+                  </Text>
                 )}
               </Pressable>
             </View>
 
             {/* Icon picker */}
             <View style={styles.groupIconPicker}>
-              <Text style={styles.moodSelectorLabel}>{t("community.groupIconLabel")}</Text>
+              <Text style={[styles.moodSelectorLabel, { color: colors.sectionLabel }]}>
+                {t("community.groupIconLabel")}
+              </Text>
               <View style={styles.moodEmojiRow}>
                 {["🌿", "💬", "🧘", "💪", "🌈", "❤️", "🎯", "📚"].map((emoji) => (
                   <Pressable
                     key={emoji}
                     onPress={() => setGroupIcon(emoji)}
-                    style={[styles.moodEmojiBtn, groupIcon === emoji && styles.moodEmojiBtnActive]}
+                    style={[
+                      styles.moodEmojiBtn,
+                      { backgroundColor: colors.inputBackground },
+                      groupIcon === emoji && [
+                        styles.moodEmojiBtnActive,
+                        { backgroundColor: colors.primaryMuted, borderColor: colors.primary },
+                      ],
+                    ]}
                   >
                     <Text style={styles.moodEmoji}>{emoji}</Text>
                   </Pressable>
@@ -1119,7 +1252,10 @@ export default function CommunityScreen() {
 
             {/* Name input */}
             <TextInput
-              style={styles.groupInput}
+              style={[
+                styles.groupInput,
+                { color: colors.text, backgroundColor: colors.inputBackground },
+              ]}
               placeholder={t("community.groupNamePlaceholder")}
               placeholderTextColor={colors.textTertiary}
               value={groupName}
@@ -1130,7 +1266,11 @@ export default function CommunityScreen() {
 
             {/* Description input */}
             <TextInput
-              style={[styles.groupInput, styles.groupDescInput]}
+              style={[
+                styles.groupInput,
+                styles.groupDescInput,
+                { color: colors.text, backgroundColor: colors.inputBackground },
+              ]}
               placeholder={t("community.groupDescPlaceholder")}
               placeholderTextColor={colors.textTertiary}
               value={groupDescription}
@@ -1307,6 +1447,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
     marginBottom: spacing.sm,
+  },
+  postAuthorTap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    flex: 1,
   },
   postAuthorInfo: {
     flex: 1,

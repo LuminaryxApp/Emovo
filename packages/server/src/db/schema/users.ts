@@ -16,6 +16,8 @@ export const users = pgTable("users", {
   displayName: varchar("display_name", { length: 100 }).notNull(),
   username: varchar("username", { length: 30 }).unique(),
   showRealName: boolean("show_real_name").default(false).notNull(),
+  bio: varchar("bio", { length: 160 }),
+  isPrivate: boolean("is_private").default(false).notNull(),
   tokenVersion: integer("token_version").default(0).notNull(),
   encryptionKeyVersion: integer("encryption_key_version").default(1).notNull(),
   timezone: varchar("timezone", { length: 50 }).default("UTC").notNull(),

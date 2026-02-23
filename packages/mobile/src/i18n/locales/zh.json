@@ -341,7 +341,12 @@
     "reminderPermissionDenied": "请在设备设置中启用通知以使用提醒功能。",
     "themePickMessage": "选择您喜欢的外观。",
     "sectionAdmin": "管理",
-    "moderation": "内容审核"
+    "moderation": "内容审核",
+    "bio": "简介",
+    "editBio": "编辑简介",
+    "enterBio": "写一段简短的简介（最多160个字符）",
+    "privateAccount": "私密账户",
+    "followRequests": "关注请求"
   },
   "faq": {
     "title": "帮助与常见问题",
@@ -410,6 +415,30 @@
     "note": "备注",
     "by": "执行者",
     "reportedBy": "举报者"
+  },
+  "followRequests": {
+    "title": "关注请求",
+    "empty": "没有关注请求",
+    "emptySubtitle": "当有人想关注你时，他们的请求会显示在这里。",
+    "accept": "接受",
+    "decline": "拒绝"
+  },
+  "publicProfile": {
+    "follow": "关注",
+    "unfollow": "取消关注",
+    "following": "正在关注",
+    "requested": "已请求",
+    "followers": "粉丝",
+    "followingTab": "正在关注",
+    "memberSince": "{{date}}加入",
+    "privateAccount": "此账户为私密账户",
+    "privateAccountDesc": "关注此账户即可查看其动态。",
+    "confirmUnfollow": "取消关注{{name}}？",
+    "confirmUnfollowMessage": "您将不再看到对方的动态。",
+    "cancelRequest": "取消请求",
+    "cancelRequestMessage": "取消对{{name}}的关注请求？",
+    "editProfile": "编辑资料",
+    "requestSent": "关注请求已发送"
   },
   "errors": {
     "somethingWrong": "出了点问题",

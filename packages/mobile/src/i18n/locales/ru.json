@@ -341,7 +341,12 @@
     "reminderPermissionDenied": "Пожалуйста, включите уведомления в настройках устройства для использования напоминаний.",
     "themePickMessage": "Выберите предпочитаемый внешний вид.",
     "sectionAdmin": "АДМИНИСТРИРОВАНИЕ",
-    "moderation": "Модерация"
+    "moderation": "Модерация",
+    "bio": "О себе",
+    "editBio": "Редактировать bio",
+    "enterBio": "Напишите короткую биографию (макс. 160 символов)",
+    "privateAccount": "Закрытый аккаунт",
+    "followRequests": "Запросы на подписку"
   },
   "faq": {
     "title": "Помощь и FAQ",
@@ -410,6 +415,30 @@
     "note": "Заметка",
     "by": "от",
     "reportedBy": "Пожаловался"
+  },
+  "followRequests": {
+    "title": "Запросы на подписку",
+    "empty": "Нет запросов на подписку",
+    "emptySubtitle": "Когда кто-то захочет подписаться на вас, запрос появится здесь.",
+    "accept": "Принять",
+    "decline": "Отклонить"
+  },
+  "publicProfile": {
+    "follow": "Подписаться",
+    "unfollow": "Отписаться",
+    "following": "Подписка",
+    "requested": "Запрошено",
+    "followers": "Подписчики",
+    "followingTab": "Подписки",
+    "memberSince": "Участник с {{date}}",
+    "privateAccount": "Это закрытый аккаунт",
+    "privateAccountDesc": "Подпишитесь на этот аккаунт, чтобы видеть его активность.",
+    "confirmUnfollow": "Отписаться от {{name}}?",
+    "confirmUnfollowMessage": "Вы больше не будете видеть их активность.",
+    "cancelRequest": "Отменить запрос",
+    "cancelRequestMessage": "Отменить запрос на подписку к {{name}}?",
+    "editProfile": "Редактировать профиль",
+    "requestSent": "Запрос на подписку отправлен"
   },
   "errors": {
     "somethingWrong": "Что-то пошло не так",

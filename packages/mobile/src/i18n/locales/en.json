@@ -341,7 +341,12 @@
     "reminderPermissionDenied": "Please enable notifications in your device settings to use reminders.",
     "themePickMessage": "Choose your preferred appearance.",
     "sectionAdmin": "ADMIN",
-    "moderation": "Moderation"
+    "moderation": "Moderation",
+    "bio": "Bio",
+    "editBio": "Edit Bio",
+    "enterBio": "Write a short bio (max 160 characters)",
+    "privateAccount": "Private Account",
+    "followRequests": "Follow Requests"
   },
   "faq": {
     "title": "Help & FAQ",
@@ -410,6 +415,37 @@
     "note": "Note",
     "by": "by",
     "reportedBy": "Reported by"
+  },
+  "followRequests": {
+    "title": "Follow Requests",
+    "empty": "No follow requests",
+    "emptySubtitle": "When someone wants to follow you, their request will appear here.",
+    "accept": "Accept",
+    "decline": "Decline"
+  },
+  "publicProfile": {
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "following": "Following",
+    "requested": "Requested",
+    "followers": "Followers",
+    "followingTab": "Following",
+    "memberSince": "Member since {{date}}",
+    "privateAccount": "This account is private",
+    "privateAccountDesc": "Follow this account to see their activity.",
+    "confirmUnfollow": "Unfollow {{name}}?",
+    "confirmUnfollowMessage": "You will no longer see their activity.",
+    "cancelRequest": "Cancel Request",
+    "cancelRequestMessage": "Cancel your follow request to {{name}}?",
+    "editProfile": "Edit Profile",
+    "requestSent": "Follow request sent",
+    "title": "Profile",
+    "notFound": "Profile not found",
+    "followError": "Failed to follow user.",
+    "unfollowError": "Failed to unfollow user.",
+    "cancelRequestError": "Failed to cancel request.",
+    "noFollowers": "No followers yet",
+    "noFollowing": "Not following anyone yet"
   },
   "errors": {
     "somethingWrong": "Something went wrong",

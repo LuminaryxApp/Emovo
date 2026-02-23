@@ -341,7 +341,12 @@
     "reminderPermissionDenied": "يرجى تفعيل الإشعارات في إعدادات جهازك لاستخدام التذكيرات.",
     "themePickMessage": "اختر المظهر المفضل لديك.",
     "sectionAdmin": "الإدارة",
-    "moderation": "الإشراف"
+    "moderation": "الإشراف",
+    "bio": "نبذة",
+    "editBio": "تعديل النبذة",
+    "enterBio": "اكتب نبذة قصيرة (160 حرفًا كحد أقصى)",
+    "privateAccount": "حساب خاص",
+    "followRequests": "طلبات المتابعة"
   },
   "faq": {
     "title": "المساعدة والأسئلة الشائعة",
@@ -410,6 +415,30 @@
     "note": "ملاحظة",
     "by": "بواسطة",
     "reportedBy": "أبلغ عنه"
+  },
+  "followRequests": {
+    "title": "طلبات المتابعة",
+    "empty": "لا توجد طلبات متابعة",
+    "emptySubtitle": "عندما يريد شخص ما متابعتك، سيظهر طلبه هنا.",
+    "accept": "قبول",
+    "decline": "رفض"
+  },
+  "publicProfile": {
+    "follow": "متابعة",
+    "unfollow": "إلغاء المتابعة",
+    "following": "متابَع",
+    "requested": "تم الطلب",
+    "followers": "المتابعون",
+    "followingTab": "المتابَعون",
+    "memberSince": "عضو منذ {{date}}",
+    "privateAccount": "هذا الحساب خاص",
+    "privateAccountDesc": "تابع هذا الحساب لمشاهدة نشاطه.",
+    "confirmUnfollow": "إلغاء متابعة {{name}}؟",
+    "confirmUnfollowMessage": "لن ترى نشاطهم بعد الآن.",
+    "cancelRequest": "إلغاء الطلب",
+    "cancelRequestMessage": "إلغاء طلب المتابعة إلى {{name}}؟",
+    "editProfile": "تعديل الملف الشخصي",
+    "requestSent": "تم إرسال طلب المتابعة"
   },
   "errors": {
     "somethingWrong": "حدث خطأ ما",

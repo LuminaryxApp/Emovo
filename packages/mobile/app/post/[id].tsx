@@ -337,11 +337,16 @@ export default function PostDetailScreen() {
         <Pressable onLongPress={handlePostLongPress}>
           <Card variant="elevated" padding="md" style={styles.postCard}>
             <View style={styles.postAuthorRow}>
-              <Avatar name={post.author.displayName} size="md" />
-              <View style={styles.postAuthorInfo}>
-                <Text style={styles.postAuthorName}>{getPublicName(post.author)}</Text>
-                <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
-              </View>
+              <Pressable
+                onPress={() => router.push(`/profile/${post.author.id}`)}
+                style={styles.postAuthorTap}
+              >
+                <Avatar name={post.author.displayName} size="md" />
+                <View style={styles.postAuthorInfo}>
+                  <Text style={styles.postAuthorName}>{getPublicName(post.author)}</Text>
+                  <Text style={styles.postTimestamp}>{formatRelativeTime(post.createdAt)}</Text>
+                </View>
+              </Pressable>
               {post.moodScore != null && (
                 <Badge variant={getMoodBadgeVariant(post.moodScore)} size="sm">
                   {`${moodEmojis[post.moodScore as MoodLevel] ?? ""} ${post.moodScore}/5`}
@@ -405,10 +410,14 @@ export default function PostDetailScreen() {
             {comments.map((comment) => (
               <Pressable key={comment.id} onLongPress={() => handleCommentLongPress(comment)}>
                 <View style={styles.commentItem}>
-                  <Avatar name={comment.author.displayName} size="sm" />
+                  <Pressable onPress={() => router.push(`/profile/${comment.author.id}`)}>
+                    <Avatar name={comment.author.displayName} size="sm" />
+                  </Pressable>
                   <View style={styles.commentContent}>
                     <View style={styles.commentHeader}>
-                      <Text style={styles.commentAuthor}>{getPublicName(comment.author)}</Text>
+                      <Pressable onPress={() => router.push(`/profile/${comment.author.id}`)}>
+                        <Text style={styles.commentAuthor}>{getPublicName(comment.author)}</Text>
+                      </Pressable>
                       <Text style={styles.commentTime}>
                         {formatRelativeTime(comment.createdAt)}
                       </Text>
@@ -524,6 +533,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
     marginBottom: spacing.sm,
+  },
+  postAuthorTap: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    flex: 1,
   },
   postAuthorInfo: {
     flex: 1,

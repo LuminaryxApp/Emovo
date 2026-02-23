@@ -341,7 +341,12 @@
     "reminderPermissionDenied": "Veuillez activer les notifications dans les paramètres de votre appareil pour utiliser les rappels.",
     "themePickMessage": "Choisissez votre apparence préférée.",
     "sectionAdmin": "ADMINISTRATION",
-    "moderation": "Modération"
+    "moderation": "Modération",
+    "bio": "Bio",
+    "editBio": "Modifier la bio",
+    "enterBio": "Écrivez une courte bio (max. 160 caractères)",
+    "privateAccount": "Compte privé",
+    "followRequests": "Demandes de suivi"
   },
   "faq": {
     "title": "Aide et FAQ",
@@ -410,6 +415,30 @@
     "note": "Note",
     "by": "par",
     "reportedBy": "Signalé par"
+  },
+  "followRequests": {
+    "title": "Demandes de suivi",
+    "empty": "Aucune demande de suivi",
+    "emptySubtitle": "Quand quelqu'un voudra vous suivre, sa demande apparaitra ici.",
+    "accept": "Accepter",
+    "decline": "Refuser"
+  },
+  "publicProfile": {
+    "follow": "Suivre",
+    "unfollow": "Ne plus suivre",
+    "following": "Abonné",
+    "requested": "Demandé",
+    "followers": "Abonnés",
+    "followingTab": "Abonnements",
+    "memberSince": "Membre depuis {{date}}",
+    "privateAccount": "Ce compte est privé",
+    "privateAccountDesc": "Suivez ce compte pour voir son activité.",
+    "confirmUnfollow": "Ne plus suivre {{name}} ?",
+    "confirmUnfollowMessage": "Vous ne verrez plus son activité.",
+    "cancelRequest": "Annuler la demande",
+    "cancelRequestMessage": "Annuler votre demande de suivi à {{name}} ?",
+    "editProfile": "Modifier le profil",
+    "requestSent": "Demande de suivi envoyée"
   },
   "errors": {
     "somethingWrong": "Une erreur est survenue",

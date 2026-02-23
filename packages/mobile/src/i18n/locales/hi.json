@@ -341,7 +341,12 @@
     "reminderPermissionDenied": "अनुस्मारक का उपयोग करने के लिए कृपया अपने डिवाइस सेटिंग्स में सूचनाएँ सक्षम करें।",
     "themePickMessage": "अपनी पसंदीदा दिखावट चुनें।",
     "sectionAdmin": "प्रशासन",
-    "moderation": "मॉडरेशन"
+    "moderation": "मॉडरेशन",
+    "bio": "परिचय",
+    "editBio": "परिचय संपादित करें",
+    "enterBio": "एक छोटा परिचय लिखें (अधिकतम 160 अक्षर)",
+    "privateAccount": "निजी खाता",
+    "followRequests": "फॉलो अनुरोध"
   },
   "faq": {
     "title": "सहायता और FAQ",
@@ -410,6 +415,30 @@
     "note": "नोट",
     "by": "द्वारा",
     "reportedBy": "रिपोर्ट किया"
+  },
+  "followRequests": {
+    "title": "फॉलो अनुरोध",
+    "empty": "कोई फॉलो अनुरोध नहीं",
+    "emptySubtitle": "जब कोई आपको फॉलो करना चाहेगा, तो उनका अनुरोध यहां दिखाई देगा।",
+    "accept": "स्वीकार करें",
+    "decline": "अस्वीकार करें"
+  },
+  "publicProfile": {
+    "follow": "फॉलो करें",
+    "unfollow": "अनफॉलो करें",
+    "following": "फॉलो कर रहे हैं",
+    "requested": "अनुरोधित",
+    "followers": "फॉलोअर्स",
+    "followingTab": "फॉलो कर रहे हैं",
+    "memberSince": "{{date}} से सदस्य",
+    "privateAccount": "यह खाता निजी है",
+    "privateAccountDesc": "उनकी गतिविधि देखने के लिए इस खाते को फॉलो करें।",
+    "confirmUnfollow": "{{name}} को अनफॉलो करें?",
+    "confirmUnfollowMessage": "आप अब उनकी गतिविधि नहीं देखेंगे।",
+    "cancelRequest": "अनुरोध रद्द करें",
+    "cancelRequestMessage": "{{name}} को भेजा गया फॉलो अनुरोध रद्द करें?",
+    "editProfile": "प्रोफ़ाइल संपादित करें",
+    "requestSent": "फॉलो अनुरोध भेजा गया"
   },
   "errors": {
     "somethingWrong": "कुछ गलत हो गया",

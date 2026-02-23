@@ -341,7 +341,12 @@
     "reminderPermissionDenied": "Bitte aktiviere Benachrichtigungen in deinen Geräteeinstellungen, um Erinnerungen zu verwenden.",
     "themePickMessage": "Wähle dein bevorzugtes Erscheinungsbild.",
     "sectionAdmin": "VERWALTUNG",
-    "moderation": "Moderation"
+    "moderation": "Moderation",
+    "bio": "Bio",
+    "editBio": "Bio bearbeiten",
+    "enterBio": "Schreibe eine kurze Bio (max. 160 Zeichen)",
+    "privateAccount": "Privates Konto",
+    "followRequests": "Follower-Anfragen"
   },
   "faq": {
     "title": "Hilfe und FAQ",
@@ -410,6 +415,30 @@
     "note": "Notiz",
     "by": "von",
     "reportedBy": "Gemeldet von"
+  },
+  "followRequests": {
+    "title": "Follower-Anfragen",
+    "empty": "Keine Follower-Anfragen",
+    "emptySubtitle": "Wenn jemand dir folgen moechte, erscheint die Anfrage hier.",
+    "accept": "Annehmen",
+    "decline": "Ablehnen"
+  },
+  "publicProfile": {
+    "follow": "Folgen",
+    "unfollow": "Entfolgen",
+    "following": "Folge ich",
+    "requested": "Angefragt",
+    "followers": "Follower",
+    "followingTab": "Folge ich",
+    "memberSince": "Mitglied seit {{date}}",
+    "privateAccount": "Dieses Konto ist privat",
+    "privateAccountDesc": "Folge diesem Konto, um seine Aktivitäten zu sehen.",
+    "confirmUnfollow": "{{name}} entfolgen?",
+    "confirmUnfollowMessage": "Du wirst ihre Aktivitäten nicht mehr sehen.",
+    "cancelRequest": "Anfrage abbrechen",
+    "cancelRequestMessage": "Deine Follower-Anfrage an {{name}} abbrechen?",
+    "editProfile": "Profil bearbeiten",
+    "requestSent": "Follower-Anfrage gesendet"
   },
   "errors": {
     "somethingWrong": "Etwas ist schiefgelaufen",

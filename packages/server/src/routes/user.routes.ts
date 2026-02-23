@@ -26,6 +26,8 @@ export async function userRoutes(fastify: FastifyInstance) {
         displayName: users.displayName,
         username: users.username,
         showRealName: users.showRealName,
+        bio: users.bio,
+        isPrivate: users.isPrivate,
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
         preferredLanguage: users.preferredLanguage,
@@ -52,6 +54,8 @@ export async function userRoutes(fastify: FastifyInstance) {
         displayName: user.displayName,
         username: user.username,
         showRealName: user.showRealName,
+        bio: user.bio,
+        isPrivate: user.isPrivate,
         timezone: user.timezone,
         notificationsEnabled: user.notificationsEnabled,
         preferredLanguage: user.preferredLanguage,
@@ -102,6 +106,8 @@ export async function userRoutes(fastify: FastifyInstance) {
     if (body.avatarBase64 !== undefined) updateData.avatarBase64 = body.avatarBase64;
     if (body.reminderTime !== undefined) updateData.reminderTime = body.reminderTime;
     if (body.themePreference !== undefined) updateData.themePreference = body.themePreference;
+    if (body.bio !== undefined) updateData.bio = body.bio;
+    if (body.isPrivate !== undefined) updateData.isPrivate = body.isPrivate;
 
     // Email change triggers re-verification
     if (body.email !== undefined) {
@@ -120,6 +126,8 @@ export async function userRoutes(fastify: FastifyInstance) {
         displayName: users.displayName,
         username: users.username,
         showRealName: users.showRealName,
+        bio: users.bio,
+        isPrivate: users.isPrivate,
         timezone: users.timezone,
         notificationsEnabled: users.notificationsEnabled,
         preferredLanguage: users.preferredLanguage,
@@ -149,6 +157,8 @@ export async function userRoutes(fastify: FastifyInstance) {
         displayName: updated.displayName,
         username: updated.username,
         showRealName: updated.showRealName,
+        bio: updated.bio,
+        isPrivate: updated.isPrivate,
         timezone: updated.timezone,
         notificationsEnabled: updated.notificationsEnabled,
         preferredLanguage: updated.preferredLanguage,

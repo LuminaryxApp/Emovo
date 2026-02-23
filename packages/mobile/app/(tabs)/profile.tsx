@@ -46,7 +46,7 @@ import {
 } from "../../src/services/user.api";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useTheme, type ThemeMode } from "../../src/theme/ThemeContext";
-import { colors, gradients, cardShadowStrong } from "../../src/theme/colors";
+import { colors, cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii, screenPadding, iconSizes } from "../../src/theme/spacing";
 
 // ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ const THEME_LABELS: Record<ThemeMode, string> = {
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  const { mode: themeMode, setMode: setThemeMode } = useTheme();
+  const { mode: themeMode, setMode: setThemeMode, colors, gradients } = useTheme();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const logoutAll = useAuthStore((s) => s.logoutAll);
@@ -81,7 +81,7 @@ export default function ProfileScreen() {
 
   // Edit modal state
   const [editModal, setEditModal] = useState<{
-    field: "displayName" | "timezone" | "username" | null;
+    field: "displayName" | "timezone" | "username" | "bio" | null;
     value: string;
   }>({ field: null, value: "" });
   const [isSaving, setIsSaving] = useState(false);
@@ -201,20 +201,24 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const openEdit = (field: "displayName" | "timezone" | "username") => {
+  const openEdit = (field: "displayName" | "timezone" | "username" | "bio") => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     let value = "";
     if (field === "displayName") value = user?.displayName || "";
     else if (field === "timezone") value = user?.timezone || "UTC";
     else if (field === "username") value = user?.username || "";
+    else if (field === "bio") value = user?.bio || "";
     setEditModal({ field, value });
   };
 
   const handleSaveEdit = async () => {
-    if (!editModal.field || !editModal.value.trim()) return;
+    if (!editModal.field) return;
+    // Bio can be empty (to clear it), other fields must have content
+    if (editModal.field !== "bio" && !editModal.value.trim()) return;
     setIsSaving(true);
     try {
-      await updateProfile({ [editModal.field]: editModal.value.trim() });
+      const val = editModal.value.trim();
+      await updateProfile({ [editModal.field]: editModal.field === "bio" && !val ? null : val });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setEditModal({ field: null, value: "" });
     } catch (err: unknown) {
@@ -476,7 +480,10 @@ export default function ProfileScreen() {
 
   return (
     <>
-      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <SafeAreaView
+        style={[styles.safeArea, { backgroundColor: colors.background }]}
+        edges={["top"]}
+      >
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* ---- Profile Header Gradient ---- */}
           <LinearGradient
@@ -499,6 +506,7 @@ export default function ProfileScreen() {
             <Text style={styles.name}>{user?.displayName || "User"}</Text>
             {user?.username ? <Text style={styles.username}>@{user.username}</Text> : null}
             <Text style={styles.email}>{user?.email || ""}</Text>
+            {user?.bio ? <Text style={styles.bio}>{user.bio}</Text> : null}
             {joinDate ? (
               <View style={styles.memberBadge}>
                 <Text style={styles.memberBadgeText}>{`Member since ${joinDate}`}</Text>
@@ -530,7 +538,9 @@ export default function ProfileScreen() {
           </Card>
 
           {/* ---- Account Section ---- */}
-          <Text style={styles.sectionLabel}>{t("profile.sectionAccount")}</Text>
+          <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+            {t("profile.sectionAccount")}
+          </Text>
           <Card variant="elevated" padding="none" style={styles.sectionCard}>
             <SettingsRow
               icon="person-outline"
@@ -544,6 +554,10 @@ export default function ProfileScreen() {
                   {
                     text: t("profile.username"),
                     onPress: () => openEdit("username"),
+                  },
+                  {
+                    text: t("profile.bio"),
+                    onPress: () => openEdit("bio"),
                   },
                   {
                     text: t("profile.timezone"),
@@ -599,6 +613,34 @@ export default function ProfileScreen() {
             />
             <Divider spacing={0} />
             <SettingsRow
+              icon="lock-closed-outline"
+              label={t("profile.privateAccount")}
+              trailing={
+                <View style={{ alignSelf: "center", marginRight: spacing.xs }}>
+                  <Switch
+                    value={user?.isPrivate ?? false}
+                    onValueChange={async (val) => {
+                      try {
+                        await updateProfile({ isPrivate: val });
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      } catch {
+                        Alert.alert(t("common.error"), t("profile.failedUpdateProfile"));
+                      }
+                    }}
+                    trackColor={{ false: colors.border, true: colors.primary }}
+                    thumbColor={colors.surface}
+                  />
+                </View>
+              }
+            />
+            <Divider spacing={0} />
+            <SettingsRow
+              icon="people-outline"
+              label={t("profile.followRequests")}
+              onPress={() => router.push("/follow-requests")}
+            />
+            <Divider spacing={0} />
+            <SettingsRow
               icon="shield-checkmark-outline"
               label={t("profile.privacySecurity")}
               onPress={handleOpenSessions}
@@ -606,7 +648,9 @@ export default function ProfileScreen() {
           </Card>
 
           {/* ---- Preferences Section ---- */}
-          <Text style={styles.sectionLabel}>{t("profile.sectionPreferences")}</Text>
+          <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+            {t("profile.sectionPreferences")}
+          </Text>
           <Card variant="elevated" padding="none" style={styles.sectionCard}>
             <SettingsRow
               icon="moon-outline"
@@ -638,7 +682,9 @@ export default function ProfileScreen() {
           </Card>
 
           {/* ---- Data Section ---- */}
-          <Text style={styles.sectionLabel}>{t("profile.sectionData")}</Text>
+          <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+            {t("profile.sectionData")}
+          </Text>
           <Card variant="elevated" padding="none" style={styles.sectionCard}>
             <SettingsRow
               icon="download-outline"
@@ -688,7 +734,9 @@ export default function ProfileScreen() {
           {/* ---- Admin Section (only if admin) ---- */}
           {user?.isAdmin && (
             <>
-              <Text style={styles.sectionLabel}>{t("profile.sectionAdmin")}</Text>
+              <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+                {t("profile.sectionAdmin")}
+              </Text>
               <Card variant="elevated" padding="none" style={styles.sectionCard}>
                 <SettingsRow
                   icon="shield-outline"
@@ -700,7 +748,9 @@ export default function ProfileScreen() {
           )}
 
           {/* ---- Support Section ---- */}
-          <Text style={styles.sectionLabel}>{t("profile.sectionSupport")}</Text>
+          <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+            {t("profile.sectionSupport")}
+          </Text>
           <Card variant="elevated" padding="none" style={styles.sectionCard}>
             <SettingsRow
               icon="help-circle-outline"
@@ -756,7 +806,7 @@ export default function ProfileScreen() {
                 style={{ marginRight: spacing.sm }}
               />
             )}
-            <Text style={styles.logoutText}>
+            <Text style={[styles.logoutText, { color: colors.error }]}>
               {isLoggingOut ? t("profile.loggingOut") : t("profile.logOut")}
             </Text>
           </Pressable>
@@ -767,11 +817,13 @@ export default function ProfileScreen() {
             onPress={handleDeleteAccount}
             activeOpacity={0.7}
           >
-            <Text style={styles.deleteText}>{t("profile.deleteAccount")}</Text>
+            <Text style={[styles.deleteText, { color: colors.error }]}>
+              {t("profile.deleteAccount")}
+            </Text>
           </TouchableOpacity>
 
           {/* ---- Version ---- */}
-          <Text style={styles.version}>Emovo v0.0.1</Text>
+          <Text style={[styles.version, { color: colors.textTertiary }]}>Emovo v0.0.1</Text>
         </ScrollView>
       </SafeAreaView>
 
@@ -785,16 +837,22 @@ export default function ProfileScreen() {
         onRequestClose={() => setEditModal({ field: null, value: "" })}
       >
         <View style={modalStyles.overlay}>
-          <View style={modalStyles.container}>
-            <Text style={modalStyles.title}>
+          <View style={[modalStyles.container, { backgroundColor: colors.surface }]}>
+            <Text style={[modalStyles.title, { color: colors.text }]}>
               {editModal.field === "displayName"
                 ? t("profile.editDisplayName")
                 : editModal.field === "username"
                   ? t("profile.editUsername")
-                  : t("profile.editTimezone")}
+                  : editModal.field === "bio"
+                    ? t("profile.editBio")
+                    : t("profile.editTimezone")}
             </Text>
             <TextInput
-              style={modalStyles.input}
+              style={[
+                modalStyles.input,
+                { color: colors.text, backgroundColor: colors.inputBackground },
+                editModal.field === "bio" && { height: 80, textAlignVertical: "top" },
+              ]}
               value={editModal.value}
               onChangeText={(v) => {
                 if (editModal.field === "username") {
@@ -811,10 +869,14 @@ export default function ProfileScreen() {
                   ? t("profile.enterName")
                   : editModal.field === "username"
                     ? t("profile.enterUsername")
-                    : t("profile.timezoneExample")
+                    : editModal.field === "bio"
+                      ? t("profile.enterBio")
+                      : t("profile.timezoneExample")
               }
               autoCapitalize={editModal.field === "username" ? "none" : undefined}
               placeholderTextColor={colors.textTertiary}
+              multiline={editModal.field === "bio"}
+              maxLength={editModal.field === "bio" ? 160 : undefined}
               autoFocus
             />
             <View style={modalStyles.actions}>
@@ -822,17 +884,25 @@ export default function ProfileScreen() {
                 style={modalStyles.cancelBtn}
                 onPress={() => setEditModal({ field: null, value: "" })}
               >
-                <Text style={modalStyles.cancelText}>{t("common.cancel")}</Text>
+                <Text style={[modalStyles.cancelText, { color: colors.textSecondary }]}>
+                  {t("common.cancel")}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[modalStyles.saveBtn, isSaving && { opacity: 0.6 }]}
+                style={[
+                  modalStyles.saveBtn,
+                  { backgroundColor: colors.primary },
+                  isSaving && { opacity: 0.6 },
+                ]}
                 onPress={handleSaveEdit}
                 disabled={isSaving}
               >
                 {isSaving ? (
                   <ActivityIndicator size="small" color={colors.textInverse} />
                 ) : (
-                  <Text style={modalStyles.saveText}>{t("common.save")}</Text>
+                  <Text style={[modalStyles.saveText, { color: colors.textInverse }]}>
+                    {t("common.save")}
+                  </Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -850,11 +920,18 @@ export default function ProfileScreen() {
         onRequestClose={() => setSessionsVisible(false)}
       >
         <View style={modalStyles.overlay}>
-          <View style={[modalStyles.container, { maxHeight: "80%", padding: 0 }]}>
+          <View
+            style={[
+              modalStyles.container,
+              { maxHeight: "80%", padding: 0, backgroundColor: colors.surface },
+            ]}
+          >
             {/* Header */}
-            <View style={sessionStyles.header}>
+            <View style={[sessionStyles.header, { borderBottomColor: colors.divider }]}>
               <View>
-                <Text style={modalStyles.title}>{t("profile.activeSessions")}</Text>
+                <Text style={[modalStyles.title, { color: colors.text }]}>
+                  {t("profile.activeSessions")}
+                </Text>
                 {!sessionsLoading && sessions.length > 0 && (
                   <Text style={sessionStyles.sessionCount}>
                     {sessions.length} {sessions.length === 1 ? "device" : "devices"}
@@ -960,9 +1037,13 @@ export default function ProfileScreen() {
         onRequestClose={() => setLanguageModalVisible(false)}
       >
         <View style={modalStyles.overlay}>
-          <View style={[modalStyles.container, { maxHeight: "70%" }]}>
+          <View
+            style={[modalStyles.container, { maxHeight: "70%", backgroundColor: colors.surface }]}
+          >
             <View style={modalStyles.headerRow}>
-              <Text style={modalStyles.title}>{t("profile.selectLanguage")}</Text>
+              <Text style={[modalStyles.title, { color: colors.text }]}>
+                {t("profile.selectLanguage")}
+              </Text>
               <TouchableOpacity onPress={() => setLanguageModalVisible(false)}>
                 <Ionicons name="close-outline" size={22} color={colors.text} />
               </TouchableOpacity>
@@ -975,17 +1056,30 @@ export default function ProfileScreen() {
                 const isSelected = item.code === currentLangCode;
                 return (
                   <TouchableOpacity
-                    style={[langStyles.row, isSelected && langStyles.rowSelected]}
+                    style={[
+                      langStyles.row,
+                      { borderBottomColor: colors.divider },
+                      isSelected && [
+                        langStyles.rowSelected,
+                        { backgroundColor: `${colors.primary}10` },
+                      ],
+                    ]}
                     onPress={() => handleSelectLanguage(item.code)}
                     activeOpacity={0.6}
                   >
                     <View>
                       <Text
-                        style={[langStyles.nativeLabel, isSelected && langStyles.labelSelected]}
+                        style={[
+                          langStyles.nativeLabel,
+                          { color: colors.text },
+                          isSelected && [langStyles.labelSelected, { color: colors.primary }],
+                        ]}
                       >
                         {item.nativeLabel}
                       </Text>
-                      <Text style={langStyles.label}>{item.label}</Text>
+                      <Text style={[langStyles.label, { color: colors.textTertiary }]}>
+                        {item.label}
+                      </Text>
                     </View>
                     {isSelected && (
                       <Ionicons name="checkmark-outline" size={20} color={colors.primary} />
@@ -1066,17 +1160,29 @@ function SessionCard({
   onRevoke: () => void;
   t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
+  const { colors } = useTheme();
   const deviceIcon = getDeviceIcon(session.deviceName);
   const lastActive = getRelativeTime(session.lastUsedAt || session.createdAt, t);
   const isActiveNow = lastActive === t("profile.activeNow");
 
   return (
-    <View style={[sessionStyles.card, session.current && sessionStyles.cardCurrent]}>
+    <View
+      style={[
+        sessionStyles.card,
+        { backgroundColor: colors.inputBackground },
+        session.current && [
+          sessionStyles.cardCurrent,
+          { backgroundColor: `${colors.primary}08`, borderColor: `${colors.primary}20` },
+        ],
+      ]}
+    >
       <View style={sessionStyles.cardTop}>
         <View
           style={[
             sessionStyles.iconContainer,
-            session.current ? sessionStyles.iconContainerCurrent : sessionStyles.iconContainerOther,
+            session.current
+              ? [sessionStyles.iconContainerCurrent, { backgroundColor: `${colors.primary}15` }]
+              : [sessionStyles.iconContainerOther, { backgroundColor: colors.surface }],
           ]}
         >
           <Ionicons
@@ -1088,7 +1194,11 @@ function SessionCard({
         <View style={sessionStyles.cardInfo}>
           <View style={sessionStyles.nameRow}>
             <Text
-              style={[sessionStyles.deviceName, session.current && sessionStyles.deviceNameCurrent]}
+              style={[
+                sessionStyles.deviceName,
+                { color: colors.text },
+                session.current && [sessionStyles.deviceNameCurrent, { color: colors.primary }],
+              ]}
               numberOfLines={1}
             >
               {session.deviceName || t("profile.unknownDevice")}
@@ -1153,6 +1263,7 @@ function StatItem({
   value: number;
   label: string;
 }) {
+  const { colors } = useTheme();
   return (
     <View style={statStyles.item}>
       <Ionicons
@@ -1161,8 +1272,8 @@ function StatItem({
         color={colors.primary}
         style={{ marginBottom: spacing.xs }}
       />
-      <Text style={statStyles.value}>{value}</Text>
-      <Text style={statStyles.label}>{label}</Text>
+      <Text style={[statStyles.value, { color: colors.text }]}>{value}</Text>
+      <Text style={[statStyles.label, { color: colors.textTertiary }]}>{label}</Text>
     </View>
   );
 }
@@ -1186,6 +1297,7 @@ function SettingsRow({
   onPress?: () => void;
   trailing?: React.ReactNode;
 }) {
+  const { colors } = useTheme();
   const _isInteractive = onPress || trailing;
   const Wrapper = onPress ? Pressable : View;
   return (
@@ -1195,8 +1307,10 @@ function SettingsRow({
       {...(onPress ? { android_ripple: { color: colors.primaryMuted } } : {})}
     >
       <Ionicons name={icon} size={iconSizes.md} color={colors.text} style={settingsStyles.icon} />
-      <Text style={settingsStyles.label}>{label}</Text>
-      {value ? <Text style={settingsStyles.value}>{value}</Text> : null}
+      <Text style={[settingsStyles.label, { color: colors.text }]}>{label}</Text>
+      {value ? (
+        <Text style={[settingsStyles.value, { color: colors.textSecondary }]}>{value}</Text>
+      ) : null}
       {badge ? (
         <Badge
           variant="secondary"
@@ -1272,6 +1386,15 @@ const styles = StyleSheet.create({
     fontFamily: "SourceSerif4_400Regular",
     color: "rgba(255, 255, 255, 0.8)",
     marginTop: spacing.xs,
+  },
+  bio: {
+    fontSize: 14,
+    fontFamily: "SourceSerif4_400Regular",
+    color: "rgba(255, 255, 255, 0.75)",
+    marginTop: spacing.sm,
+    textAlign: "center",
+    paddingHorizontal: spacing.lg,
+    lineHeight: 20,
   },
   memberBadge: {
     marginTop: spacing.sm,

@@ -341,7 +341,12 @@
     "reminderPermissionDenied": "Activa las notificaciones en la configuración de tu dispositivo para usar los recordatorios.",
     "themePickMessage": "Elige tu apariencia preferida.",
     "sectionAdmin": "ADMINISTRACIÓN",
-    "moderation": "Moderación"
+    "moderation": "Moderación",
+    "bio": "Biografía",
+    "editBio": "Editar biografía",
+    "enterBio": "Escribe una biografía breve (máx. 160 caracteres)",
+    "privateAccount": "Cuenta privada",
+    "followRequests": "Solicitudes de seguimiento"
   },
   "faq": {
     "title": "Ayuda y preguntas frecuentes",
@@ -410,6 +415,30 @@
     "note": "Nota",
     "by": "por",
     "reportedBy": "Reportado por"
+  },
+  "followRequests": {
+    "title": "Solicitudes de seguimiento",
+    "empty": "Sin solicitudes de seguimiento",
+    "emptySubtitle": "Cuando alguien quiera seguirte, su solicitud aparecerá aquí.",
+    "accept": "Aceptar",
+    "decline": "Rechazar"
+  },
+  "publicProfile": {
+    "follow": "Seguir",
+    "unfollow": "Dejar de seguir",
+    "following": "Siguiendo",
+    "requested": "Solicitado",
+    "followers": "Seguidores",
+    "followingTab": "Siguiendo",
+    "memberSince": "Miembro desde {{date}}",
+    "privateAccount": "Esta cuenta es privada",
+    "privateAccountDesc": "Sigue esta cuenta para ver su actividad.",
+    "confirmUnfollow": "¿Dejar de seguir a {{name}}?",
+    "confirmUnfollowMessage": "Ya no verás su actividad.",
+    "cancelRequest": "Cancelar solicitud",
+    "cancelRequestMessage": "¿Cancelar tu solicitud de seguimiento a {{name}}?",
+    "editProfile": "Editar perfil",
+    "requestSent": "Solicitud de seguimiento enviada"
   },
   "errors": {
     "somethingWrong": "Algo salió mal",

@@ -341,7 +341,12 @@
     "reminderPermissionDenied": "リマインダーを使用するには、デバイスの設定で通知を有効にしてください。",
     "themePickMessage": "お好みの外観を選択してください。",
     "sectionAdmin": "管理",
-    "moderation": "モデレーション"
+    "moderation": "モデレーション",
+    "bio": "自己紹介",
+    "editBio": "自己紹介を編集",
+    "enterBio": "短い自己紹介を書いてください（最大160文字）",
+    "privateAccount": "非公開アカウント",
+    "followRequests": "フォローリクエスト"
   },
   "faq": {
     "title": "ヘルプとFAQ",
@@ -410,6 +415,30 @@
     "note": "メモ",
     "by": "実行者",
     "reportedBy": "報告者"
+  },
+  "followRequests": {
+    "title": "フォローリクエスト",
+    "empty": "フォローリクエストはありません",
+    "emptySubtitle": "誰かがあなたをフォローしたいとき、リクエストがここに表示されます。",
+    "accept": "承認",
+    "decline": "拒否"
+  },
+  "publicProfile": {
+    "follow": "フォロー",
+    "unfollow": "フォロー解除",
+    "following": "フォロー中",
+    "requested": "リクエスト済み",
+    "followers": "フォロワー",
+    "followingTab": "フォロー中",
+    "memberSince": "{{date}}から利用",
+    "privateAccount": "このアカウントは非公開です",
+    "privateAccountDesc": "このアカウントをフォローすると、アクティビティを見ることができます。",
+    "confirmUnfollow": "{{name}}のフォローを解除しますか？",
+    "confirmUnfollowMessage": "このユーザーのアクティビティは表示されなくなります。",
+    "cancelRequest": "リクエストを取り消す",
+    "cancelRequestMessage": "{{name}}へのフォローリクエストを取り消しますか？",
+    "editProfile": "プロフィールを編集",
+    "requestSent": "フォローリクエストを送信しました"
   },
   "errors": {
     "somethingWrong": "問題が発生しました",

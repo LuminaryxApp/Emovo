@@ -341,7 +341,12 @@
     "reminderPermissionDenied": "Ative as notificações nas configurações do seu dispositivo para usar os lembretes.",
     "themePickMessage": "Escolha sua aparência preferida.",
     "sectionAdmin": "ADMINISTRAÇÃO",
-    "moderation": "Moderação"
+    "moderation": "Moderação",
+    "bio": "Bio",
+    "editBio": "Editar bio",
+    "enterBio": "Escreva uma bio curta (máx. 160 caracteres)",
+    "privateAccount": "Conta privada",
+    "followRequests": "Pedidos de seguimento"
   },
   "faq": {
     "title": "Ajuda e FAQ",
@@ -410,6 +415,30 @@
     "note": "Nota",
     "by": "por",
     "reportedBy": "Denunciado por"
+  },
+  "followRequests": {
+    "title": "Pedidos de seguimento",
+    "empty": "Sem pedidos de seguimento",
+    "emptySubtitle": "Quando alguem quiser seguir voce, o pedido aparecera aqui.",
+    "accept": "Aceitar",
+    "decline": "Recusar"
+  },
+  "publicProfile": {
+    "follow": "Seguir",
+    "unfollow": "Deixar de seguir",
+    "following": "Seguindo",
+    "requested": "Solicitado",
+    "followers": "Seguidores",
+    "followingTab": "Seguindo",
+    "memberSince": "Membro desde {{date}}",
+    "privateAccount": "Esta conta é privada",
+    "privateAccountDesc": "Siga esta conta para ver a atividade dela.",
+    "confirmUnfollow": "Deixar de seguir {{name}}?",
+    "confirmUnfollowMessage": "Você não verá mais a atividade desta pessoa.",
+    "cancelRequest": "Cancelar pedido",
+    "cancelRequestMessage": "Cancelar seu pedido de seguimento para {{name}}?",
+    "editProfile": "Editar perfil",
+    "requestSent": "Pedido de seguimento enviado"
   },
   "errors": {
     "somethingWrong": "Algo deu errado",
