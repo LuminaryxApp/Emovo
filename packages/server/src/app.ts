@@ -48,6 +48,14 @@ export async function buildApp() {
   // Request ID plugin
   await fastify.register(requestIdPlugin);
 
+  // CORS — must be registered before Helmet
+  const allowedOrigins =
+    env.CORS_ORIGIN === "*" ? null : env.CORS_ORIGIN.split(",").map((s) => s.trim());
+  await fastify.register(cors, {
+    origin: allowedOrigins ?? true,
+    credentials: true,
+  });
+
   // Helmet — relaxed CSP for Swagger UI on /docs
   await fastify.register(helmet, {
     contentSecurityPolicy: {
@@ -58,19 +66,7 @@ export async function buildApp() {
         imgSrc: ["'self'", "data:", "validator.swagger.io"],
       },
     },
-  });
-
-  // CORS
-  const allowedOrigins = env.CORS_ORIGIN === "*" ? null : env.CORS_ORIGIN.split(",");
-  await fastify.register(cors, {
-    origin: (origin, cb) => {
-      if (!allowedOrigins || !origin || allowedOrigins.includes(origin)) {
-        cb(null, true);
-      } else {
-        cb(null, false);
-      }
-    },
-    credentials: true,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
   });
 
   // Rate limiting (global)
