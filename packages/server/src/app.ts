@@ -61,8 +61,15 @@ export async function buildApp() {
   });
 
   // CORS
+  const allowedOrigins = env.CORS_ORIGIN === "*" ? null : env.CORS_ORIGIN.split(",");
   await fastify.register(cors, {
-    origin: env.CORS_ORIGIN === "*" ? true : env.CORS_ORIGIN.split(","),
+    origin: (origin, cb) => {
+      if (!allowedOrigins || !origin || allowedOrigins.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
+    },
     credentials: true,
   });
 
