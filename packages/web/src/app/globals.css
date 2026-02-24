@@ -1,0 +1,269 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-green: #75863C;
+  --color-brand-green-light: #8FA04E;
+  --color-brand-green-dark: #5E6B30;
+  --color-brand-blue: #6F98B8;
+  --color-brand-blue-light: #8BB0C9;
+  --color-brand-blue-dark: #5A7D99;
+  --color-brand-cream: #FEFAE0;
+  --color-brand-black: #000000;
+
+  --color-mood-1: #DC2626;
+  --color-mood-2: #F97316;
+  --color-mood-3: #EAB308;
+  --color-mood-4: #75863C;
+  --color-mood-5: #4A7A2E;
+
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FDF7D0;
+  --color-input-bg: #F7F6F0;
+  --color-border-default: #E5E1C8;
+  --color-border-light: #F0ECDA;
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #5C5C5C;
+  --color-text-tertiary: #8A8A8A;
+  --color-section-label: #8A8A6E;
+
+  --color-success: #75863C;
+  --color-warning: #EAB308;
+  --color-error: #DC2626;
+  --color-info: #6F98B8;
+
+  --font-serif: "Source Serif 4", Georgia, serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+/* Dark mode overrides */
+.dark {
+  --color-brand-green: #8FA04E;
+  --color-brand-green-light: #A3B462;
+  --color-brand-green-dark: #75863C;
+  --color-brand-blue: #8BB0C9;
+  --color-brand-blue-light: #A0C2D6;
+  --color-brand-blue-dark: #6F98B8;
+  --color-brand-cream: #161810;
+
+  --color-mood-1: #EF4444;
+  --color-mood-2: #FB923C;
+  --color-mood-3: #FACC15;
+  --color-mood-4: #8FA04E;
+  --color-mood-5: #5C9A3A;
+
+  --color-surface: #1F211A;
+  --color-surface-elevated: #282B22;
+  --color-input-bg: #252820;
+  --color-border-default: #3A3C32;
+  --color-border-light: #2E302A;
+  --color-text-primary: #EDECE4;
+  --color-text-secondary: #B5B4A8;
+  --color-text-tertiary: #7A7968;
+  --color-section-label: #A8A284;
+
+  --color-success: #8FA04E;
+  --color-warning: #FACC15;
+  --color-error: #EF4444;
+  --color-info: #8BB0C9;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Base styles */
+body {
+  font-family: var(--font-serif);
+  color: var(--color-text-primary);
+  background-color: var(--color-brand-cream);
+  position: relative;
+}
+
+.dark body {
+  background-color: #161810;
+}
+
+/* Subtle noise/grain texture overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* Custom scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-green) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-brand-green);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-brand-green-dark);
+}
+
+/* Selection colors */
+::selection {
+  background-color: var(--color-brand-green);
+  color: white;
+}
+
+::-moz-selection {
+  background-color: var(--color-brand-green);
+  color: white;
+}
+
+/* Better focus-visible ring */
+*:focus-visible {
+  outline: 2px solid var(--color-brand-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Animation: fade in */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 400ms ease-out both;
+}
+
+/* Animation: slide up */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 500ms ease-out both;
+}
+
+/* Stagger children animation delays */
+.animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.animate-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.animate-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.animate-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.animate-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.animate-stagger > *:nth-child(7) { animation-delay: 360ms; }
+.animate-stagger > *:nth-child(8) { animation-delay: 420ms; }
+.animate-stagger > *:nth-child(9) { animation-delay: 480ms; }
+.animate-stagger > *:nth-child(10) { animation-delay: 540ms; }
+
+/* Card hover utility */
+.card-hover {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* ===== Landing Page Animations ===== */
+
+/* Hero stagger animation — children start hidden and slide in when active */
+@keyframes landing-stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-stagger .landing-stagger-item {
+  opacity: 0;
+}
+
+.landing-stagger--active .landing-stagger-item {
+  animation: landing-stagger-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.landing-stagger--active .landing-stagger-item:nth-child(1) { animation-delay: 100ms; }
+.landing-stagger--active .landing-stagger-item:nth-child(2) { animation-delay: 250ms; }
+.landing-stagger--active .landing-stagger-item:nth-child(3) { animation-delay: 400ms; }
+.landing-stagger--active .landing-stagger-item:nth-child(4) { animation-delay: 550ms; }
+
+/* Scroll-triggered reveal for sections */
+@keyframes landing-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-reveal {
+  animation: landing-reveal 800ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-timeline: view();
+  animation-range: entry 0% entry 30%;
+}
+
+/* Fallback for browsers without animation-timeline: always visible */
+@supports not (animation-timeline: view()) {
+  .landing-reveal {
+    animation: landing-reveal 600ms ease-out both;
+  }
+}
+
+/* Wave emoji animation for greeting */
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(14deg); }
+  30% { transform: rotate(-8deg); }
+  45% { transform: rotate(14deg); }
+  60% { transform: rotate(-4deg); }
+  75% { transform: rotate(10deg); }
+  90% { transform: rotate(0deg); }
+}
+
+/* Like button pop animation */
+@keyframes like-pop {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.35); }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}

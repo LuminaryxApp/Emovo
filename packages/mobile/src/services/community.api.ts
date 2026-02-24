@@ -4,6 +4,7 @@ import type {
   GroupWithMembership,
   ConversationPreview,
   Message,
+  UserSearchResult,
 } from "@emovo/shared";
 
 import { api } from "./api";
@@ -20,7 +21,7 @@ export async function createPostApi(input: {
   return data.data as PostWithAuthor;
 }
 
-export async function listFeedApi(params: { cursor?: string; limit?: number }) {
+export async function listFeedApi(params: { cursor?: string; limit?: number; search?: string }) {
   const { data } = await api.get("/community/feed", { params });
   return { posts: data.data as PostWithAuthor[], cursor: data.meta?.cursor ?? null };
 }
@@ -73,7 +74,11 @@ export async function listMyGroupsApi() {
   return data.data as GroupWithMembership[];
 }
 
-export async function discoverGroupsApi(params: { cursor?: string; limit?: number }) {
+export async function discoverGroupsApi(params: {
+  cursor?: string;
+  limit?: number;
+  search?: string;
+}) {
   const { data } = await api.get("/community/groups/discover", { params });
   return { groups: data.data as GroupWithMembership[], cursor: data.meta?.cursor ?? null };
 }
@@ -85,6 +90,11 @@ export async function joinGroupApi(id: string) {
 
 export async function leaveGroupApi(id: string) {
   await api.delete(`/community/groups/${id}/leave`);
+}
+
+export async function searchUsersApi(params: { q: string; cursor?: string; limit?: number }) {
+  const { data } = await api.get("/community/users/search", { params });
+  return { users: data.data as UserSearchResult[], cursor: data.meta?.cursor ?? null };
 }
 
 // ── Conversations / Messages ──────────────────────────────────

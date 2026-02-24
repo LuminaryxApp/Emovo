@@ -4,7 +4,8 @@ import type {
   CreateGroupInput,
   SendMessageInput,
 } from "@emovo/shared";
-import { eq, and, sql, desc, ne, ilike, notInArray, inArray } from "drizzle-orm";
+import { eq, and, sql, desc, ne, ilike, notInArray, inArray, isNull } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 
 import { db } from "../config/database.js";
 import { comments } from "../db/schema/comments.js";
@@ -94,10 +95,14 @@ export class CommunityService {
    * Paginated feed of posts ordered by createdAt DESC.
    * Includes author displayName and whether the requesting user has liked each post.
    */
-  async listFeed(userId: string, options: { cursor?: string; limit: number }) {
-    const { cursor, limit } = options;
+  async listFeed(userId: string, options: { cursor?: string; limit: number; search?: string }) {
+    const { cursor, limit, search } = options;
 
     const conditions = [];
+
+    if (search) {
+      conditions.push(ilike(posts.content, `%${search}%`));
+    }
 
     if (cursor) {
       const decoded = decodeCursor(cursor);
@@ -903,5 +908,67 @@ export class CommunityService {
     if (result.length === 0) {
       throw new ForbiddenError("Not a participant in this conversation");
     }
+  }
+
+  // =======================================================================
+  //  USER SEARCH
+  // =======================================================================
+
+  /**
+   * Search users by username or display name. Paginated by createdAt DESC.
+   */
+  async searchUsers(options: { q: string; cursor?: string; limit: number }) {
+    const { q, cursor, limit } = options;
+    const searchPattern = `%${q}%`;
+
+    const conditions: SQL[] = [
+      sql`(${users.username} ILIKE ${searchPattern} OR ${users.displayName} ILIKE ${searchPattern})`,
+      isNull(users.bannedAt),
+    ];
+
+    if (cursor) {
+      const decoded = decodeCursor(cursor);
+      if (decoded) {
+        conditions.push(
+          sql`(${users.createdAt}, ${users.id}) < (${decoded.createdAt}::timestamptz, ${decoded.id}::uuid)`,
+        );
+      }
+    }
+
+    const rows = await db
+      .select({
+        id: users.id,
+        displayName: users.displayName,
+        username: users.username,
+        showRealName: users.showRealName,
+        avatarBase64: users.avatarBase64,
+        bio: users.bio,
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(and(...conditions))
+      .orderBy(desc(users.createdAt), desc(users.id))
+      .limit(limit + 1);
+
+    const hasMore = rows.length > limit;
+    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+
+    const data = pageRows.map((row) => ({
+      id: row.id,
+      displayName: row.displayName,
+      username: row.username,
+      showRealName: row.showRealName,
+      avatarBase64: row.avatarBase64,
+      bio: row.bio ?? null,
+    }));
+
+    const nextCursor = hasMore
+      ? encodeCursor({
+          createdAt: pageRows[pageRows.length - 1].createdAt.toISOString(),
+          id: pageRows[pageRows.length - 1].id,
+        })
+      : null;
+
+    return { users: data, nextCursor };
   }
 }

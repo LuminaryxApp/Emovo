@@ -5,14 +5,15 @@
   "workspaces": [
     "packages/shared",
     "packages/server",
-    "packages/mobile"
+    "packages/mobile",
+    "packages/web"
   ],
   "scripts": {
     "lint": "eslint packages/*/src --ext .ts,.tsx",
     "lint:fix": "eslint packages/*/src --ext .ts,.tsx --fix",
     "format": "prettier --write \"packages/*/src/**/*.{ts,tsx,json}\"",
     "format:check": "prettier --check \"packages/*/src/**/*.{ts,tsx,json}\"",
-    "typecheck": "tsc --noEmit -p packages/shared/tsconfig.json && tsc --noEmit -p packages/server/tsconfig.json",
+    "typecheck": "tsc --noEmit -p packages/shared/tsconfig.json && tsc --noEmit -p packages/server/tsconfig.json && tsc --noEmit -p packages/web/tsconfig.json",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -38,5 +39,8 @@
   "overrides": {
     "react": "19.1.0",
     "react-dom": "19.1.0"
+  },
+  "dependencies": {
+    "emovo": "file:"
   }
 }

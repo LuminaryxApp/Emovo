@@ -3,6 +3,7 @@ import type {
   Comment,
   GroupWithMembership,
   ConversationPreview,
+  UserSearchResult,
 } from "@emovo/shared";
 import { create } from "zustand";
 
@@ -20,6 +21,7 @@ import {
   discoverGroupsApi,
   joinGroupApi,
   leaveGroupApi,
+  searchUsersApi,
   listConversationsApi,
   createConversationApi,
   markConversationReadApi,
@@ -40,6 +42,13 @@ interface CommunityState {
   // Conversations
   conversations: ConversationPreview[];
   isLoadingConversations: boolean;
+
+  // Search state
+  searchQuery: string;
+  searchPosts: PostWithAuthor[];
+  searchUsers: UserSearchResult[];
+  searchGroups: GroupWithMembership[];
+  isSearching: boolean;
 
   // Feed actions
   fetchFeed: (reset?: boolean) => Promise<void>;
@@ -63,7 +72,7 @@ interface CommunityState {
 
   // Group actions
   fetchMyGroups: () => Promise<void>;
-  fetchDiscoverGroups: () => Promise<void>;
+  fetchDiscoverGroups: (search?: string) => Promise<void>;
   joinGroup: (id: string) => Promise<void>;
   leaveGroup: (id: string) => Promise<void>;
   createGroup: (input: {
@@ -77,6 +86,11 @@ interface CommunityState {
   fetchConversations: () => Promise<void>;
   createConversation: (participantIds: string[]) => Promise<ConversationPreview>;
   markAsRead: (conversationId: string) => Promise<void>;
+
+  // Search actions
+  setSearchQuery: (q: string) => void;
+  performSearch: (q: string) => Promise<void>;
+  clearSearch: () => void;
 
   // Report actions
   reportContent: (input: {
@@ -100,6 +114,12 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
 
   conversations: [],
   isLoadingConversations: false,
+
+  searchQuery: "",
+  searchPosts: [],
+  searchUsers: [],
+  searchGroups: [],
+  isSearching: false,
 
   // ── Feed ────────────────────────────────────────────────────
 
@@ -217,10 +237,10 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     }
   },
 
-  fetchDiscoverGroups: async () => {
+  fetchDiscoverGroups: async (search?: string) => {
     set({ isLoadingGroups: true });
     try {
-      const result = await discoverGroupsApi({ limit: 20 });
+      const result = await discoverGroupsApi({ limit: 20, search });
       set({ discoverGroups: result.groups });
     } finally {
       set({ isLoadingGroups: false });
@@ -288,6 +308,41 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
       ),
     }));
   },
+
+  // ── Search ──────────────────────────────────────────────────
+
+  setSearchQuery: (q) => set({ searchQuery: q }),
+
+  performSearch: async (q) => {
+    if (!q.trim()) {
+      get().clearSearch();
+      return;
+    }
+    set({ isSearching: true });
+    try {
+      const [feedResult, userResult, groupResult] = await Promise.all([
+        listFeedApi({ search: q, limit: 10 }),
+        searchUsersApi({ q, limit: 10 }),
+        discoverGroupsApi({ search: q, limit: 10 }),
+      ]);
+      set({
+        searchPosts: feedResult.posts,
+        searchUsers: userResult.users,
+        searchGroups: groupResult.groups,
+      });
+    } finally {
+      set({ isSearching: false });
+    }
+  },
+
+  clearSearch: () =>
+    set({
+      searchQuery: "",
+      searchPosts: [],
+      searchUsers: [],
+      searchGroups: [],
+      isSearching: false,
+    }),
 
   // ── Reports ──────────────────────────────────────────────────
 

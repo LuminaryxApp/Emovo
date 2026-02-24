@@ -7,6 +7,7 @@ import {
   feedQuerySchema,
   groupQuerySchema,
   messageQuerySchema,
+  userSearchQuerySchema,
 } from "@emovo/shared";
 import type { FastifyInstance } from "fastify";
 
@@ -46,10 +47,29 @@ export async function communityRoutes(fastify: FastifyInstance) {
     const result = await communityService.listFeed(request.userId, {
       cursor: query.cursor,
       limit: query.limit,
+      search: query.search,
     });
 
     return reply.send({
       data: result.posts,
+      meta: { cursor: result.nextCursor },
+    });
+  });
+
+  /**
+   * GET /community/users/search
+   * Search users by username or display name.
+   */
+  fastify.get("/community/users/search", async (request, reply) => {
+    const query = userSearchQuerySchema.parse(request.query);
+    const result = await communityService.searchUsers({
+      q: query.q,
+      cursor: query.cursor,
+      limit: query.limit,
+    });
+
+    return reply.send({
+      data: result.users,
       meta: { cursor: result.nextCursor },
     });
   });

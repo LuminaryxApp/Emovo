@@ -128,6 +128,8 @@ export default function CommunityScreen() {
   const [activeTab, setActiveTab] = useState<CommunityTab>("feed");
   const [refreshing, setRefreshing] = useState(false);
   const [messageSearch, setMessageSearch] = useState("");
+  const [groupSearch, setGroupSearch] = useState("");
+  const groupSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Create post modal
   const [showCreatePost, setShowCreatePost] = useState(false);
@@ -207,6 +209,17 @@ export default function CommunityScreen() {
   useEffect(() => {
     loadTabData(activeTab);
   }, [activeTab, loadTabData]);
+
+  useEffect(() => {
+    if (activeTab !== "groups") return;
+    if (groupSearchTimerRef.current) clearTimeout(groupSearchTimerRef.current);
+    groupSearchTimerRef.current = setTimeout(() => {
+      fetchDiscoverGroups(groupSearch || undefined);
+    }, 300);
+    return () => {
+      if (groupSearchTimerRef.current) clearTimeout(groupSearchTimerRef.current);
+    };
+  }, [groupSearch, activeTab, fetchDiscoverGroups]);
 
   useEffect(() => {
     let cancelled = false;
@@ -451,7 +464,7 @@ export default function CommunityScreen() {
       <Text style={[styles.title, { color: colors.text }]}>{t("community.title")}</Text>
       <View style={styles.headerActions}>
         <Pressable
-          onPress={showComingSoon}
+          onPress={() => router.push("/search")}
           style={[styles.headerIconBtn, cardShadow(), { backgroundColor: colors.surface }]}
         >
           <Ionicons name="search-outline" size={iconSizes.sm} color={colors.text} />
@@ -832,6 +845,23 @@ export default function CommunityScreen() {
             {myGroups.map((g, i) => renderGroupIconCard(g, i))}
           </ScrollView>
         </Animated.View>
+
+        {/* Group Search */}
+        <View
+          style={[
+            styles.messageSearchWrap,
+            { backgroundColor: colors.inputBackground, marginTop: spacing.lg },
+          ]}
+        >
+          <Ionicons name="search-outline" size={iconSizes.xs} color={colors.textTertiary} />
+          <TextInput
+            style={[styles.messageSearchInput, { color: colors.text }]}
+            placeholder={t("community.searchGroups")}
+            placeholderTextColor={colors.textTertiary}
+            value={groupSearch}
+            onChangeText={setGroupSearch}
+          />
+        </View>
 
         {/* Discover Groups */}
         <Animated.View entering={FadeInDown.delay(150).duration(400)}>

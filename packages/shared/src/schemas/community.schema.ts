@@ -38,6 +38,7 @@ export const createConversationSchema = z.object({
 export const feedQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
+  search: z.string().max(100).optional(),
 });
 
 export const groupQuerySchema = z.object({
@@ -80,6 +81,13 @@ export const reportQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
+
+export const userSearchQuerySchema = z.object({
+  q: z.string().min(1).max(100).trim(),
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+export type UserSearchQueryInput = z.infer<typeof userSearchQuerySchema>;
 
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;

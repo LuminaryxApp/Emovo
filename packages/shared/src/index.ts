@@ -45,6 +45,7 @@ export type {
   ReportReason,
   ReportStatus,
   ReportAction,
+  UserSearchResult,
 } from "./types/community.js";
 export type { Notification } from "./types/notification.js";
 
@@ -91,6 +92,7 @@ export {
   createReportSchema,
   resolveReportSchema,
   reportQuerySchema,
+  userSearchQuerySchema,
 } from "./schemas/community.schema.js";
 export type {
   CreatePostInput,
@@ -101,4 +103,5 @@ export type {
   CreateReportInput,
   ResolveReportInput,
   ReportQueryInput,
+  UserSearchQueryInput,
 } from "./schemas/community.schema.js";

@@ -130,3 +130,12 @@ export interface ReportWithContext extends Report {
   targetContent?: string;
   targetAuthor?: { id: string; displayName: string };
 }
+
+export interface UserSearchResult {
+  id: string;
+  displayName: string;
+  username: string | null;
+  showRealName: boolean;
+  avatarBase64: string | null;
+  bio: string | null;
+}
