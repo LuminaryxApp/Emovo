@@ -248,7 +248,11 @@
     },
     "selectReportReason": "Warum meldest du dies?",
     "alreadyReported": "Du hast diesen Inhalt bereits gemeldet.",
-    "reportFailed": "Meldung konnte nicht gesendet werden. Bitte versuche es erneut."
+    "reportFailed": "Meldung konnte nicht gesendet werden. Bitte versuche es erneut.",
+    "groupMembers": "{{count}} Mitglieder",
+    "groupPostsComingSoon": "Gruppenbeiträge demnächst verfügbar",
+    "publicGroup": "Öffentliche Gruppe",
+    "privateGroup": "Private Gruppe"
   },
   "charts": {
     "moodDistribution": "STIMMUNGSVERTEILUNG",

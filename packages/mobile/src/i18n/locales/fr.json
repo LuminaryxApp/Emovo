@@ -248,7 +248,11 @@
     },
     "selectReportReason": "Pourquoi signalez-vous ceci ?",
     "alreadyReported": "Vous avez déjà signalé ce contenu.",
-    "reportFailed": "Échec de l'envoi du signalement. Veuillez réessayer."
+    "reportFailed": "Échec de l'envoi du signalement. Veuillez réessayer.",
+    "groupMembers": "{{count}} membres",
+    "groupPostsComingSoon": "Publications du groupe à venir",
+    "publicGroup": "Groupe Public",
+    "privateGroup": "Groupe Privé"
   },
   "charts": {
     "moodDistribution": "RÉPARTITION DES HUMEURS",

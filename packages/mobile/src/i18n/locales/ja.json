@@ -248,7 +248,11 @@
     },
     "selectReportReason": "報告する理由を選択してください",
     "alreadyReported": "このコンテンツは既に報告済みです。",
-    "reportFailed": "報告の送信に失敗しました。もう一度お試しください。"
+    "reportFailed": "報告の送信に失敗しました。もう一度お試しください。",
+    "groupMembers": "{{count}}人のメンバー",
+    "groupPostsComingSoon": "グループ投稿は近日公開",
+    "publicGroup": "公開グループ",
+    "privateGroup": "非公開グループ"
   },
   "charts": {
     "moodDistribution": "気分の分布",

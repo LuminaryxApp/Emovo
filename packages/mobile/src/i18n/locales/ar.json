@@ -248,7 +248,11 @@
     },
     "selectReportReason": "لماذا تبلّغ عن هذا المحتوى؟",
     "alreadyReported": "لقد أبلغت عن هذا المحتوى بالفعل.",
-    "reportFailed": "فشل إرسال البلاغ. يرجى المحاولة مرة أخرى."
+    "reportFailed": "فشل إرسال البلاغ. يرجى المحاولة مرة أخرى.",
+    "groupMembers": "{{count}} أعضاء",
+    "groupPostsComingSoon": "منشورات المجموعة قريبًا",
+    "publicGroup": "مجموعة عامة",
+    "privateGroup": "مجموعة خاصة"
   },
   "charts": {
     "moodDistribution": "توزيع المزاج",

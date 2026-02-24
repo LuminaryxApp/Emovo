@@ -248,7 +248,11 @@
     },
     "selectReportReason": "¿Por qué estás reportando esto?",
     "alreadyReported": "Ya has reportado este contenido.",
-    "reportFailed": "Error al enviar el reporte. Inténtalo de nuevo."
+    "reportFailed": "Error al enviar el reporte. Inténtalo de nuevo.",
+    "groupMembers": "{{count}} miembros",
+    "groupPostsComingSoon": "Publicaciones del grupo próximamente",
+    "publicGroup": "Grupo Público",
+    "privateGroup": "Grupo Privado"
   },
   "charts": {
     "moodDistribution": "DISTRIBUCIÓN DE ÁNIMO",

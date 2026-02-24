@@ -248,7 +248,11 @@
     },
     "selectReportReason": "Why are you reporting this?",
     "alreadyReported": "You have already reported this content.",
-    "reportFailed": "Failed to submit report. Please try again."
+    "reportFailed": "Failed to submit report. Please try again.",
+    "groupMembers": "{{count}} members",
+    "groupPostsComingSoon": "Group posts coming soon",
+    "publicGroup": "Public Group",
+    "privateGroup": "Private Group"
   },
   "charts": {
     "moodDistribution": "MOOD DISTRIBUTION",

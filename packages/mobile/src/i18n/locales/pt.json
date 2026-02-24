@@ -248,7 +248,11 @@
     },
     "selectReportReason": "Por que você está denunciando isso?",
     "alreadyReported": "Você já denunciou este conteúdo.",
-    "reportFailed": "Falha ao enviar a denúncia. Por favor, tente novamente."
+    "reportFailed": "Falha ao enviar a denúncia. Por favor, tente novamente.",
+    "groupMembers": "{{count}} membros",
+    "groupPostsComingSoon": "Publicações do grupo em breve",
+    "publicGroup": "Grupo Público",
+    "privateGroup": "Grupo Privado"
   },
   "charts": {
     "moodDistribution": "DISTRIBUIÇÃO DE HUMOR",

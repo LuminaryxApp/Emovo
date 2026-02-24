@@ -248,7 +248,11 @@
     },
     "selectReportReason": "Почему вы жалуетесь?",
     "alreadyReported": "Вы уже жаловались на этот контент.",
-    "reportFailed": "Не удалось отправить жалобу. Попробуйте ещё раз."
+    "reportFailed": "Не удалось отправить жалобу. Попробуйте ещё раз.",
+    "groupMembers": "{{count}} участников",
+    "groupPostsComingSoon": "Публикации группы скоро появятся",
+    "publicGroup": "Публичная группа",
+    "privateGroup": "Закрытая группа"
   },
   "charts": {
     "moodDistribution": "РАСПРЕДЕЛЕНИЕ НАСТРОЕНИЙ",

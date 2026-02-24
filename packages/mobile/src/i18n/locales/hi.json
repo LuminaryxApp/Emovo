@@ -248,7 +248,11 @@
     },
     "selectReportReason": "आप इसकी रिपोर्ट क्यों कर रहे हैं?",
     "alreadyReported": "आपने पहले ही इस सामग्री की रिपोर्ट कर दी है।",
-    "reportFailed": "रिपोर्ट भेजने में विफल। कृपया पुनः प्रयास करें।"
+    "reportFailed": "रिपोर्ट भेजने में विफल। कृपया पुनः प्रयास करें।",
+    "groupMembers": "{{count}} सदस्य",
+    "groupPostsComingSoon": "समूह पोस्ट जल्द आ रही हैं",
+    "publicGroup": "सार्वजनिक समूह",
+    "privateGroup": "निजी समूह"
   },
   "charts": {
     "moodDistribution": "मूड वितरण",

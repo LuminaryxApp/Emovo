@@ -248,7 +248,11 @@
     },
     "selectReportReason": "您为什么要举报此内容？",
     "alreadyReported": "您已经举报过此内容。",
-    "reportFailed": "提交举报失败，请重试。"
+    "reportFailed": "提交举报失败，请重试。",
+    "groupMembers": "{{count}} 位成员",
+    "groupPostsComingSoon": "群组帖子即将推出",
+    "publicGroup": "公开群组",
+    "privateGroup": "私密群组"
   },
   "charts": {
     "moodDistribution": "心情分布",

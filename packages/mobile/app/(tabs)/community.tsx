@@ -1,3 +1,4 @@
+import type { UserSearchResult } from "@emovo/shared";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
@@ -19,12 +20,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Share,
+  FlatList,
 } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Card, Avatar, Badge, ActionSheet, type ActionSheetItem } from "../../src/components/ui";
 import { getPublicName } from "../../src/lib/display-name";
+import { searchUsersApi, createConversationApi } from "../../src/services/community.api";
 import { getUnreadCountApi } from "../../src/services/notification.api";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useCommunityStore } from "../../src/stores/community.store";
@@ -149,6 +153,14 @@ export default function CommunityScreen() {
   // Action sheet
   const [actionSheetVisible, setActionSheetVisible] = useState(false);
   const [actionSheetItems, setActionSheetItems] = useState<ActionSheetItem[]>([]);
+
+  // New message modal
+  const [showNewMessage, setShowNewMessage] = useState(false);
+  const [newMsgSearch, setNewMsgSearch] = useState("");
+  const [newMsgResults, setNewMsgResults] = useState<UserSearchResult[]>([]);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+  const [isCreatingConvo, setIsCreatingConvo] = useState(false);
+  const newMsgSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Report reason picker
   const [reportSheetVisible, setReportSheetVisible] = useState(false);
@@ -444,9 +456,51 @@ export default function CommunityScreen() {
     [leaveGroup, t],
   );
 
-  const showComingSoon = useCallback(() => {
-    Alert.alert(t("community.comingSoon"), t("community.comingSoonMessage"));
-  }, [t]);
+  // Search users for new message modal
+  useEffect(() => {
+    if (!showNewMessage) return;
+    if (!newMsgSearch.trim()) {
+      setNewMsgResults([]);
+      return;
+    }
+    if (newMsgSearchTimerRef.current) clearTimeout(newMsgSearchTimerRef.current);
+    newMsgSearchTimerRef.current = setTimeout(async () => {
+      setIsSearchingUsers(true);
+      try {
+        const { users } = await searchUsersApi({ q: newMsgSearch.trim(), limit: 20 });
+        setNewMsgResults(users);
+      } catch {
+        // silent
+      } finally {
+        setIsSearchingUsers(false);
+      }
+    }, 300);
+    return () => {
+      if (newMsgSearchTimerRef.current) clearTimeout(newMsgSearchTimerRef.current);
+    };
+  }, [newMsgSearch, showNewMessage]);
+
+  const handleStartConversation = useCallback(
+    async (userId: string) => {
+      if (isCreatingConvo) return;
+      setIsCreatingConvo(true);
+      try {
+        const convo = await createConversationApi({ participantIds: [userId] });
+        setShowNewMessage(false);
+        setNewMsgSearch("");
+        setNewMsgResults([]);
+        router.push(`/conversation/${convo.id}`);
+      } catch {
+        Alert.alert(
+          t("common.error"),
+          t("community.conversationError") || "Could not start conversation.",
+        );
+      } finally {
+        setIsCreatingConvo(false);
+      }
+    },
+    [isCreatingConvo, router, t],
+  );
 
   const handleOpenComments = useCallback(
     (postId: string) => {
@@ -669,14 +723,15 @@ export default function CommunityScreen() {
                 </Text>
               </Pressable>
 
-              <Pressable onPress={showComingSoon} style={styles.postAction}>
+              <Pressable
+                onPress={() => {
+                  Share.share({
+                    message: `${post.author?.displayName}: ${post.content.substring(0, 200)}`,
+                  });
+                }}
+                style={styles.postAction}
+              >
                 <Ionicons name="share-outline" size={iconSizes.sm} color={colors.textTertiary} />
-              </Pressable>
-
-              <View style={styles.postActionSpacer} />
-
-              <Pressable onPress={showComingSoon} style={styles.postAction}>
-                <Ionicons name="bookmark-outline" size={iconSizes.sm} color={colors.textTertiary} />
               </Pressable>
             </View>
           </Card>
@@ -731,7 +786,11 @@ export default function CommunityScreen() {
     const gEnd = group.gradientEnd || gradients.primary[1];
 
     return (
-      <Pressable key={group.id} style={styles.myGroupCard}>
+      <Pressable
+        key={group.id}
+        style={styles.myGroupCard}
+        onPress={() => router.push(`/group/${group.id}`)}
+      >
         <LinearGradient
           colors={[gStart, gEnd]}
           start={{ x: 0, y: 0 }}
@@ -764,51 +823,53 @@ export default function CommunityScreen() {
 
     return (
       <Animated.View key={group.id} entering={FadeInDown.delay(200 + index * 60).duration(400)}>
-        <Card variant="elevated" padding="md" style={styles.discoverGroupCard}>
-          <View style={styles.discoverGroupRow}>
-            <LinearGradient
-              colors={[gStart, gEnd]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.discoverGroupIcon}
-            >
-              <Text style={styles.discoverGroupEmoji}>{group.icon || "🌿"}</Text>
-            </LinearGradient>
-            <View style={styles.discoverGroupInfo}>
-              <Text style={[styles.discoverGroupName, { color: colors.text }]}>{group.name}</Text>
-              {group.description && (
-                <Text
-                  style={[styles.discoverGroupDesc, { color: colors.textSecondary }]}
-                  numberOfLines={1}
+        <Pressable onPress={() => router.push(`/group/${group.id}`)}>
+          <Card variant="elevated" padding="md" style={styles.discoverGroupCard}>
+            <View style={styles.discoverGroupRow}>
+              <LinearGradient
+                colors={[gStart, gEnd]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.discoverGroupIcon}
+              >
+                <Text style={styles.discoverGroupEmoji}>{group.icon || "🌿"}</Text>
+              </LinearGradient>
+              <View style={styles.discoverGroupInfo}>
+                <Text style={[styles.discoverGroupName, { color: colors.text }]}>{group.name}</Text>
+                {group.description && (
+                  <Text
+                    style={[styles.discoverGroupDesc, { color: colors.textSecondary }]}
+                    numberOfLines={1}
+                  >
+                    {group.description}
+                  </Text>
+                )}
+                <Text style={[styles.discoverGroupMembers, { color: colors.textTertiary }]}>
+                  {group.memberCount} {t("community.members")}
+                </Text>
+              </View>
+              {!group.isMember ? (
+                <Pressable
+                  onPress={() => handleJoinGroup(group.id)}
+                  style={[styles.joinButton, { backgroundColor: colors.primary }]}
                 >
-                  {group.description}
-                </Text>
+                  <Text style={[styles.joinButtonText, { color: colors.textInverse }]}>
+                    {t("community.join")}
+                  </Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={() => handleLeaveGroup(group.id)}
+                  style={[styles.leaveButton, { borderColor: colors.error }]}
+                >
+                  <Text style={[styles.leaveButtonText, { color: colors.error }]}>
+                    {t("community.leave")}
+                  </Text>
+                </Pressable>
               )}
-              <Text style={[styles.discoverGroupMembers, { color: colors.textTertiary }]}>
-                {group.memberCount} {t("community.members")}
-              </Text>
             </View>
-            {!group.isMember ? (
-              <Pressable
-                onPress={() => handleJoinGroup(group.id)}
-                style={[styles.joinButton, { backgroundColor: colors.primary }]}
-              >
-                <Text style={[styles.joinButtonText, { color: colors.textInverse }]}>
-                  {t("community.join")}
-                </Text>
-              </Pressable>
-            ) : (
-              <Pressable
-                onPress={() => handleLeaveGroup(group.id)}
-                style={[styles.leaveButton, { borderColor: colors.error }]}
-              >
-                <Text style={[styles.leaveButtonText, { color: colors.error }]}>
-                  {t("community.leave")}
-                </Text>
-              </Pressable>
-            )}
-          </View>
-        </Card>
+          </Card>
+        </Pressable>
       </Animated.View>
     );
   };
@@ -895,7 +956,10 @@ export default function CommunityScreen() {
 
     return (
       <Animated.View key={convo.id} entering={FadeInDown.delay(150 + index * 50).duration(400)}>
-        <Pressable style={[styles.conversationItem, { borderBottomColor: colors.borderLight }]}>
+        <Pressable
+          onPress={() => router.push(`/conversation/${convo.id}`)}
+          style={[styles.conversationItem, { borderBottomColor: colors.borderLight }]}
+        >
           {isGroup ? (
             <View style={styles.groupAvatarWrap}>
               <LinearGradient
@@ -998,7 +1062,11 @@ export default function CommunityScreen() {
               contentContainerStyle={styles.onlineScroll}
             >
               {onlineConversations.map((c) => (
-                <Pressable key={c.id} style={styles.onlineItem}>
+                <Pressable
+                  key={c.id}
+                  onPress={() => router.push(`/conversation/${c.id}`)}
+                  style={styles.onlineItem}
+                >
                   <View style={styles.onlineAvatarWrap}>
                     <Avatar name={c.name || "User"} size="lg" />
                     <View style={[styles.onlineDotLarge, { borderColor: colors.background }]} />
@@ -1067,7 +1135,11 @@ export default function CommunityScreen() {
       {/* New Message FAB (messages tab only) */}
       {activeTab === "messages" && (
         <Pressable
-          onPress={showComingSoon}
+          onPress={() => {
+            setShowNewMessage(true);
+            setNewMsgSearch("");
+            setNewMsgResults([]);
+          }}
           style={[
             styles.newMessageFab,
             { bottom: insets.bottom + 8, backgroundColor: colors.primary },
@@ -1341,6 +1413,96 @@ export default function CommunityScreen() {
               multiline
               maxLength={500}
             />
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* ================================================================ */}
+      {/* New Message Modal */}
+      {/* ================================================================ */}
+      <Modal visible={showNewMessage} animationType="slide" transparent>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalOverlay}
+        >
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowNewMessage(false)} />
+          <View
+            style={[
+              styles.modalSheet,
+              { paddingBottom: insets.bottom + spacing.md, backgroundColor: colors.surface },
+            ]}
+          >
+            {/* Modal header */}
+            <View style={styles.modalHeader}>
+              <Pressable onPress={() => setShowNewMessage(false)}>
+                <Text style={[styles.modalCancel, { color: colors.textSecondary }]}>
+                  {t("common.cancel")}
+                </Text>
+              </Pressable>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {t("community.newMessage") || "New Message"}
+              </Text>
+              <View style={{ width: 60 }} />
+            </View>
+
+            {/* Search input */}
+            <View style={[styles.messageSearchWrap, { backgroundColor: colors.inputBackground }]}>
+              <Ionicons name="search-outline" size={iconSizes.xs} color={colors.textTertiary} />
+              <TextInput
+                style={[styles.messageSearchInput, { color: colors.text }]}
+                placeholder={t("community.searchUsers") || "Search users..."}
+                placeholderTextColor={colors.textTertiary}
+                value={newMsgSearch}
+                onChangeText={setNewMsgSearch}
+                autoFocus
+              />
+            </View>
+
+            {/* Results */}
+            <View style={{ flex: 1, marginTop: spacing.md }}>
+              {isSearchingUsers ? (
+                <ActivityIndicator
+                  style={{ marginTop: spacing.lg }}
+                  size="small"
+                  color={colors.primary}
+                />
+              ) : newMsgResults.length === 0 && newMsgSearch.trim() ? (
+                <View style={styles.emptyContainer}>
+                  <Ionicons name="person-outline" size={40} color={colors.textTertiary} />
+                  <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
+                    {t("community.noUsersFound") || "No users found"}
+                  </Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={newMsgResults}
+                  keyExtractor={(item) => item.id}
+                  keyboardShouldPersistTaps="handled"
+                  renderItem={({ item }) => (
+                    <Pressable
+                      onPress={() => handleStartConversation(item.id)}
+                      disabled={isCreatingConvo}
+                      style={[styles.conversationItem, { borderBottomColor: colors.borderLight }]}
+                    >
+                      <Avatar name={item.displayName} size="md" />
+                      <View style={styles.conversationInfo}>
+                        <Text style={[styles.conversationName, { color: colors.text }]}>
+                          {getPublicName(item)}
+                        </Text>
+                        {item.bio ? (
+                          <Text
+                            style={[styles.conversationLastMsg, { color: colors.textTertiary }]}
+                            numberOfLines={1}
+                          >
+                            {item.bio}
+                          </Text>
+                        ) : null}
+                      </View>
+                    </Pressable>
+                  )}
+                />
+              )}
+            </View>
           </View>
         </KeyboardAvoidingView>
       </Modal>
