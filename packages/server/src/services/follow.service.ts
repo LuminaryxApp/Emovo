@@ -3,6 +3,7 @@ import { eq, and } from "drizzle-orm";
 import { db, client } from "../config/database.js";
 import { follows } from "../db/schema/follows.js";
 import { users } from "../db/schema/users.js";
+import { PushService } from "../services/push.service.js";
 import { ConflictError, NotFoundError } from "../utils/errors.js";
 
 interface PublicProfileResult {
@@ -29,6 +30,8 @@ interface FollowListItemResult {
 }
 
 export class FollowService {
+  private pushService = new PushService();
+
   async getPublicProfile(targetUserId: string, viewerId: string): Promise<PublicProfileResult> {
     const [target] = await db
       .select({
@@ -119,6 +122,31 @@ export class FollowService {
       followingId,
       status,
     });
+
+    // Send notification to the target user
+    db.select({ displayName: users.displayName })
+      .from(users)
+      .where(eq(users.id, followerId))
+      .limit(1)
+      .then(([follower]) => {
+        if (follower) {
+          const name = follower.displayName ?? "Someone";
+          if (status === "accepted") {
+            this.pushService
+              .sendPush(followingId, "follow", "New Follower", `${name} started following you`, {
+                followerId,
+              })
+              .catch(() => {});
+          } else {
+            this.pushService
+              .sendPush(followingId, "follow", "Follow Request", `${name} wants to follow you`, {
+                followerId,
+              })
+              .catch(() => {});
+          }
+        }
+      })
+      .catch(() => {});
 
     return { status };
   }
@@ -284,11 +312,35 @@ export class FollowService {
           eq(follows.status, "pending"),
         ),
       )
-      .returning({ id: follows.id });
+      .returning({ id: follows.id, followerId: follows.followerId });
 
     if (result.length === 0) {
       throw new NotFoundError("Follow request not found");
     }
+
+    // Notify the follower that their request was accepted
+    const followerId = result[0].followerId;
+    db.select({ displayName: users.displayName })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+      .then(([accepter]) => {
+        if (accepter) {
+          const name = accepter.displayName ?? "Someone";
+          this.pushService
+            .sendPush(
+              followerId,
+              "follow",
+              "Follow Accepted",
+              `${name} accepted your follow request`,
+              {
+                userId,
+              },
+            )
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
   }
 
   async declineRequest(userId: string, followId: string): Promise<void> {

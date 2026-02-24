@@ -17,6 +17,7 @@ import { messages } from "../db/schema/messages.js";
 import { postLikes } from "../db/schema/post-likes.js";
 import { posts } from "../db/schema/posts.js";
 import { users } from "../db/schema/users.js";
+import { PushService } from "../services/push.service.js";
 import { AppError, ForbiddenError, NotFoundError } from "../utils/errors.js";
 
 // ---------------------------------------------------------------------------
@@ -48,6 +49,8 @@ function decodeCursor(cursor: string): CursorData | null {
 // ---------------------------------------------------------------------------
 
 export class CommunityService {
+  private pushService = new PushService();
+
   // =======================================================================
   //  POSTS
   // =======================================================================
@@ -200,7 +203,7 @@ export class CommunityService {
   async likePost(userId: string, postId: string) {
     // Verify post exists
     const [post] = await db
-      .select({ id: posts.id })
+      .select({ id: posts.id, userId: posts.userId })
       .from(posts)
       .where(eq(posts.id, postId))
       .limit(1);
@@ -220,6 +223,23 @@ export class CommunityService {
         .update(posts)
         .set({ likeCount: sql`${posts.likeCount} + 1` })
         .where(eq(posts.id, postId));
+
+      // Notify post author (skip if liker is the author)
+      if (post.userId !== userId) {
+        db.select({ displayName: users.displayName })
+          .from(users)
+          .where(eq(users.id, userId))
+          .limit(1)
+          .then(([liker]) => {
+            if (liker) {
+              const name = liker.displayName ?? "Someone";
+              this.pushService
+                .sendPush(post.userId, "like", "New Like", `${name} liked your post`, { postId })
+                .catch(() => {});
+            }
+          })
+          .catch(() => {});
+      }
     }
   }
 
@@ -250,7 +270,7 @@ export class CommunityService {
   async createComment(userId: string, postId: string, input: CreateCommentInput) {
     // Verify post exists
     const [post] = await db
-      .select({ id: posts.id })
+      .select({ id: posts.id, userId: posts.userId })
       .from(posts)
       .where(eq(posts.id, postId))
       .limit(1);
@@ -280,6 +300,17 @@ export class CommunityService {
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
+
+    // Notify post author (skip if commenter is the author)
+    if (post.userId !== userId) {
+      const name = author?.displayName ?? "Someone";
+      this.pushService
+        .sendPush(post.userId, "comment", "New Comment", `${name} commented on your post`, {
+          postId,
+          commentId: comment.id,
+        })
+        .catch(() => {});
+    }
 
     return {
       ...comment,
@@ -878,6 +909,29 @@ export class CommunityService {
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
+
+    // Notify all other participants in the conversation
+    const senderName = sender?.displayName ?? "Someone";
+    const messagePreview =
+      input.content.length > 50 ? input.content.slice(0, 50) + "..." : input.content;
+    db.select({ userId: conversationParticipants.userId })
+      .from(conversationParticipants)
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, conversationId),
+          ne(conversationParticipants.userId, userId),
+        ),
+      )
+      .then((participants) => {
+        for (const p of participants) {
+          this.pushService
+            .sendPush(p.userId, "message", "New Message", `${senderName}: ${messagePreview}`, {
+              conversationId,
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
 
     return {
       id: message.id,
