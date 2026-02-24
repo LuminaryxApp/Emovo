@@ -13,6 +13,7 @@ import {
   Mail,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -78,32 +79,12 @@ function relativeTime(dateStr: string | null): string {
   return `${months}mo ago`;
 }
 
-// ── FAQ data ────────────────────────────────────────────────────────
-const FAQ_ITEMS = [
-  {
-    q: "How do I log my mood?",
-    a: "Click the '+' button on the home page, select your mood level (1-5), add optional notes and triggers, then click 'Save Entry'.",
-  },
-  {
-    q: "What are triggers?",
-    a: "Triggers are activities or events that may affect your mood. You can select from default triggers or create custom ones.",
-  },
-  {
-    q: "Can I export my data?",
-    a: "Yes! Use the export buttons below to download your data as JSON or CSV.",
-  },
-  {
-    q: "Is my data private?",
-    a: "Absolutely. Your mood notes are encrypted end-to-end. We never share your personal data.",
-  },
-  {
-    q: "How are insights calculated?",
-    a: "Insights are based on your mood entries over time. We analyze average mood, distribution, and trigger patterns.",
-  },
-];
+// ── FAQ keys ────────────────────────────────────────────────────────
+const FAQ_KEYS = ["q1", "q2", "q3", "q4", "q5"] as const;
 
 // ── Main Page ───────────────────────────────────────────────────────
 export default function SettingsPage() {
+  const { t } = useTranslation();
   const { addToast } = useToast();
   const { theme, setTheme } = useTheme();
   const { user, updateProfile, logoutAll } = useAuthStore();
@@ -147,11 +128,11 @@ export default function SettingsPage() {
       const data = await getSessionsApi();
       setSessions(data);
     } catch {
-      addToast("error", "Failed to load sessions");
+      addToast("error", t("settings.sessionsLoadFailed"));
     } finally {
       setSessionsLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, t]);
 
   useEffect(() => {
     fetchSessions();
@@ -163,9 +144,9 @@ export default function SettingsPage() {
     setExporting(format);
     try {
       await exportData(format);
-      addToast("success", `Data exported as ${format.toUpperCase()}`);
+      addToast("success", t("settings.dataExported", { format: format.toUpperCase() }));
     } catch {
-      addToast("error", "Failed to export data");
+      addToast("error", t("settings.exportFailed"));
     } finally {
       setExporting(null);
     }
@@ -177,9 +158,9 @@ export default function SettingsPage() {
     try {
       await changeLanguage(code as Parameters<typeof changeLanguage>[0]);
       await updateProfile({ preferredLanguage: code });
-      addToast("success", "Language updated");
+      addToast("success", t("settings.languageUpdated"));
     } catch {
-      addToast("error", "Failed to update language");
+      addToast("error", t("settings.languageUpdateFailed"));
       setSelectedLang(user?.preferredLanguage || getCurrentLanguage() || "en");
     } finally {
       setChangingLang(false);
@@ -193,11 +174,11 @@ export default function SettingsPage() {
     setSavingPrivacy(field);
     try {
       await updateProfile({ [field]: value });
-      addToast("success", "Privacy setting updated");
+      addToast("success", t("settings.privacyUpdated"));
     } catch {
       if (field === "isPrivate") setIsPrivate(prev);
       else setShowRealName(prev);
-      addToast("error", "Failed to update setting");
+      addToast("error", t("settings.privacyUpdateFailed"));
     } finally {
       setSavingPrivacy(null);
     }
@@ -208,9 +189,9 @@ export default function SettingsPage() {
     try {
       await deleteSessionApi(id);
       setSessions((prev) => prev.filter((s) => s.id !== id));
-      addToast("success", "Session revoked");
+      addToast("success", t("settings.sessionRevoked"));
     } catch {
-      addToast("error", "Failed to revoke session");
+      addToast("error", t("settings.sessionRevokeFailed"));
     } finally {
       setRevokingId(null);
     }
@@ -221,7 +202,7 @@ export default function SettingsPage() {
     try {
       await logoutAll();
     } catch {
-      addToast("error", "Failed to log out other devices");
+      addToast("error", t("settings.logoutFailed"));
       setLoggingOutAll(false);
     }
   };
@@ -229,33 +210,33 @@ export default function SettingsPage() {
   // ── Theme icons ─────────────────────────────────────────────────
 
   const themeOptions = [
-    { value: "light" as const, label: "Light", icon: Sun },
-    { value: "dark" as const, label: "Dark", icon: Moon },
-    { value: "system" as const, label: "System", icon: Monitor },
+    { value: "light" as const, labelKey: "settings.light", icon: Sun },
+    { value: "dark" as const, labelKey: "settings.dark", icon: Moon },
+    { value: "system" as const, labelKey: "settings.system", icon: Monitor },
   ];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
+      <h1 className="text-2xl font-bold text-text-primary">{t("settings.title")}</h1>
 
       {/* ── 1. Appearance ──────────────────────────────────────── */}
       <Card className="p-4">
         <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold uppercase text-section-label">
           <Sun size={16} />
-          Appearance
+          {t("settings.appearance")}
         </h3>
         <div className="flex gap-2">
-          {themeOptions.map((t) => {
-            const Icon = t.icon;
+          {themeOptions.map((opt) => {
+            const Icon = opt.icon;
             return (
               <Button
-                key={t.value}
-                variant={theme === t.value ? "primary" : "secondary"}
+                key={opt.value}
+                variant={theme === opt.value ? "primary" : "secondary"}
                 size="sm"
-                onClick={() => setTheme(t.value)}
+                onClick={() => setTheme(opt.value)}
               >
                 <Icon size={14} className="mr-1.5" />
-                {t.label}
+                {t(opt.labelKey)}
               </Button>
             );
           })}
@@ -266,7 +247,7 @@ export default function SettingsPage() {
       <Card className="p-4">
         <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold uppercase text-section-label">
           <Globe size={16} />
-          Language
+          {t("settings.language")}
         </h3>
         <div className="relative">
           <select
@@ -297,16 +278,16 @@ export default function SettingsPage() {
       <Card className="p-4">
         <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold uppercase text-section-label">
           <Shield size={16} />
-          Privacy
+          {t("settings.privacy")}
         </h3>
         <div className="space-y-4">
           {/* Private Account */}
           <div className="flex items-center justify-between">
             <div className="mr-4">
-              <p className="text-sm font-medium text-text-primary">Private Account</p>
-              <p className="text-xs text-text-secondary">
-                Only approved followers can see your posts
+              <p className="text-sm font-medium text-text-primary">
+                {t("settings.privateAccount")}
               </p>
+              <p className="text-xs text-text-secondary">{t("settings.privateAccountDesc")}</p>
             </div>
             <ToggleSwitch
               checked={isPrivate}
@@ -318,8 +299,8 @@ export default function SettingsPage() {
           {/* Show Real Name */}
           <div className="flex items-center justify-between">
             <div className="mr-4">
-              <p className="text-sm font-medium text-text-primary">Show Real Name</p>
-              <p className="text-xs text-text-secondary">Display your real name to other users</p>
+              <p className="text-sm font-medium text-text-primary">{t("settings.showRealName")}</p>
+              <p className="text-xs text-text-secondary">{t("settings.showRealNameDesc")}</p>
             </div>
             <ToggleSwitch
               checked={showRealName}
@@ -334,7 +315,7 @@ export default function SettingsPage() {
       <Card className="p-4">
         <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold uppercase text-section-label">
           <Smartphone size={16} />
-          Active Sessions
+          {t("settings.activeSessions")}
         </h3>
 
         {sessionsLoading ? (
@@ -350,7 +331,7 @@ export default function SettingsPage() {
             ))}
           </div>
         ) : sessions.length === 0 ? (
-          <p className="text-sm text-text-secondary">No active sessions</p>
+          <p className="text-sm text-text-secondary">{t("settings.noSessions")}</p>
         ) : (
           <div className="space-y-3">
             {sessions.map((session) => (
@@ -361,11 +342,11 @@ export default function SettingsPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="truncate text-sm font-medium text-text-primary">
-                      {session.deviceName || "Unknown device"}
+                      {session.deviceName || t("settings.unknownDevice")}
                     </p>
                     {session.current && (
                       <Badge variant="primary" className="shrink-0">
-                        Current
+                        {t("settings.current")}
                       </Badge>
                     )}
                   </div>
@@ -381,7 +362,7 @@ export default function SettingsPage() {
                     loading={revokingId === session.id}
                     className="ml-2 shrink-0 text-error hover:text-error"
                   >
-                    Revoke
+                    {t("settings.revoke")}
                   </Button>
                 )}
               </div>
@@ -395,7 +376,7 @@ export default function SettingsPage() {
                 onClick={handleLogoutAllOther}
                 loading={loggingOutAll}
               >
-                Log Out All Other Devices
+                {t("settings.logoutAllDevices")}
               </Button>
             )}
           </div>
@@ -406,7 +387,7 @@ export default function SettingsPage() {
       <Card className="p-4">
         <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold uppercase text-section-label">
           <Download size={16} />
-          Export Data
+          {t("settings.exportData")}
         </h3>
         <div className="flex gap-3">
           <Button
@@ -415,7 +396,7 @@ export default function SettingsPage() {
             loading={exporting === "json"}
           >
             <Download size={16} className="mr-2" />
-            Export as JSON
+            {t("settings.exportJson")}
           </Button>
           <Button
             variant="outline"
@@ -423,7 +404,7 @@ export default function SettingsPage() {
             loading={exporting === "csv"}
           >
             <Download size={16} className="mr-2" />
-            Export as CSV
+            {t("settings.exportCsv")}
           </Button>
         </div>
       </Card>
@@ -432,22 +413,24 @@ export default function SettingsPage() {
       <Card className="p-4">
         <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold uppercase text-section-label">
           <HelpCircle size={16} />
-          Help & FAQ
+          {t("settings.helpFaq")}
         </h3>
         <div className="space-y-2">
-          {FAQ_ITEMS.map((item, i) => (
-            <div key={i} className="border-b border-border-light last:border-0">
+          {FAQ_KEYS.map((key, i) => (
+            <div key={key} className="border-b border-border-light last:border-0">
               <button
                 onClick={() => setOpenFaq(openFaq === i ? null : i)}
                 className="flex w-full items-center justify-between py-3 text-left text-sm font-medium text-text-primary"
               >
-                {item.q}
+                {t(`settings.faq.${key}`)}
                 <ChevronDown
                   size={16}
                   className={cn("shrink-0 transition-transform", openFaq === i && "rotate-180")}
                 />
               </button>
-              {openFaq === i && <p className="pb-3 text-sm text-text-secondary">{item.a}</p>}
+              {openFaq === i && (
+                <p className="pb-3 text-sm text-text-secondary">{t(`settings.faq.a${i + 1}`)}</p>
+              )}
             </div>
           ))}
         </div>
@@ -458,7 +441,7 @@ export default function SettingsPage() {
           className="mt-4 flex items-center gap-2 text-sm font-medium text-brand-green hover:underline"
         >
           <Mail size={16} />
-          Contact Support
+          {t("settings.contactSupport")}
         </a>
       </Card>
     </div>
