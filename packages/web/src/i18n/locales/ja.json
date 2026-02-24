@@ -344,7 +344,7 @@
     "moderation": "モデレーション",
     "bio": "自己紹介",
     "editBio": "自己紹介を編集",
-    "enterBio": "短い自己紹介を書いてください（最大160文字）",
+    "enterBio": "短い自己紹介を書いてください（最大500文字）",
     "privateAccount": "非公開アカウント",
     "followRequests": "フォローリクエスト"
   },

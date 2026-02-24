@@ -354,7 +354,7 @@
     "moderation": "Moderação",
     "bio": "Bio",
     "editBio": "Editar bio",
-    "enterBio": "Escreva uma bio curta (máx. 160 caracteres)",
+    "enterBio": "Escreva uma bio curta (máx. 500 caracteres)",
     "privateAccount": "Conta privada",
     "followRequests": "Pedidos de seguimento"
   },

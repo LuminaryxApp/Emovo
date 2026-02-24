@@ -4,6 +4,7 @@ import type { Notification } from "@emovo/shared";
 import { formatDistanceToNow } from "date-fns";
 import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -12,6 +13,7 @@ import { cn } from "@/lib/cn";
 import { listNotificationsApi, markNotificationReadApi } from "@/services/notification.api";
 
 export default function NotificationsPage() {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,7 +37,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-text-primary">Notifications</h1>
+      <h1 className="text-2xl font-bold text-text-primary">{t("notifications.title")}</h1>
 
       {loading ? (
         <div className="space-y-3">
@@ -46,8 +48,8 @@ export default function NotificationsPage() {
       ) : notifications.length === 0 ? (
         <EmptyState
           icon={<Bell size={40} />}
-          title="No notifications yet"
-          description="When someone likes or comments on your posts, you'll see it here."
+          title={t("notifications.empty")}
+          description={t("notifications.emptySubtitle")}
         />
       ) : (
         <div className="space-y-2">
@@ -68,7 +70,7 @@ export default function NotificationsPage() {
               >
                 {(n as { message?: string }).message ||
                   (n as { body?: string }).body ||
-                  "New notification"}
+                  t("notifications.title")}
               </p>
               <p className="mt-1 text-xs text-text-tertiary">
                 {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}

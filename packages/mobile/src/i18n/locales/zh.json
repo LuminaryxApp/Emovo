@@ -354,7 +354,7 @@
     "moderation": "内容审核",
     "bio": "简介",
     "editBio": "编辑简介",
-    "enterBio": "写一段简短的简介（最多160个字符）",
+    "enterBio": "写一段简短的简介（最多500个字符）",
     "privateAccount": "私密账户",
     "followRequests": "关注请求"
   },

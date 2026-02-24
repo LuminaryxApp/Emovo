@@ -901,7 +901,7 @@ export default function ProfileScreen() {
               autoCapitalize={editModal.field === "username" ? "none" : undefined}
               placeholderTextColor={colors.textTertiary}
               multiline={editModal.field === "bio"}
-              maxLength={editModal.field === "bio" ? 160 : undefined}
+              maxLength={editModal.field === "bio" ? 500 : undefined}
               autoFocus
             />
             <View style={modalStyles.actions}>

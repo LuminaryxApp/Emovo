@@ -68,7 +68,7 @@ export const updateProfileSchema = z.object({
   displayName: z.string().min(1).max(100).trim().optional(),
   username: usernameSchema.nullable().optional(),
   showRealName: z.boolean().optional(),
-  bio: z.string().max(160).nullable().optional(),
+  bio: z.string().max(500).nullable().optional(),
   isPrivate: z.boolean().optional(),
   timezone: z.string().max(50).optional(),
   notificationsEnabled: z.boolean().optional(),

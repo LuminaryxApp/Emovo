@@ -1,9 +1,9 @@
 "use client";
 
 import type { PublicProfile } from "@emovo/shared";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Avatar } from "@/components/ui/avatar";
@@ -12,15 +12,18 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getPublicName } from "@/lib/display-name";
 import { useToast } from "@/providers/toast-provider";
+import { createConversationApi } from "@/services/community.api";
 import { getPublicProfileApi, followUserApi, unfollowUserApi } from "@/services/follow.api";
 import { useAuthStore } from "@/stores/auth.store";
 
 export default function PublicProfilePage() {
   const { userId } = useParams<{ userId: string }>();
+  const router = useRouter();
   const currentUserId = useAuthStore((s) => s.user?.id);
   const { addToast } = useToast();
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [startingChat, setStartingChat] = useState(false);
 
   useEffect(() => {
     getPublicProfileApi(userId)
@@ -44,6 +47,18 @@ export default function PublicProfilePage() {
       );
     } catch {
       addToast("error", "Failed to follow user");
+    }
+  };
+
+  const handleMessage = async () => {
+    setStartingChat(true);
+    try {
+      const conversation = await createConversationApi(userId);
+      router.push(`/messages/${conversation.id}`);
+    } catch {
+      addToast("error", "Could not start conversation");
+    } finally {
+      setStartingChat(false);
     }
   };
 
@@ -109,7 +124,7 @@ export default function PublicProfilePage() {
         </div>
 
         {!isSelf && (
-          <div className="mt-4">
+          <div className="mt-4 flex justify-center gap-3">
             {profile.followStatus === "following" ? (
               <Button variant="outline" onClick={handleUnfollow}>
                 Unfollow
@@ -121,6 +136,10 @@ export default function PublicProfilePage() {
             ) : (
               <Button onClick={handleFollow}>Follow</Button>
             )}
+            <Button variant="secondary" onClick={handleMessage} loading={startingChat}>
+              <MessageCircle size={16} className="mr-1.5" />
+              Message
+            </Button>
           </div>
         )}
       </Card>

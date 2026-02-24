@@ -99,8 +99,8 @@ export async function listConversationsApi(params: { cursor?: string; limit?: nu
   return { conversations: data.data as ConversationPreview[], cursor: data.meta?.cursor ?? null };
 }
 
-export async function createConversationApi(input: { participantIds: string[]; type?: string }) {
-  const { data } = await api.post("/community/conversations", input);
+export async function createConversationApi(participantId: string) {
+  const { data } = await api.post("/community/conversations", { participantId });
   return data.data as ConversationPreview;
 }
 

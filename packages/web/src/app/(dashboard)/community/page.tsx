@@ -92,7 +92,7 @@ export default function CommunityPage() {
     if (activeTab !== "feed") return;
     if (feedSearchTimerRef.current) clearTimeout(feedSearchTimerRef.current);
     feedSearchTimerRef.current = setTimeout(() => {
-      const query = feedSearch.trim();
+      const query = feedSearch.trim().replace(/^@/, "");
       fetchFeed(query || undefined);
       if (query) {
         searchUsersApi({ q: query, limit: 5 })

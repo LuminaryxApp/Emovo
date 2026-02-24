@@ -1,11 +1,14 @@
 import type { User, UserProfile } from "@emovo/shared";
 import { getCalendars } from "expo-localization";
+import { Platform } from "react-native";
 import { create } from "zustand";
 
 import { getOrCreateDeviceId, getDeviceName } from "../lib/device-id";
+import { getExpoPushToken } from "../lib/notifications";
 import { getRefreshToken, setRefreshToken, clearAuthStorage } from "../lib/secure-storage";
 import { api, setAccessToken } from "../services/api";
 import { loginApi, registerApi, logoutApi, logoutAllApi } from "../services/auth.api";
+import { registerPushTokenApi } from "../services/notification.api";
 import { updateProfileApi, deleteAccountApi } from "../services/user.api";
 
 interface AuthState {
@@ -44,6 +47,19 @@ async function syncTimezone(serverTimezone: string | undefined) {
   }
 }
 
+/** Register the device push token so the server can send notifications */
+async function registerPushToken() {
+  try {
+    const token = await getExpoPushToken();
+    if (token) {
+      const platform = Platform.OS === "ios" ? "ios" : "android";
+      await registerPushTokenApi(token, platform);
+    }
+  } catch {
+    // Non-critical — don't block login/hydrate
+  }
+}
+
 export const useAuthStore = create<AuthState>((set, _get) => ({
   user: null,
   isAuthenticated: false,
@@ -69,8 +85,9 @@ export const useAuthStore = create<AuthState>((set, _get) => ({
         error: null,
       });
 
-      // Sync device timezone to server in background
+      // Sync device timezone and register push token in background
       syncTimezone(result.user.timezone);
+      registerPushToken();
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { error?: { message?: string } } } })?.response?.data?.error
@@ -166,8 +183,9 @@ export const useAuthStore = create<AuthState>((set, _get) => ({
         isLoading: false,
       });
 
-      // Sync device timezone to server in background
+      // Sync device timezone and register push token in background
       syncTimezone(user.timezone);
+      registerPushToken();
     } catch {
       // Refresh failed — clear everything
       setAccessToken(null);

@@ -159,7 +159,7 @@ export default function ProfilePage() {
                   label="Bio"
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  maxLength={160}
+                  maxLength={500}
                   rows={2}
                 />
                 <div className="flex gap-2">
