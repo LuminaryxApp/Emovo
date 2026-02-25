@@ -23,8 +23,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FEFAE0"
       },
-      "edgeToEdgeEnabled": true,
-      "permissions": ["android.permission.RECORD_AUDIO"]
+      "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png",
