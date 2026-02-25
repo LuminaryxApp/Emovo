@@ -7,18 +7,21 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "prebuildCommand": "cd ../shared && npm run build",
       "env": {
         "EXPO_PUBLIC_API_URL": "http://localhost:3000/api/v1"
       }
     },
     "staging": {
       "distribution": "internal",
+      "prebuildCommand": "cd ../shared && npm run build",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://staging-api.emovo.app/api/v1"
       }
     },
     "production": {
       "autoIncrement": true,
+      "prebuildCommand": "cd ../shared && npm run build",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.emovo.app/api/v1"
       }
