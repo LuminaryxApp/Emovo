@@ -16,6 +16,7 @@ const envSchema = z.object({
   SENTRY_DSN: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("Emovo <noreply@emovo.app>"),
+  EXPO_ACCESS_TOKEN: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

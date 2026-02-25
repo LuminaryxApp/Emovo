@@ -1,3 +1,4 @@
+import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
@@ -74,7 +75,10 @@ export async function getExpoPushToken(): Promise<string | null> {
       });
     }
 
-    const tokenData = await Notifications.getExpoPushTokenAsync();
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    const tokenData = await Notifications.getExpoPushTokenAsync(
+      projectId ? { projectId } : undefined,
+    );
     return tokenData.data;
   } catch {
     return null;

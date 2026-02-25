@@ -18,6 +18,7 @@ import { postLikes } from "../db/schema/post-likes.js";
 import { posts } from "../db/schema/posts.js";
 import { users } from "../db/schema/users.js";
 import { PushService } from "../services/push.service.js";
+import { getPublicName } from "../utils/display-name.js";
 import { AppError, ForbiddenError, NotFoundError } from "../utils/errors.js";
 
 // ---------------------------------------------------------------------------
@@ -226,13 +227,17 @@ export class CommunityService {
 
       // Notify post author (skip if liker is the author)
       if (post.userId !== userId) {
-        db.select({ displayName: users.displayName })
+        db.select({
+          displayName: users.displayName,
+          username: users.username,
+          showRealName: users.showRealName,
+        })
           .from(users)
           .where(eq(users.id, userId))
           .limit(1)
           .then(([liker]) => {
             if (liker) {
-              const name = liker.displayName ?? "Someone";
+              const name = getPublicName(liker);
               this.pushService
                 .sendPush(post.userId, "like", "New Like", `${name} liked your post`, { postId })
                 .catch(() => {});
@@ -303,7 +308,7 @@ export class CommunityService {
 
     // Notify post author (skip if commenter is the author)
     if (post.userId !== userId) {
-      const name = author?.displayName ?? "Someone";
+      const name = author ? getPublicName(author) : "Someone";
       this.pushService
         .sendPush(post.userId, "comment", "New Comment", `${name} commented on your post`, {
           postId,
@@ -911,7 +916,7 @@ export class CommunityService {
       .limit(1);
 
     // Notify all other participants in the conversation
-    const senderName = sender?.displayName ?? "Someone";
+    const senderName = sender ? getPublicName(sender) : "Someone";
     const messagePreview =
       input.content.length > 50 ? input.content.slice(0, 50) + "..." : input.content;
     db.select({ userId: conversationParticipants.userId })

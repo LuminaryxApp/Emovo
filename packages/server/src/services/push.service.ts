@@ -1,6 +1,7 @@
 import { eq, and, desc } from "drizzle-orm";
 
 import { db, client } from "../config/database.js";
+import { env } from "../config/env.js";
 import { notifications } from "../db/schema/notifications.js";
 import { pushTokens } from "../db/schema/push-tokens.js";
 
@@ -69,12 +70,16 @@ export class PushService {
     }));
 
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      };
+      if (env.EXPO_ACCESS_TOKEN) {
+        headers.Authorization = `Bearer ${env.EXPO_ACCESS_TOKEN}`;
+      }
       await fetch("https://exp.host/--/api/v2/push/send", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
+        headers,
         body: JSON.stringify(messages),
       });
     } catch {

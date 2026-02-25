@@ -4,10 +4,11 @@ import {
   SourceSerif4_700Bold,
 } from "@expo-google-fonts/source-serif-4";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import * as Notifications from "expo-notifications";
+import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Toast from "react-native-toast-message";
 
 import { ErrorBoundary } from "../src/components/ui/ErrorBoundary";
@@ -55,6 +56,39 @@ export default function RootLayout() {
 
 function AppContent() {
   const { isDark } = useTheme();
+  const router = useRouter();
+
+  // Notification listeners — handle taps on push notifications
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
+  useEffect(() => {
+    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as
+        | Record<string, unknown>
+        | undefined;
+      if (!data) return;
+      try {
+        if (data.conversationId) {
+          router.push({
+            pathname: "/conversation",
+            params: { id: data.conversationId as string },
+          });
+        } else if (data.postId) {
+          router.push({ pathname: "/post/[id]", params: { id: data.postId as string } });
+        } else if (data.followerId) {
+          router.push("/follow-requests");
+        } else {
+          router.push("/notifications");
+        }
+      } catch {
+        // Navigation may fail if app isn't fully mounted yet
+      }
+    });
+    return () => {
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, [router]);
 
   return (
     <>

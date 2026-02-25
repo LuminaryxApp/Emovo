@@ -4,6 +4,7 @@ import { db, client } from "../config/database.js";
 import { follows } from "../db/schema/follows.js";
 import { users } from "../db/schema/users.js";
 import { PushService } from "../services/push.service.js";
+import { getPublicName } from "../utils/display-name.js";
 import { ConflictError, NotFoundError } from "../utils/errors.js";
 
 interface PublicProfileResult {
@@ -124,13 +125,17 @@ export class FollowService {
     });
 
     // Send notification to the target user
-    db.select({ displayName: users.displayName })
+    db.select({
+      displayName: users.displayName,
+      username: users.username,
+      showRealName: users.showRealName,
+    })
       .from(users)
       .where(eq(users.id, followerId))
       .limit(1)
       .then(([follower]) => {
         if (follower) {
-          const name = follower.displayName ?? "Someone";
+          const name = getPublicName(follower);
           if (status === "accepted") {
             this.pushService
               .sendPush(followingId, "follow", "New Follower", `${name} started following you`, {
@@ -320,13 +325,17 @@ export class FollowService {
 
     // Notify the follower that their request was accepted
     const followerId = result[0].followerId;
-    db.select({ displayName: users.displayName })
+    db.select({
+      displayName: users.displayName,
+      username: users.username,
+      showRealName: users.showRealName,
+    })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1)
       .then(([accepter]) => {
         if (accepter) {
-          const name = accepter.displayName ?? "Someone";
+          const name = getPublicName(accepter);
           this.pushService
             .sendPush(
               followerId,
