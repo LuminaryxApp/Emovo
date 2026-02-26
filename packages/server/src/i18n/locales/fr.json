@@ -1,5 +1,6 @@
 {
   "email": {
+    "greeting": "Bonjour {{name}},",
     "verification": {
       "subject": "Vérifiez votre compte Emovo",
       "heading": "Bienvenue sur Emovo",
@@ -13,6 +14,7 @@
       "heading": "Réinitialisez votre mot de passe",
       "body": "Nous avons reçu une demande de réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour en choisir un nouveau.",
       "button": "Réinitialiser le mot de passe",
+      "openInApp": "Ou ouvrir dans l'app Emovo",
       "fallback": "Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :",
       "footer": "Ce lien expire dans 1 heure. Si vous n'avez pas demandé de réinitialisation de mot de passe, vous pouvez ignorer cet e-mail."
     },

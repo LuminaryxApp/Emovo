@@ -66,6 +66,27 @@
       "checkEmail": "请查看您的电子邮箱",
       "emailSentDescription": "如果{{email}}对应的账户存在，我们已发送密码重置说明。",
       "backToSignIn": "返回登录"
+    },
+    "resetPassword": {
+      "title": "重置密码",
+      "description": "请在下方输入您的新密码。",
+      "newPassword": "新密码",
+      "newPasswordPlaceholder": "至少8个字符",
+      "confirmPassword": "确认密码",
+      "confirmPasswordPlaceholder": "再次输入密码",
+      "resetButton": "重置密码",
+      "resetting": "重置中...",
+      "minLength": "密码至少需要8个字符",
+      "mismatch": "两次输入的密码不一致",
+      "error": "重置失败",
+      "errorDescription": "此链接可能已过期，请重新申请。",
+      "invalidLink": "链接无效",
+      "invalidLinkDescription": "此密码重置链接无效或已过期。",
+      "requestNew": "申请新链接",
+      "successTitle": "密码重置成功！",
+      "successDescription": "您的密码已成功重置，现在可以使用新密码登录。",
+      "signIn": "登录",
+      "backToSignIn": "返回登录"
     }
   },
   "home": {

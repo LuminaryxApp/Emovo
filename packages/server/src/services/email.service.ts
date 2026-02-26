@@ -11,6 +11,10 @@ function getApiBaseUrl(): string {
   return env.NODE_ENV === "production" ? "https://api.emovo.app" : `http://localhost:${env.PORT}`;
 }
 
+function getFrontendUrl(): string {
+  return env.FRONTEND_URL;
+}
+
 function emailWrapper(content: string, lang = "en"): string {
   const t = getT(lang);
   const dir = lang === "ar" ? "rtl" : "ltr";
@@ -63,6 +67,7 @@ export async function sendVerificationEmail(
   email: string,
   token: string,
   lang = "en",
+  name?: string,
 ): Promise<void> {
   if (!resend) {
     console.warn("[email] Resend not configured — skipping verification email");
@@ -71,10 +76,12 @@ export async function sendVerificationEmail(
 
   const t = getT(lang);
   const verifyUrl = `${getApiBaseUrl()}/api/v1/auth/verify-email?token=${token}`;
+  const greeting = name ? t("email.greeting", { name }) : "";
 
   const html = emailWrapper(
     `
     <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 700; color: #2D2D2D;">${t("email.verification.heading")}</h1>
+    ${greeting ? `<p style="margin: 0 0 16px; font-size: 16px; color: #4A4A4A; line-height: 1.6;">${greeting}</p>` : ""}
     <p style="margin: 0 0 24px; font-size: 15px; color: #6B6B6B; line-height: 1.6;">
       ${t("email.verification.body")}
     </p>
@@ -122,6 +129,7 @@ export async function sendPasswordResetEmail(
   email: string,
   token: string,
   lang = "en",
+  name?: string,
 ): Promise<void> {
   if (!resend) {
     console.warn("[email] Resend not configured — skipping password reset email");
@@ -129,20 +137,33 @@ export async function sendPasswordResetEmail(
   }
 
   const t = getT(lang);
-  const resetUrl = `${getApiBaseUrl()}/api/v1/auth/reset-password?token=${token}`;
+  const webResetUrl = `${getFrontendUrl()}/reset-password?token=${token}`;
+  const appResetUrl = `emovo://reset-password?token=${token}`;
+  const greeting = name ? t("email.greeting", { name }) : "";
 
   const html = emailWrapper(
     `
     <h1 style="margin: 0 0 8px; font-size: 24px; font-weight: 700; color: #2D2D2D;">${t("email.passwordReset.heading")}</h1>
+    ${greeting ? `<p style="margin: 0 0 16px; font-size: 16px; color: #4A4A4A; line-height: 1.6;">${greeting}</p>` : ""}
     <p style="margin: 0 0 24px; font-size: 15px; color: #6B6B6B; line-height: 1.6;">
       ${t("email.passwordReset.body")}
     </p>
 
-    <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 24px;">
+    <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 16px;">
       <tr>
         <td align="center" style="background: #75863C; border-radius: 10px;">
-          <a href="${resetUrl}" target="_blank" style="display: inline-block; padding: 14px 36px; font-size: 16px; font-weight: 600; color: #FFFFFF; text-decoration: none; font-family: Georgia, serif;">
+          <a href="${webResetUrl}" target="_blank" style="display: inline-block; padding: 14px 36px; font-size: 16px; font-weight: 600; color: #FFFFFF; text-decoration: none; font-family: Georgia, serif;">
             ${t("email.passwordReset.button")}
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto 24px;">
+      <tr>
+        <td align="center">
+          <a href="${appResetUrl}" style="font-size: 14px; color: #6F98B8; text-decoration: underline; font-family: Georgia, serif;">
+            ${t("email.passwordReset.openInApp")}
           </a>
         </td>
       </tr>
@@ -153,7 +174,7 @@ export async function sendPasswordResetEmail(
         ${t("email.passwordReset.fallback")}
       </p>
       <p style="margin: 0; font-size: 12px; color: #6F98B8; word-break: break-all; line-height: 1.5;">
-        ${resetUrl}
+        ${webResetUrl}
       </p>
     </div>
 

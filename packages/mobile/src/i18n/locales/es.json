@@ -66,6 +66,27 @@
       "checkEmail": "Revisa tu correo electrónico",
       "emailSentDescription": "Si existe una cuenta para {{email}}, hemos enviado instrucciones para restablecer la contraseña.",
       "backToSignIn": "Volver a iniciar sesión"
+    },
+    "resetPassword": {
+      "title": "Restablecer Contraseña",
+      "description": "Ingresa tu nueva contraseña a continuación.",
+      "newPassword": "Nueva Contraseña",
+      "newPasswordPlaceholder": "Mín. 8 caracteres",
+      "confirmPassword": "Confirmar Contraseña",
+      "confirmPasswordPlaceholder": "Reingresa tu contraseña",
+      "resetButton": "Restablecer Contraseña",
+      "resetting": "Restableciendo...",
+      "minLength": "La contraseña debe tener al menos 8 caracteres",
+      "mismatch": "Las contraseñas no coinciden",
+      "error": "Error al restablecer",
+      "errorDescription": "Este enlace puede haber expirado. Solicita uno nuevo.",
+      "invalidLink": "Enlace inválido",
+      "invalidLinkDescription": "Este enlace de restablecimiento de contraseña es inválido o ha expirado.",
+      "requestNew": "Solicitar nuevo enlace",
+      "successTitle": "¡Contraseña restablecida!",
+      "successDescription": "Tu contraseña ha sido restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.",
+      "signIn": "Iniciar Sesión",
+      "backToSignIn": "Volver a Iniciar Sesión"
     }
   },
   "home": {

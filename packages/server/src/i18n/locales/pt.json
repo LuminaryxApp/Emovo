@@ -1,5 +1,6 @@
 {
   "email": {
+    "greeting": "Olá {{name}},",
     "verification": {
       "subject": "Verifique sua conta Emovo",
       "heading": "Bem-vindo ao Emovo",
@@ -13,6 +14,7 @@
       "heading": "Redefinir sua senha",
       "body": "Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para escolher uma nova.",
       "button": "Redefinir senha",
+      "openInApp": "Ou abrir no app Emovo",
       "fallback": "Se o botão não funcionar, copie e cole este link no seu navegador:",
       "footer": "Este link expira em 1 hora. Se você não solicitou a redefinição de senha, pode ignorar este e-mail."
     },

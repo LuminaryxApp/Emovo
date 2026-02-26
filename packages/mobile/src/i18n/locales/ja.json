@@ -66,6 +66,27 @@
       "checkEmail": "メールをご確認ください",
       "emailSentDescription": "{{email}}のアカウントが存在する場合、パスワードリセットの手順をお送りしました。",
       "backToSignIn": "ログインに戻る"
+    },
+    "resetPassword": {
+      "title": "パスワードリセット",
+      "description": "新しいパスワードを入力してください。",
+      "newPassword": "新しいパスワード",
+      "newPasswordPlaceholder": "8文字以上",
+      "confirmPassword": "パスワード確認",
+      "confirmPasswordPlaceholder": "パスワードを再入力",
+      "resetButton": "パスワードをリセット",
+      "resetting": "リセット中...",
+      "minLength": "パスワードは8文字以上必要です",
+      "mismatch": "パスワードが一致しません",
+      "error": "リセット失敗",
+      "errorDescription": "このリンクの有効期限が切れている可能性があります。新しいリンクをリクエストしてください。",
+      "invalidLink": "無効なリンク",
+      "invalidLinkDescription": "このパスワードリセットリンクは無効または期限切れです。",
+      "requestNew": "新しいリンクをリクエスト",
+      "successTitle": "パスワードリセット完了！",
+      "successDescription": "パスワードが正常にリセットされました。新しいパスワードでサインインできます。",
+      "signIn": "サインイン",
+      "backToSignIn": "サインインに戻る"
     }
   },
   "home": {

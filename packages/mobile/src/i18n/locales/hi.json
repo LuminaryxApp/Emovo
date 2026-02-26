@@ -66,6 +66,27 @@
       "checkEmail": "अपना ईमेल जाँचें",
       "emailSentDescription": "यदि {{email}} के लिए कोई खाता मौजूद है, तो हमने पासवर्ड रीसेट निर्देश भेज दिए हैं।",
       "backToSignIn": "साइन इन पर वापस जाएँ"
+    },
+    "resetPassword": {
+      "title": "पासवर्ड रीसेट करें",
+      "description": "नीचे अपना नया पासवर्ड दर्ज करें।",
+      "newPassword": "नया पासवर्ड",
+      "newPasswordPlaceholder": "न्यूनतम 8 अक्षर",
+      "confirmPassword": "पासवर्ड की पुष्टि करें",
+      "confirmPasswordPlaceholder": "पासवर्ड दोबारा दर्ज करें",
+      "resetButton": "पासवर्ड रीसेट करें",
+      "resetting": "रीसेट हो रहा है...",
+      "minLength": "पासवर्ड कम से कम 8 अक्षर का होना चाहिए",
+      "mismatch": "पासवर्ड मेल नहीं खाते",
+      "error": "रीसेट विफल",
+      "errorDescription": "यह लिंक समाप्त हो गया हो सकता है। कृपया नया अनुरोध करें।",
+      "invalidLink": "अमान्य लिंक",
+      "invalidLinkDescription": "यह पासवर्ड रीसेट लिंक अमान्य या समाप्त हो गया है।",
+      "requestNew": "नया लिंक का अनुरोध करें",
+      "successTitle": "पासवर्ड रीसेट हो गया!",
+      "successDescription": "आपका पासवर्ड सफलतापूर्वक रीसेट हो गया है। अब आप नए पासवर्ड से साइन इन कर सकते हैं।",
+      "signIn": "साइन इन",
+      "backToSignIn": "साइन इन पर वापस जाएं"
     }
   },
   "home": {

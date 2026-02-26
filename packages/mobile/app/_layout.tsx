@@ -4,6 +4,7 @@ import {
   SourceSerif4_700Bold,
 } from "@expo-google-fonts/source-serif-4";
 import { useFonts } from "expo-font";
+import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
 import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -57,6 +58,28 @@ export default function RootLayout() {
 function AppContent() {
   const { isDark } = useTheme();
   const router = useRouter();
+
+  // Deep link handling — emovo://reset-password?token=...
+  useEffect(() => {
+    const handleUrl = (event: { url: string }) => {
+      const parsed = Linking.parse(event.url);
+      if (parsed.path === "reset-password" && parsed.queryParams?.token) {
+        router.push({
+          pathname: "/(auth)/reset-password",
+          params: { token: parsed.queryParams.token as string },
+        });
+      }
+    };
+
+    // Handle URL that launched the app
+    Linking.getInitialURL().then((url) => {
+      if (url) handleUrl({ url });
+    });
+
+    // Handle URL while app is open
+    const subscription = Linking.addEventListener("url", handleUrl);
+    return () => subscription.remove();
+  }, [router]);
 
   // Notification listeners — handle taps on push notifications
   const responseListener = useRef<Notifications.EventSubscription | null>(null);

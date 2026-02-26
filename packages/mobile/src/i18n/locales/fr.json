@@ -66,6 +66,27 @@
       "checkEmail": "Vérifiez votre e-mail",
       "emailSentDescription": "Si un compte existe pour {{email}}, nous avons envoyé les instructions de réinitialisation du mot de passe.",
       "backToSignIn": "Retour à la connexion"
+    },
+    "resetPassword": {
+      "title": "Réinitialiser le mot de passe",
+      "description": "Entrez votre nouveau mot de passe ci-dessous.",
+      "newPassword": "Nouveau mot de passe",
+      "newPasswordPlaceholder": "Min. 8 caractères",
+      "confirmPassword": "Confirmer le mot de passe",
+      "confirmPasswordPlaceholder": "Retapez votre mot de passe",
+      "resetButton": "Réinitialiser",
+      "resetting": "Réinitialisation...",
+      "minLength": "Le mot de passe doit contenir au moins 8 caractères",
+      "mismatch": "Les mots de passe ne correspondent pas",
+      "error": "Échec de la réinitialisation",
+      "errorDescription": "Ce lien a peut-être expiré. Veuillez en demander un nouveau.",
+      "invalidLink": "Lien invalide",
+      "invalidLinkDescription": "Ce lien de réinitialisation est invalide ou a expiré.",
+      "requestNew": "Demander un nouveau lien",
+      "successTitle": "Mot de passe réinitialisé !",
+      "successDescription": "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.",
+      "signIn": "Se connecter",
+      "backToSignIn": "Retour à la connexion"
     }
   },
   "home": {

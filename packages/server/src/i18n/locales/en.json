@@ -1,5 +1,6 @@
 {
   "email": {
+    "greeting": "Hi {{name}},",
     "verification": {
       "subject": "Verify your Emovo account",
       "heading": "Welcome to Emovo",
@@ -13,6 +14,7 @@
       "heading": "Reset Your Password",
       "body": "We received a request to reset your password. Click the button below to choose a new one.",
       "button": "Reset Password",
+      "openInApp": "Or open in the Emovo app",
       "fallback": "If the button doesn't work, copy and paste this link into your browser:",
       "footer": "This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email."
     },

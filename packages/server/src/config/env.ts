@@ -17,6 +17,7 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default("Emovo <noreply@emovo.app>"),
   EXPO_ACCESS_TOKEN: z.string().optional(),
+  FRONTEND_URL: z.string().default("http://localhost:3001"),
 });
 
 const parsed = envSchema.safeParse(process.env);

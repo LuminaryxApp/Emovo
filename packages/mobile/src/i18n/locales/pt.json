@@ -66,6 +66,27 @@
       "checkEmail": "Verifique seu e-mail",
       "emailSentDescription": "Se existir uma conta para {{email}}, enviamos instruções para redefinição de senha.",
       "backToSignIn": "Voltar ao login"
+    },
+    "resetPassword": {
+      "title": "Redefinir Senha",
+      "description": "Digite sua nova senha abaixo.",
+      "newPassword": "Nova Senha",
+      "newPasswordPlaceholder": "Mín. 8 caracteres",
+      "confirmPassword": "Confirmar Senha",
+      "confirmPasswordPlaceholder": "Redigite sua senha",
+      "resetButton": "Redefinir Senha",
+      "resetting": "Redefinindo...",
+      "minLength": "A senha deve ter pelo menos 8 caracteres",
+      "mismatch": "As senhas não correspondem",
+      "error": "Falha ao redefinir",
+      "errorDescription": "Este link pode ter expirado. Solicite um novo.",
+      "invalidLink": "Link inválido",
+      "invalidLinkDescription": "Este link de redefinição de senha é inválido ou expirou.",
+      "requestNew": "Solicitar novo link",
+      "successTitle": "Senha redefinida!",
+      "successDescription": "Sua senha foi redefinida com sucesso. Agora você pode entrar com sua nova senha.",
+      "signIn": "Entrar",
+      "backToSignIn": "Voltar ao Login"
     }
   },
   "home": {

@@ -66,6 +66,27 @@
       "checkEmail": "Проверьте свою почту",
       "emailSentDescription": "Если аккаунт для {{email}} существует, мы отправили инструкции по сбросу пароля.",
       "backToSignIn": "Вернуться к входу"
+    },
+    "resetPassword": {
+      "title": "Сброс пароля",
+      "description": "Введите новый пароль ниже.",
+      "newPassword": "Новый пароль",
+      "newPasswordPlaceholder": "Мин. 8 символов",
+      "confirmPassword": "Подтвердите пароль",
+      "confirmPasswordPlaceholder": "Введите пароль повторно",
+      "resetButton": "Сбросить пароль",
+      "resetting": "Сброс...",
+      "minLength": "Пароль должен содержать не менее 8 символов",
+      "mismatch": "Пароли не совпадают",
+      "error": "Ошибка сброса",
+      "errorDescription": "Срок действия ссылки мог истечь. Запросите новую.",
+      "invalidLink": "Недействительная ссылка",
+      "invalidLinkDescription": "Эта ссылка для сброса пароля недействительна или истекла.",
+      "requestNew": "Запросить новую ссылку",
+      "successTitle": "Пароль сброшен!",
+      "successDescription": "Ваш пароль успешно сброшен. Теперь вы можете войти с новым паролем.",
+      "signIn": "Войти",
+      "backToSignIn": "Вернуться к входу"
     }
   },
   "home": {

@@ -73,7 +73,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         const canSend = await authService.canSendVerificationEmail(existingUser.id);
         if (canSend) {
           const token = await authService.createVerificationToken(existingUser.id);
-          await sendVerificationEmail(body.email, token, lang);
+          await sendVerificationEmail(body.email, token, lang, body.displayName);
         }
       }
       return reply.send({
@@ -94,7 +94,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       .returning({ id: users.id });
 
     const token = await authService.createVerificationToken(newUser.id);
-    await sendVerificationEmail(body.email, token, lang);
+    await sendVerificationEmail(body.email, token, lang, body.displayName);
 
     return reply.status(201).send({
       data: { message: t("api.emailSent") },
@@ -291,6 +291,7 @@ export async function authRoutes(fastify: FastifyInstance) {
         id: users.id,
         emailVerified: users.emailVerified,
         preferredLanguage: users.preferredLanguage,
+        displayName: users.displayName,
       })
       .from(users)
       .where(eq(users.email, email))
@@ -300,7 +301,7 @@ export async function authRoutes(fastify: FastifyInstance) {
       const canSend = await authService.canSendVerificationEmail(user.id);
       if (canSend) {
         const verifyToken = await authService.createVerificationToken(user.id);
-        await sendVerificationEmail(email, verifyToken, user.preferredLanguage);
+        await sendVerificationEmail(email, verifyToken, user.preferredLanguage, user.displayName);
       }
     }
 
@@ -439,20 +440,27 @@ export async function authRoutes(fastify: FastifyInstance) {
   fastify.post("/auth/forgot-password", authRateLimit, async (request, reply) => {
     const { email } = forgotPasswordSchema.parse(request.body);
 
-    // Look up user to get their language preference
+    // Look up user to get their language preference and display name
     const [user] = await db
-      .select({ preferredLanguage: users.preferredLanguage })
+      .select({
+        preferredLanguage: users.preferredLanguage,
+        displayName: users.displayName,
+        username: users.username,
+        showRealName: users.showRealName,
+      })
       .from(users)
       .where(eq(users.email, email))
       .limit(1);
 
     const lang = user?.preferredLanguage || "en";
+    // Always show display name in password reset emails (it's their own email)
+    const name = user?.displayName;
 
     const canSend = await authService.canSendResetEmail(email);
     if (canSend) {
       const result = await authService.createPasswordResetToken(email);
       if (result) {
-        await sendPasswordResetEmail(email, result.token, lang);
+        await sendPasswordResetEmail(email, result.token, lang, name);
       }
     }
 
