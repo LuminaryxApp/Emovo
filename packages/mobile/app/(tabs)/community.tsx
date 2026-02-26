@@ -707,7 +707,12 @@ export default function CommunityScreen() {
                   size={iconSizes.sm}
                   color={post.isLiked ? colors.error : colors.textTertiary}
                 />
-                <Text style={[styles.postActionCount, post.isLiked && { color: colors.error }]}>
+                <Text
+                  style={[
+                    styles.postActionCount,
+                    { color: post.isLiked ? colors.error : colors.textSecondary },
+                  ]}
+                >
                   {post.likeCount > 0 ? post.likeCount : ""}
                 </Text>
               </Pressable>
@@ -716,9 +721,9 @@ export default function CommunityScreen() {
                 <Ionicons
                   name="chatbubble-outline"
                   size={iconSizes.sm}
-                  color={colors.textTertiary}
+                  color={colors.textSecondary}
                 />
-                <Text style={[styles.postActionCount, { color: colors.textTertiary }]}>
+                <Text style={[styles.postActionCount, { color: colors.textSecondary }]}>
                   {post.commentCount > 0 ? post.commentCount : ""}
                 </Text>
               </Pressable>
@@ -731,7 +736,7 @@ export default function CommunityScreen() {
                 }}
                 style={styles.postAction}
               >
-                <Ionicons name="share-outline" size={iconSizes.sm} color={colors.textTertiary} />
+                <Ionicons name="share-outline" size={iconSizes.sm} color={colors.textSecondary} />
               </Pressable>
             </View>
           </Card>
