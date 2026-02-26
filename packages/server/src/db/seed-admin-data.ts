@@ -211,14 +211,16 @@ async function main() {
   const existingSet = new Set(existingDates.map((r) => (r.d as Date).toISOString().split("T")[0]));
   console.log(`User already has ${existingSet.size} entries`);
 
-  // Generate dates: 3 months back from today
+  // Generate dates: 3 months back from yesterday (avoid today to prevent logged_at_check)
   const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
   const startDate = new Date(now);
   startDate.setMonth(startDate.getMonth() - 3);
 
   const dates: Date[] = [];
   const cursor = new Date(startDate);
-  while (cursor <= now) {
+  while (cursor <= yesterday) {
     const dateStr = cursor.toISOString().split("T")[0];
     if (!existingSet.has(dateStr)) {
       dates.push(new Date(cursor));
@@ -237,11 +239,11 @@ async function main() {
     const clientEntryId = randomUUID();
     const moodScore = getWeightedMood();
 
-    // Random time during the day (7am-11pm)
+    // Random time during the day (7am-11pm) in UTC
     const hour = 7 + Math.floor(Math.random() * 16);
     const minute = Math.floor(Math.random() * 60);
     const loggedAt = new Date(date);
-    loggedAt.setHours(hour, minute, 0, 0);
+    loggedAt.setUTCHours(hour, minute, 0, 0);
 
     // ~70% chance of having a note
     let encryptedNote: Buffer | null = null;
