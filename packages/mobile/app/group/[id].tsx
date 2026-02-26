@@ -16,6 +16,7 @@ import {
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { getGroupConversationApi } from "../../src/services/community.api";
 import { useCommunityStore } from "../../src/stores/community.store";
 import { useTheme } from "../../src/theme/ThemeContext";
 import { spacing, radii, screenPadding, iconSizes } from "../../src/theme/spacing";
@@ -38,6 +39,7 @@ export default function GroupDetailScreen() {
   const leaveGroup = useCommunityStore((s) => s.leaveGroup);
 
   const [actionLoading, setActionLoading] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
 
   // Find group in either list
   const group: GroupWithMembership | undefined = [...myGroups, ...discoverGroups].find(
@@ -80,6 +82,22 @@ export default function GroupDetailScreen() {
       },
     ]);
   }, [id, actionLoading, leaveGroup, t]);
+
+  const handleOpenChat = useCallback(async () => {
+    if (!id || chatLoading) return;
+    setChatLoading(true);
+    try {
+      const result = await getGroupConversationApi(id);
+      router.push({
+        pathname: "/conversation/[id]",
+        params: { id: result.id, name: group?.name || "Group Chat" },
+      });
+    } catch {
+      Alert.alert(t("common.error"), t("community.groupChatError") || "Could not open group chat.");
+    } finally {
+      setChatLoading(false);
+    }
+  }, [id, chatLoading, router, group?.name, t]);
 
   // ---------------------------------------------------------------------------
   // Render: Loading state
@@ -175,7 +193,7 @@ export default function GroupDetailScreen() {
           </View>
         </Animated.View>
 
-        {/* Join / Leave button */}
+        {/* Join / Leave / Chat buttons */}
         <Animated.View
           entering={FadeInDown.duration(400).delay(400)}
           style={styles.actionContainer}
@@ -198,22 +216,40 @@ export default function GroupDetailScreen() {
               )}
             </Pressable>
           ) : (
-            <Pressable
-              style={[styles.actionButton, { borderColor: colors.error, borderWidth: 1 }]}
-              onPress={handleLeave}
-              disabled={actionLoading}
-            >
-              {actionLoading ? (
-                <ActivityIndicator size="small" color={colors.error} />
-              ) : (
-                <>
-                  <Ionicons name="exit-outline" size={18} color={colors.error} />
-                  <Text style={[styles.actionButtonText, { color: colors.error }]}>
-                    {t("community.leave")}
-                  </Text>
-                </>
-              )}
-            </Pressable>
+            <View style={styles.memberActions}>
+              <Pressable
+                style={[styles.actionButton, styles.chatButton, { backgroundColor: colors.accent }]}
+                onPress={handleOpenChat}
+                disabled={chatLoading}
+              >
+                {chatLoading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <>
+                    <Ionicons name="chatbubbles-outline" size={18} color="#FFFFFF" />
+                    <Text style={[styles.actionButtonText, { color: "#FFFFFF" }]}>
+                      {t("community.groupChat") || "Group Chat"}
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+              <Pressable
+                style={[styles.actionButton, { borderColor: colors.error, borderWidth: 1 }]}
+                onPress={handleLeave}
+                disabled={actionLoading}
+              >
+                {actionLoading ? (
+                  <ActivityIndicator size="small" color={colors.error} />
+                ) : (
+                  <>
+                    <Ionicons name="exit-outline" size={18} color={colors.error} />
+                    <Text style={[styles.actionButtonText, { color: colors.error }]}>
+                      {t("community.leave")}
+                    </Text>
+                  </>
+                )}
+              </Pressable>
+            </View>
           )}
         </Animated.View>
 
@@ -230,18 +266,30 @@ export default function GroupDetailScreen() {
           </View>
         </Animated.View>
 
-        {/* Posts section */}
-        <Animated.View entering={FadeInDown.duration(400).delay(600)} style={styles.section}>
-          <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
-            {t("community.feed").toUpperCase()}
-          </Text>
-          <View style={[styles.emptyState, { backgroundColor: colors.surface }]}>
-            <Ionicons name="newspaper-outline" size={40} color={colors.textTertiary} />
-            <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>
-              {t("community.groupPostsComingSoon")}
+        {/* Chat CTA section (for members) */}
+        {group.isMember && (
+          <Animated.View entering={FadeInDown.duration(400).delay(600)} style={styles.section}>
+            <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
+              {t("community.groupChat")?.toUpperCase() || "GROUP CHAT"}
             </Text>
-          </View>
-        </Animated.View>
+            <Pressable
+              onPress={handleOpenChat}
+              disabled={chatLoading}
+              style={[styles.chatCta, { backgroundColor: colors.surface }]}
+            >
+              <Ionicons name="chatbubbles-outline" size={28} color={colors.accent} />
+              <View style={styles.chatCtaText}>
+                <Text style={[styles.chatCtaTitle, { color: colors.text }]}>
+                  {t("community.openGroupChat") || "Open Group Chat"}
+                </Text>
+                <Text style={[styles.chatCtaSubtitle, { color: colors.textSecondary }]}>
+                  {t("community.chatWithMembers") || "Chat with group members"}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+            </Pressable>
+          </Animated.View>
+        )}
 
         <View style={{ height: spacing.xxl }} />
       </ScrollView>
@@ -398,15 +446,33 @@ const styles = StyleSheet.create({
     fontFamily: "SourceSerif4_400Regular",
   },
 
-  // Empty state
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: spacing.xl,
-    borderRadius: radii.lg,
+  memberActions: {
+    flexDirection: "row",
     gap: spacing.md,
+    width: "100%",
   },
-  emptyTitle: {
+  chatButton: {
+    flex: 1,
+  },
+
+  // Chat CTA
+  chatCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radii.lg,
+  },
+  chatCtaText: {
+    flex: 1,
+  },
+  chatCtaTitle: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
+  },
+  chatCtaSubtitle: {
+    fontSize: 13,
+    fontFamily: "SourceSerif4_400Regular",
+    marginTop: 2,
   },
 });

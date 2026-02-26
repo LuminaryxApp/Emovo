@@ -233,6 +233,21 @@ export async function communityRoutes(fastify: FastifyInstance) {
     return reply.status(204).send();
   });
 
+  /**
+   * POST /community/groups/:id/conversation
+   * Get or create the group chat conversation. User must be a member.
+   */
+  fastify.post(
+    "/community/groups/:id/conversation",
+    { preHandler: [fastify.requireNotBanned] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const result = await communityService.getOrCreateGroupConversation(request.userId, id);
+
+      return reply.status(result.isNew ? 201 : 200).send({ data: result });
+    },
+  );
+
   // =========================================================================
   //  CONVERSATIONS
   // =========================================================================

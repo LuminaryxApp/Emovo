@@ -1,5 +1,6 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useTranslation } from "react-i18next";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Dimensions } from "react-native";
 import { LineChart } from "react-native-gifted-charts";
 
 import { useTheme } from "../../theme/ThemeContext";
@@ -17,10 +18,16 @@ interface MoodLineChartProps {
   period: "week" | "month" | "year";
 }
 
+const CARD_PADDING = 20;
+const SCREEN_PADDING = 16;
+
 function formatLabel(dateStr: string, period: string): string {
   const date = new Date(dateStr);
   if (period === "year") {
     return date.toLocaleDateString(undefined, { month: "short" });
+  }
+  if (period === "month") {
+    return date.toLocaleDateString(undefined, { day: "numeric" });
   }
   return date.toLocaleDateString(undefined, { weekday: "short" });
 }
@@ -31,19 +38,32 @@ export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
 
   if (dataPoints.length < 2) return null;
 
+  // Calculate available width
+  const screenWidth = Dimensions.get("window").width;
+  const chartAreaWidth = screenWidth - SCREEN_PADDING * 2 - CARD_PADDING * 2 - 40;
+
+  // Determine spacing based on data density
+  const numPoints = dataPoints.length;
+  const idealSpacing = Math.max(20, Math.floor(chartAreaWidth / Math.max(numPoints - 1, 1)));
+  const spacing_ = Math.min(60, idealSpacing);
+
+  const labelInterval = Math.max(1, Math.floor(numPoints / 6));
+
   const lineData = dataPoints.map((dp, i) => ({
     value: dp.avgMood,
-    label:
-      i % Math.max(1, Math.floor(dataPoints.length / 5)) === 0 ? formatLabel(dp.date, period) : "",
+    label: i % labelInterval === 0 ? formatLabel(dp.date, period) : "",
     dataPointText: dp.avgMood.toFixed(1),
   }));
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
-        {t("charts.moodTrend")}
-      </Text>
       <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
+        <View style={styles.cardHeader}>
+          <View style={[styles.iconCircle, { backgroundColor: colors.primaryMuted }]}>
+            <Ionicons name="trending-up-outline" size={14} color={colors.primary} />
+          </View>
+          <Text style={[styles.sectionLabel, { color: colors.text }]}>{t("charts.moodTrend")}</Text>
+        </View>
         <View style={styles.chartWrapper}>
           <LineChart
             data={lineData}
@@ -58,8 +78,8 @@ export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
             hideRules
             isAnimated
             curved
-            height={150}
-            spacing={dataPoints.length > 10 ? 30 : 50}
+            height={160}
+            spacing={spacing_}
             textShiftY={-10}
             textColor={colors.textSecondary}
             textFontSize={10}
@@ -69,6 +89,7 @@ export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
             areaChart
             xAxisLabelTextStyle={[styles.xLabel, { color: colors.textTertiary }]}
             yAxisTextStyle={[styles.yLabel, { color: colors.textTertiary }]}
+            scrollToEnd
           />
         </View>
       </View>
@@ -78,22 +99,33 @@ export function MoodLineChart({ dataPoints, period }: MoodLineChartProps) {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.lg,
-  },
-  sectionLabel: {
-    fontSize: 11,
-    fontFamily: "SourceSerif4_600SemiBold",
-    letterSpacing: 1.5,
     marginBottom: spacing.sm,
-    marginLeft: spacing.xs,
   },
   card: {
-    borderRadius: radii.xl,
-    padding: spacing.md,
+    borderRadius: radii.xxl,
+    padding: CARD_PADDING,
     ...cardShadow(),
+    overflow: "hidden",
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  iconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionLabel: {
+    fontSize: 15,
+    fontFamily: "SourceSerif4_700Bold",
   },
   chartWrapper: {
-    alignItems: "center",
+    overflow: "hidden",
     paddingTop: spacing.xs,
   },
   xLabel: {

@@ -97,6 +97,13 @@ export async function searchUsersApi(params: { q: string; cursor?: string; limit
   return { users: data.data as UserSearchResult[], cursor: data.meta?.cursor ?? null };
 }
 
+// ── Group Conversations ──────────────────────────────────────
+
+export async function getGroupConversationApi(groupId: string) {
+  const { data } = await api.post(`/community/groups/${groupId}/conversation`);
+  return data.data as { id: string; isNew: boolean };
+}
+
 // ── Conversations / Messages ──────────────────────────────────
 
 export async function listConversationsApi(params: { cursor?: string; limit?: number }) {
@@ -104,8 +111,8 @@ export async function listConversationsApi(params: { cursor?: string; limit?: nu
   return { conversations: data.data as ConversationPreview[], cursor: data.meta?.cursor ?? null };
 }
 
-export async function createConversationApi(input: { participantIds: string[]; type?: string }) {
-  const { data } = await api.post("/community/conversations", input);
+export async function createConversationApi(participantId: string) {
+  const { data } = await api.post("/community/conversations", { participantId });
   return data.data as ConversationPreview;
 }
 

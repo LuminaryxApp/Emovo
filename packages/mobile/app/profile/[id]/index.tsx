@@ -178,7 +178,7 @@ export default function PublicProfileScreen() {
     if (!id || !profile || messageLoading) return;
     setMessageLoading(true);
     try {
-      const conversation = await createConversationApi({ participantIds: [id] });
+      const conversation = await createConversationApi(id);
       router.push({
         pathname: "/conversation/[id]",
         params: { id: conversation.id, name: getPublicName(profile) },

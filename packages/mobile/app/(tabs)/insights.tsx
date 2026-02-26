@@ -18,9 +18,9 @@ import { MoodBarChart } from "../../src/components/charts/MoodBarChart";
 import { MoodLineChart } from "../../src/components/charts/MoodLineChart";
 import { PeriodSelector } from "../../src/components/charts/PeriodSelector";
 import { TriggerPieChart } from "../../src/components/charts/TriggerPieChart";
-import { Card, Badge, ProgressBar } from "../../src/components/ui";
+import { ProgressBar } from "../../src/components/ui";
 import { useMoodStats } from "../../src/hooks/useMoodStats";
-import { moodEmojis, moodLabels, type MoodLevel } from "../../src/theme";
+import { moodEmojis, moodLabels, getMoodGradient, type MoodLevel } from "../../src/theme";
 import { useTheme } from "../../src/theme/ThemeContext";
 import { cardShadow, cardShadowStrong } from "../../src/theme/colors";
 import { spacing, radii, screenPadding, iconSizes } from "../../src/theme/spacing";
@@ -64,19 +64,37 @@ export default function InsightsScreen() {
     });
   };
 
+  // Find best mood day from trend
+  const bestDay = useMemo(() => {
+    if (!trend || trend.dataPoints.length === 0) return null;
+    let best = trend.dataPoints[0];
+    for (const dp of trend.dataPoints) {
+      if (dp.avgMood > best.avgMood) best = dp;
+    }
+    const date = new Date(best.date);
+    return {
+      label: date.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+      }),
+      mood: best.avgMood,
+    };
+  }, [trend]);
+
   // Compute insights from actual data
   const computedInsights = useMemo(() => {
     const insights: Array<{
       icon: keyof typeof Ionicons.glyphMap;
       color: string;
-      bgColor: string;
+      gradientColors: readonly [string, string];
       title: string;
       description: string;
     }> = [];
 
     if (!summary || summary.entryCount === 0) return insights;
 
-    // 1. Mood trend insight (from trend data)
+    // 1. Mood trend insight
     if (trend && trend.dataPoints.length >= 2) {
       const pts = trend.dataPoints;
       const recentHalf = pts.slice(Math.floor(pts.length / 2));
@@ -90,7 +108,9 @@ export default function InsightsScreen() {
         insights.push({
           icon: improving ? "trending-up-outline" : "trending-down-outline",
           color: improving ? colors.success : colors.error,
-          bgColor: improving ? "rgba(117, 134, 60, 0.12)" : "rgba(220, 38, 38, 0.12)",
+          gradientColors: improving
+            ? (gradients.primary as unknown as [string, string])
+            : (gradients.danger as unknown as [string, string]),
           title: improving
             ? t("insights.computed.trendUpTitle", "Mood is improving")
             : t("insights.computed.trendDownTitle", "Mood has dipped"),
@@ -108,7 +128,7 @@ export default function InsightsScreen() {
         insights.push({
           icon: "analytics-outline",
           color: colors.primary,
-          bgColor: "rgba(117, 134, 60, 0.12)",
+          gradientColors: gradients.primary as unknown as [string, string],
           title: t("insights.computed.stableTitle", "Mood is steady"),
           description: t(
             "insights.computed.stableDesc",
@@ -124,7 +144,7 @@ export default function InsightsScreen() {
       insights.push({
         icon: "bulb-outline",
         color: colors.primary,
-        bgColor: "rgba(117, 134, 60, 0.12)",
+        gradientColors: gradients.accent as unknown as [string, string],
         title: t("insights.computed.topTriggerTitle", "Top factor: {{name}}", {
           name: topTrigger.trigger.name,
         }),
@@ -143,7 +163,7 @@ export default function InsightsScreen() {
       });
     }
 
-    // 3. Distribution insight — predominant mood
+    // 3. Distribution insight
     if (summary.moodDistribution) {
       const total = summary.entryCount;
       const highMood = (summary.moodDistribution[4] || 0) + (summary.moodDistribution[5] || 0);
@@ -155,7 +175,7 @@ export default function InsightsScreen() {
         insights.push({
           icon: "sunny-outline",
           color: colors.success,
-          bgColor: "rgba(117, 134, 60, 0.12)",
+          gradientColors: ["#4A7A2E", "#75863C"] as [string, string],
           title: t("insights.computed.mostlyPositiveTitle", "Mostly positive"),
           description: t(
             "insights.computed.mostlyPositiveDesc",
@@ -167,7 +187,7 @@ export default function InsightsScreen() {
         insights.push({
           icon: "heart-outline",
           color: colors.accent,
-          bgColor: "rgba(111, 152, 184, 0.12)",
+          gradientColors: gradients.accent as unknown as [string, string],
           title: t("insights.computed.mostlyLowTitle", "Tough period"),
           description: t(
             "insights.computed.mostlyLowDesc",
@@ -179,7 +199,7 @@ export default function InsightsScreen() {
         insights.push({
           icon: "swap-horizontal-outline",
           color: colors.accent,
-          bgColor: "rgba(111, 152, 184, 0.12)",
+          gradientColors: gradients.accent as unknown as [string, string],
           title: t("insights.computed.mixedTitle", "Mixed emotions"),
           description: t(
             "insights.computed.mixedDesc",
@@ -189,12 +209,12 @@ export default function InsightsScreen() {
       }
     }
 
-    // 4. Entry count / consistency insight
+    // 4. Consistency
     if (period === "week" && summary.entryCount < 4) {
       insights.push({
         icon: "calendar-outline",
         color: colors.textSecondary,
-        bgColor: "rgba(0, 0, 0, 0.06)",
+        gradientColors: ["#8A8A8A", "#5C5C5C"] as [string, string],
         title: t("insights.computed.logMoreTitle", "Log more often"),
         description: t(
           "insights.computed.logMoreDesc",
@@ -206,7 +226,7 @@ export default function InsightsScreen() {
       insights.push({
         icon: "checkmark-circle-outline",
         color: colors.success,
-        bgColor: "rgba(117, 134, 60, 0.12)",
+        gradientColors: gradients.primary as unknown as [string, string],
         title: t("insights.computed.consistentTitle", "Great consistency"),
         description: t(
           "insights.computed.consistentDesc",
@@ -217,7 +237,7 @@ export default function InsightsScreen() {
     }
 
     return insights;
-  }, [summary, trend, triggers, period, t]);
+  }, [summary, trend, triggers, period, t, colors, gradients]);
 
   return (
     <SafeAreaView
@@ -236,19 +256,15 @@ export default function InsightsScreen() {
           />
         }
       >
-        {/* Header */}
-        <Animated.Text
-          entering={FadeIn.duration(400)}
-          style={[styles.title, { color: colors.text }]}
-        >
-          {t("insights.title")}
-        </Animated.Text>
-        <Animated.Text
-          entering={FadeIn.duration(400).delay(50)}
-          style={[styles.subtitle, { color: colors.textSecondary }]}
-        >
-          {t("insights.subtitle")}
-        </Animated.Text>
+        {/* ── Header ─────────────────────────────────────────────── */}
+        <Animated.View entering={FadeIn.duration(400)} style={styles.headerRow}>
+          <View>
+            <Text style={[styles.title, { color: colors.text }]}>{t("insights.title")}</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {t("insights.subtitle")}
+            </Text>
+          </View>
+        </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(100).springify()}>
           <PeriodSelector value={period} onChange={setPeriod} />
@@ -263,105 +279,109 @@ export default function InsightsScreen() {
           </View>
         ) : hasData ? (
           <>
-            {/* Mood Overview Card */}
+            {/* ── Hero Mood Score ─────────────────────────────── */}
             <Animated.View entering={FadeInDown.delay(200).springify()}>
-              <Card variant="elevated" padding="lg" style={styles.overviewCard}>
-                <Text style={[styles.overviewTitle, { color: colors.sectionLabel }]}>
-                  {t("insights.moodOverview")}
-                </Text>
-
-                <View style={styles.overviewContent}>
-                  {/* Left side: Average mood */}
-                  <View style={styles.overviewLeft}>
-                    <LinearGradient
-                      colors={[...gradients.heroCard]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={styles.avgMoodGradient}
-                    >
-                      <Text style={[styles.avgMoodNumber, { color: colors.textInverse }]}>
-                        {summary.avgMood.toFixed(1)}
-                      </Text>
-                      <Text style={styles.avgMoodEmoji}>
+              <LinearGradient
+                colors={[...gradients.heroCard]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.heroCard}
+              >
+                <View style={styles.heroContent}>
+                  {/* Big mood score */}
+                  <View style={styles.heroScoreSection}>
+                    <View style={styles.heroScoreCircle}>
+                      <Text style={styles.heroScoreNumber}>{summary.avgMood.toFixed(1)}</Text>
+                      <Text style={styles.heroScoreEmoji}>
                         {getMoodForScore(summary.avgMood).emoji}
                       </Text>
-                    </LinearGradient>
-                    <Text style={[styles.avgMoodLabel, { color: colors.text }]}>
-                      {t("insights.avgMood")}
-                    </Text>
-                    <Text style={[styles.avgMoodSub, { color: colors.textTertiary }]}>
-                      {t("insights.outOf5")}
-                    </Text>
-                    <Badge variant="primary" size="sm" style={styles.entriesBadge}>
-                      {`${summary.entryCount} ${t("insights.entries")}`}
-                    </Badge>
+                    </View>
+                    <Text style={styles.heroScoreLabel}>{t("insights.avgMood")}</Text>
+                    <Text style={styles.heroScoreSub}>{t("insights.outOf5")}</Text>
                   </View>
 
-                  {/* Divider */}
-                  <View style={[styles.overviewDivider, { backgroundColor: colors.border }]} />
+                  {/* Quick stats */}
+                  <View style={styles.heroStats}>
+                    <View style={styles.heroStatItem}>
+                      <Text style={styles.heroStatValue}>{summary.entryCount}</Text>
+                      <Text style={styles.heroStatLabel}>{t("insights.entries")}</Text>
+                    </View>
+                    <View
+                      style={[styles.heroStatDivider, { backgroundColor: "rgba(255,255,255,0.2)" }]}
+                    />
+                    <View style={styles.heroStatItem}>
+                      <Text style={styles.heroStatValue}>{PERIOD_LABELS[period]}</Text>
+                      <Text style={styles.heroStatLabel}>{t("insights.period", "Period")}</Text>
+                    </View>
+                    {bestDay && (
+                      <>
+                        <View
+                          style={[
+                            styles.heroStatDivider,
+                            { backgroundColor: "rgba(255,255,255,0.2)" },
+                          ]}
+                        />
+                        <View style={styles.heroStatItem}>
+                          <Text style={styles.heroStatValue}>
+                            {moodEmojis[Math.round(bestDay.mood) as MoodLevel] || "😊"}
+                          </Text>
+                          <Text style={styles.heroStatLabel}>
+                            {t("insights.bestDay", "Best Day")}
+                          </Text>
+                        </View>
+                      </>
+                    )}
+                  </View>
+                </View>
+              </LinearGradient>
+            </Animated.View>
 
-                  {/* Right side: Mood distribution */}
-                  <View style={styles.overviewRight}>
-                    <Text style={[styles.distributionTitle, { color: colors.sectionLabel }]}>
-                      {t("insights.moodDistribution")}
-                    </Text>
-                    {getMoodDistributionRows().map((row) => (
-                      <View key={row.level} style={styles.distRow}>
-                        <Text style={styles.distEmoji}>{moodEmojis[row.level]}</Text>
+            {/* ── Mood Distribution ──────────────────────────── */}
+            <Animated.View entering={FadeInDown.delay(300).springify()}>
+              <View style={[styles.sectionCard, { backgroundColor: colors.cardBackground }]}>
+                <View style={styles.sectionHeader}>
+                  <View
+                    style={[styles.sectionIconCircle, { backgroundColor: colors.primaryMuted }]}
+                  >
+                    <Ionicons name="bar-chart-outline" size={16} color={colors.primary} />
+                  </View>
+                  <Text style={[styles.sectionTitle, { color: colors.text }]}>
+                    {t("insights.moodDistribution")}
+                  </Text>
+                </View>
+
+                {getMoodDistributionRows().map((row) => (
+                  <View key={row.level} style={styles.distRow}>
+                    <Text style={styles.distEmoji}>{moodEmojis[row.level]}</Text>
+                    <View style={styles.distBarSection}>
+                      <View style={styles.distLabelRow}>
                         <Text style={[styles.distLabel, { color: colors.textSecondary }]}>
                           {moodLabels[row.level]}
                         </Text>
-                        <View style={styles.distBarWrap}>
-                          <ProgressBar
-                            progress={row.percentage}
-                            height={6}
-                            color={colors.mood[row.level]}
-                          />
-                        </View>
                         <Text style={[styles.distPercent, { color: colors.text }]}>
                           {Math.round(row.percentage)}%
                         </Text>
                       </View>
-                    ))}
+                      <ProgressBar
+                        progress={row.percentage}
+                        gradient={getMoodGradient(row.level)}
+                        height={8}
+                      />
+                    </View>
+                    <Text style={[styles.distCount, { color: colors.textTertiary }]}>
+                      {row.count}
+                    </Text>
                   </View>
-                </View>
-              </Card>
+                ))}
+              </View>
             </Animated.View>
 
-            {/* Stats Row */}
-            <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.statsRow}>
-              <LinearGradient
-                colors={[...gradients.warmSurface]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.statCard}
-              >
-                <Text style={[styles.statValue, { color: colors.text }]}>{summary.entryCount}</Text>
-                <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
-                  {t("insights.entries")}
-                </Text>
-              </LinearGradient>
-              <LinearGradient
-                colors={[...gradients.warmSurface]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={styles.statCard}
-              >
-                <Text style={[styles.statValue, { color: colors.text }]}>
-                  {getMoodForScore(summary.avgMood).emoji}
-                </Text>
-                <Text style={[styles.statLabel, { color: colors.textTertiary }]}>
-                  {PERIOD_LABELS[period]}
-                </Text>
-              </LinearGradient>
-            </Animated.View>
-
-            {/* Mood Distribution Chart */}
+            {/* ── Mood Distribution Chart ─────────────────────── */}
             <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.chartSection}>
               <MoodBarChart distribution={summary.moodDistribution} />
             </Animated.View>
 
-            {/* Mood Trend Chart */}
+            {/* ── Mood Trend Chart ────────────────────────────── */}
             {trend && trend.dataPoints.length >= 2 && (
               <Animated.View
                 entering={FadeInDown.delay(500).springify()}
@@ -371,7 +391,7 @@ export default function InsightsScreen() {
               </Animated.View>
             )}
 
-            {/* Triggers Pie Chart */}
+            {/* ── Triggers Chart ──────────────────────────────── */}
             {triggers && triggers.length > 0 && (
               <Animated.View
                 entering={FadeInDown.delay(600).springify()}
@@ -381,27 +401,48 @@ export default function InsightsScreen() {
               </Animated.View>
             )}
 
-            {/* Data-Driven Insights Section */}
+            {/* ── AI Insights ─────────────────────────────────── */}
             {computedInsights.length > 0 && (
-              <Animated.View entering={FadeInDown.delay(700).springify()} style={styles.aiSection}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  {t("insights.aiInsights")}
-                </Text>
-                <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-                  {t("insights.aiInsightsSubtitle")}
-                </Text>
+              <Animated.View
+                entering={FadeInDown.delay(700).springify()}
+                style={styles.insightsSection}
+              >
+                <View style={styles.insightsHeader}>
+                  <View
+                    style={[styles.sectionIconCircle, { backgroundColor: colors.primaryMuted }]}
+                  >
+                    <Ionicons name="sparkles-outline" size={16} color={colors.primary} />
+                  </View>
+                  <View>
+                    <Text style={[styles.insightsTitle, { color: colors.text }]}>
+                      {t("insights.aiInsights")}
+                    </Text>
+                    <Text style={[styles.insightsSubtitle, { color: colors.textSecondary }]}>
+                      {t("insights.aiInsightsSubtitle")}
+                    </Text>
+                  </View>
+                </View>
 
                 {computedInsights.map((insight, index) => (
                   <Animated.View
                     key={insight.title}
                     entering={FadeInDown.delay(750 + index * 80).springify()}
                   >
-                    <Card variant="elevated" padding="md" style={styles.insightCard}>
-                      <View style={styles.insightRow}>
+                    <View style={[styles.insightCard, { backgroundColor: colors.cardBackground }]}>
+                      <LinearGradient
+                        colors={[...insight.gradientColors]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                        style={styles.insightAccentBar}
+                      />
+                      <View style={styles.insightBody}>
                         <View
-                          style={[styles.insightIconCircle, { backgroundColor: insight.bgColor }]}
+                          style={[
+                            styles.insightIconCircle,
+                            { backgroundColor: insight.color + "18" },
+                          ]}
                         >
-                          <Ionicons name={insight.icon} size={iconSizes.md} color={insight.color} />
+                          <Ionicons name={insight.icon} size={iconSizes.sm} color={insight.color} />
                         </View>
                         <View style={styles.insightTextWrap}>
                           <Text style={[styles.insightTitle, { color: colors.text }]}>
@@ -412,15 +453,25 @@ export default function InsightsScreen() {
                           </Text>
                         </View>
                       </View>
-                    </Card>
+                    </View>
                   </Animated.View>
                 ))}
               </Animated.View>
             )}
+
+            {/* Bottom spacer */}
+            <View style={{ height: spacing.xxl }} />
           </>
         ) : (
           <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>📊</Text>
+            <LinearGradient
+              colors={[...gradients.heroCard]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.emptyIconCircle}
+            >
+              <Ionicons name="analytics-outline" size={36} color="#FFFFFF" />
+            </LinearGradient>
             <Text style={[styles.emptyTitle, { color: colors.text }]}>{t("insights.noData")}</Text>
             <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
               {t("insights.noDataSubtitle")}
@@ -438,18 +489,22 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: screenPadding.horizontal,
-    paddingBottom: spacing.xxl,
+    paddingBottom: spacing.xxl + 40,
+  },
+
+  // ── Header ────────────────────────────────────────────
+  headerRow: {
+    paddingTop: spacing.md,
+    marginBottom: spacing.sm,
   },
   title: {
     fontSize: 28,
     fontFamily: "SourceSerif4_700Bold",
-    paddingTop: spacing.md,
     marginBottom: spacing.xs,
   },
   subtitle: {
     fontSize: 14,
     fontFamily: "SourceSerif4_400Regular",
-    marginBottom: spacing.md,
     lineHeight: 20,
   },
   periodHint: {
@@ -463,146 +518,180 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // Mood Overview Card
-  overviewCard: {
+  // ── Hero Mood Score Card ──────────────────────────────
+  heroCard: {
+    borderRadius: radii.xxl,
     marginTop: spacing.lg,
-  },
-  overviewTitle: {
-    fontSize: 11,
-    fontFamily: "SourceSerif4_600SemiBold",
-    letterSpacing: 1,
-    textTransform: "uppercase",
-    marginBottom: spacing.md,
-  },
-  overviewContent: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-  },
-  overviewLeft: {
-    alignItems: "center",
-    paddingRight: spacing.md,
-    minWidth: 110,
-  },
-  avgMoodGradient: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    alignItems: "center",
-    justifyContent: "center",
+    overflow: "hidden",
     ...cardShadowStrong(),
   },
-  avgMoodNumber: {
-    fontSize: 28,
-    fontFamily: "SourceSerif4_700Bold",
-    lineHeight: 32,
+  heroContent: {
+    padding: spacing.lg,
+    alignItems: "center",
   },
-  avgMoodEmoji: {
-    fontSize: 18,
+  heroScoreSection: {
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  },
+  heroScoreCircle: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderWidth: 3,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.sm,
+  },
+  heroScoreNumber: {
+    fontSize: 36,
+    fontFamily: "SourceSerif4_700Bold",
+    color: "#FFFFFF",
+    lineHeight: 40,
+  },
+  heroScoreEmoji: {
+    fontSize: 22,
     marginTop: 2,
   },
-  avgMoodLabel: {
-    fontSize: 13,
+  heroScoreLabel: {
+    fontSize: 14,
     fontFamily: "SourceSerif4_600SemiBold",
-    marginTop: spacing.sm,
+    color: "rgba(255, 255, 255, 0.9)",
   },
-  avgMoodSub: {
+  heroScoreSub: {
+    fontSize: 12,
+    fontFamily: "SourceSerif4_400Regular",
+    color: "rgba(255, 255, 255, 0.6)",
+    marginTop: 2,
+  },
+  heroStats: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    borderRadius: radii.lg,
+    paddingVertical: spacing.sm + 4,
+    paddingHorizontal: spacing.md,
+    width: "100%",
+  },
+  heroStatItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  heroStatValue: {
+    fontSize: 16,
+    fontFamily: "SourceSerif4_700Bold",
+    color: "#FFFFFF",
+  },
+  heroStatLabel: {
     fontSize: 11,
     fontFamily: "SourceSerif4_400Regular",
+    color: "rgba(255, 255, 255, 0.7)",
     marginTop: 2,
   },
-  entriesBadge: {
-    marginTop: spacing.sm,
-  },
-  overviewDivider: {
+  heroStatDivider: {
     width: 1,
-    alignSelf: "stretch",
-    marginVertical: spacing.xs,
+    height: 28,
   },
-  overviewRight: {
-    flex: 1,
-    paddingLeft: spacing.md,
+
+  // ── Section Card (Mood Distribution) ──────────────────
+  sectionCard: {
+    borderRadius: radii.xxl,
+    padding: spacing.lg,
+    marginTop: spacing.lg,
+    ...cardShadow(),
   },
-  distributionTitle: {
-    fontSize: 11,
-    fontFamily: "SourceSerif4_600SemiBold",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-    marginBottom: spacing.sm,
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.md + 4,
+    gap: spacing.sm + 2,
+  },
+  sectionIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: "SourceSerif4_700Bold",
   },
   distRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: spacing.sm + 4,
+    gap: spacing.sm,
   },
   distEmoji: {
-    fontSize: 14,
-    width: 22,
+    fontSize: 20,
+    width: 28,
+    textAlign: "center",
+  },
+  distBarSection: {
+    flex: 1,
+  },
+  distLabelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
   },
   distLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: "SourceSerif4_400Regular",
-    width: 48,
-  },
-  distBarWrap: {
-    flex: 1,
-    marginHorizontal: spacing.xs,
   },
   distPercent: {
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: "SourceSerif4_600SemiBold",
-    width: 32,
+  },
+  distCount: {
+    fontSize: 12,
+    fontFamily: "SourceSerif4_600SemiBold",
+    width: 24,
     textAlign: "right",
   },
 
-  // Stats Row
-  statsRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: spacing.md,
-  },
-  statCard: {
-    flex: 1,
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    alignItems: "center",
-    ...cardShadow(),
-  },
-  statValue: {
-    fontSize: 24,
-    fontFamily: "SourceSerif4_700Bold",
-  },
-  statLabel: {
-    fontSize: 12,
-    fontFamily: "SourceSerif4_400Regular",
-    marginTop: spacing.xs,
-  },
-
-  // Chart Sections
+  // ── Charts ────────────────────────────────────────────
   chartSection: {
     marginTop: spacing.lg,
   },
 
-  // AI Insights Section
-  aiSection: {
+  // ── AI Insights ───────────────────────────────────────
+  insightsSection: {
     marginTop: spacing.xl,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontFamily: "SourceSerif4_700Bold",
-    marginBottom: spacing.xs,
-  },
-  sectionSubtitle: {
-    fontSize: 13,
-    fontFamily: "SourceSerif4_400Regular",
-    marginBottom: spacing.md,
-    lineHeight: 18,
-  },
-  insightCard: {
-    marginBottom: spacing.sm,
-  },
-  insightRow: {
+  insightsHeader: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: spacing.md,
+    gap: spacing.sm + 2,
+  },
+  insightsTitle: {
+    fontSize: 18,
+    fontFamily: "SourceSerif4_700Bold",
+  },
+  insightsSubtitle: {
+    fontSize: 12,
+    fontFamily: "SourceSerif4_400Regular",
+    marginTop: 1,
+  },
+  insightCard: {
+    flexDirection: "row",
+    borderRadius: radii.xl,
+    marginBottom: spacing.sm + 2,
+    overflow: "hidden",
+    ...cardShadow(),
+  },
+  insightAccentBar: {
+    width: 4,
+  },
+  insightBody: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: spacing.md,
+    gap: spacing.md,
   },
   insightIconCircle: {
     width: 44,
@@ -610,7 +699,6 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: spacing.md,
   },
   insightTextWrap: {
     flex: 1,
@@ -618,7 +706,7 @@ const styles = StyleSheet.create({
   insightTitle: {
     fontSize: 15,
     fontFamily: "SourceSerif4_600SemiBold",
-    marginBottom: 2,
+    marginBottom: 3,
   },
   insightDesc: {
     fontSize: 13,
@@ -626,14 +714,18 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // Empty State
+  // ── Empty State ───────────────────────────────────────
   emptyContainer: {
     alignItems: "center",
     paddingVertical: spacing.xxl * 2,
   },
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: spacing.md,
+  emptyIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.lg,
   },
   emptyTitle: {
     fontSize: 20,

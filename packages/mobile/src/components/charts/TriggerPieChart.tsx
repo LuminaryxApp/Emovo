@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { View, Text, StyleSheet } from "react-native";
@@ -47,31 +48,38 @@ export function TriggerPieChart({ triggers }: TriggerPieChartProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
-        {t("charts.triggerBreakdown")}
-      </Text>
       <View style={[styles.card, { backgroundColor: colors.cardBackground }]}>
+        <View style={styles.cardHeader}>
+          <View style={[styles.iconCircle, { backgroundColor: colors.primaryMuted }]}>
+            <Ionicons name="pie-chart-outline" size={14} color={colors.primary} />
+          </View>
+          <Text style={[styles.sectionLabel, { color: colors.text }]}>
+            {t("charts.triggerBreakdown")}
+          </Text>
+        </View>
         <View style={styles.chartRow}>
-          <PieChart
-            data={pieData}
-            radius={80}
-            innerRadius={50}
-            textColor={colors.textInverse}
-            textSize={10}
-            showText
-            focusOnPress
-            innerCircleColor={colors.cardBackground}
-            centerLabelComponent={() => (
-              <View style={styles.centerLabel}>
-                <Text style={[styles.centerCount, { color: colors.text }]}>{total}</Text>
-                <Text style={[styles.centerText, { color: colors.textTertiary }]}>
-                  {t("charts.total")}
-                </Text>
-              </View>
-            )}
-          />
+          <View style={styles.pieWrap}>
+            <PieChart
+              data={pieData}
+              radius={75}
+              innerRadius={45}
+              textColor={colors.textInverse}
+              textSize={10}
+              showText
+              focusOnPress
+              innerCircleColor={colors.cardBackground}
+              centerLabelComponent={() => (
+                <View style={styles.centerLabel}>
+                  <Text style={[styles.centerCount, { color: colors.text }]}>{total}</Text>
+                  <Text style={[styles.centerText, { color: colors.textTertiary }]}>
+                    {t("charts.total")}
+                  </Text>
+                </View>
+              )}
+            />
+          </View>
           <View style={styles.legend}>
-            {triggers.slice(0, 8).map((item, i) => (
+            {triggers.slice(0, 6).map((item, i) => (
               <View key={item.trigger.name} style={styles.legendRow}>
                 <View
                   style={[styles.legendDot, { backgroundColor: pieColors[i % pieColors.length] }]}
@@ -93,30 +101,44 @@ export function TriggerPieChart({ triggers }: TriggerPieChartProps) {
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: spacing.lg,
-  },
-  sectionLabel: {
-    fontSize: 11,
-    fontFamily: "SourceSerif4_600SemiBold",
-    letterSpacing: 1.5,
     marginBottom: spacing.sm,
-    marginLeft: spacing.xs,
   },
   card: {
-    borderRadius: radii.xl,
-    padding: spacing.md,
+    borderRadius: radii.xxl,
+    padding: 20,
     ...cardShadow(),
+  },
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  iconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sectionLabel: {
+    fontSize: 15,
+    fontFamily: "SourceSerif4_700Bold",
   },
   chartRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.md,
   },
+  pieWrap: {
+    // Prevent pie chart from overflowing
+    overflow: "hidden",
+  },
   centerLabel: {
     alignItems: "center",
   },
   centerCount: {
-    fontSize: 36,
+    fontSize: 28,
     fontFamily: "SourceSerif4_700Bold",
   },
   centerText: {
@@ -133,9 +155,9 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     marginRight: spacing.sm,
   },
   legendName: {

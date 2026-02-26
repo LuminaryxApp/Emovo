@@ -630,6 +630,80 @@ export class CommunityService {
   }
 
   // =======================================================================
+  //  GROUP CONVERSATIONS
+  // =======================================================================
+
+  /**
+   * Get or create a group conversation. User must be a member of the group.
+   * Auto-adds the user as a conversation participant if not already.
+   */
+  async getOrCreateGroupConversation(userId: string, groupId: string) {
+    // Verify user is a member of the group
+    const [membership] = await db
+      .select({ id: groupMembers.id })
+      .from(groupMembers)
+      .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.userId, userId)))
+      .limit(1);
+
+    if (!membership) {
+      throw new ForbiddenError("You must be a member of this group to access chat");
+    }
+
+    // Check if a group conversation already exists
+    const [existingConv] = await db
+      .select({ id: conversations.id })
+      .from(conversations)
+      .where(and(eq(conversations.groupId, groupId), eq(conversations.type, "group")))
+      .limit(1);
+
+    if (existingConv) {
+      // Ensure user is a participant (they might have left and rejoined the group)
+      const [existingParticipant] = await db
+        .select({ id: conversationParticipants.id })
+        .from(conversationParticipants)
+        .where(
+          and(
+            eq(conversationParticipants.conversationId, existingConv.id),
+            eq(conversationParticipants.userId, userId),
+          ),
+        )
+        .limit(1);
+
+      if (!existingParticipant) {
+        await db
+          .insert(conversationParticipants)
+          .values({ conversationId: existingConv.id, userId })
+          .onConflictDoNothing();
+      }
+
+      return { id: existingConv.id, isNew: false };
+    }
+
+    // Create new group conversation
+    const [conversation] = await db
+      .insert(conversations)
+      .values({ type: "group", groupId })
+      .returning();
+
+    // Add all current group members as participants
+    const members = await db
+      .select({ userId: groupMembers.userId })
+      .from(groupMembers)
+      .where(eq(groupMembers.groupId, groupId));
+
+    if (members.length > 0) {
+      await db.insert(conversationParticipants).values(
+        members.map((m) => ({
+          conversationId: conversation.id,
+          userId: m.userId,
+        })),
+      );
+    }
+
+    return { id: conversation.id, isNew: true };
+  }
+
+  // =======================================================================
   //  CONVERSATIONS
   // =======================================================================
 
@@ -776,10 +850,26 @@ export class CommunityService {
       unreadMap.set(row.conversation_id, row.unread_count);
     }
 
+    // Get group names for group conversations
+    const groupIds = convRows.filter((c) => c.groupId).map((c) => c.groupId!);
+    const groupNameMap = new Map<string, string>();
+    if (groupIds.length > 0) {
+      const groupRows = await db
+        .select({ id: groups.id, name: groups.name })
+        .from(groups)
+        .where(inArray(groups.id, groupIds));
+      for (const g of groupRows) {
+        groupNameMap.set(g.id, g.name);
+      }
+    }
+
     return convRows.map((conv) => {
       const participants = participantsByConv.get(conv.id) || [];
       const lastMsg = lastMsgMap.get(conv.id) || null;
-      const name = participants.map((p) => p.displayName).join(", ") || "Conversation";
+      const name =
+        conv.type === "group" && conv.groupId
+          ? groupNameMap.get(conv.groupId) || "Group"
+          : participants.map((p) => p.displayName).join(", ") || "Conversation";
 
       return {
         id: conv.id,

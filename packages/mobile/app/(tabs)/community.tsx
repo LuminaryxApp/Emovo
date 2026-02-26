@@ -481,15 +481,18 @@ export default function CommunityScreen() {
   }, [newMsgSearch, showNewMessage]);
 
   const handleStartConversation = useCallback(
-    async (userId: string) => {
+    async (userId: string, userName?: string) => {
       if (isCreatingConvo) return;
       setIsCreatingConvo(true);
       try {
-        const convo = await createConversationApi({ participantIds: [userId] });
+        const convo = await createConversationApi(userId);
         setShowNewMessage(false);
         setNewMsgSearch("");
         setNewMsgResults([]);
-        router.push(`/conversation/${convo.id}`);
+        router.push({
+          pathname: "/conversation/[id]",
+          params: { id: convo.id, name: userName || convo.name || "Conversation" },
+        });
       } catch {
         Alert.alert(
           t("common.error"),
@@ -962,7 +965,12 @@ export default function CommunityScreen() {
     return (
       <Animated.View key={convo.id} entering={FadeInDown.delay(150 + index * 50).duration(400)}>
         <Pressable
-          onPress={() => router.push(`/conversation/${convo.id}`)}
+          onPress={() =>
+            router.push({
+              pathname: "/conversation/[id]",
+              params: { id: convo.id, name: displayName },
+            })
+          }
           style={[styles.conversationItem, { borderBottomColor: colors.borderLight }]}
         >
           {isGroup ? (
@@ -1069,7 +1077,12 @@ export default function CommunityScreen() {
               {onlineConversations.map((c) => (
                 <Pressable
                   key={c.id}
-                  onPress={() => router.push(`/conversation/${c.id}`)}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/conversation/[id]",
+                      params: { id: c.id, name: c.name || "User" },
+                    })
+                  }
                   style={styles.onlineItem}
                 >
                   <View style={styles.onlineAvatarWrap}>
@@ -1485,7 +1498,7 @@ export default function CommunityScreen() {
                   keyboardShouldPersistTaps="handled"
                   renderItem={({ item }) => (
                     <Pressable
-                      onPress={() => handleStartConversation(item.id)}
+                      onPress={() => handleStartConversation(item.id, getPublicName(item))}
                       disabled={isCreatingConvo}
                       style={[styles.conversationItem, { borderBottomColor: colors.borderLight }]}
                     >

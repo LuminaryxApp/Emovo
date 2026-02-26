@@ -93,6 +93,12 @@ export async function leaveGroupApi(id: string) {
   await api.delete(`/community/groups/${id}/leave`);
 }
 
+// Group Conversations
+export async function getGroupConversationApi(groupId: string) {
+  const { data } = await api.post(`/community/groups/${groupId}/conversation`);
+  return data.data as { id: string; isNew: boolean };
+}
+
 // Conversations / Messages
 export async function listConversationsApi(params: { cursor?: string; limit?: number }) {
   const { data } = await api.get("/community/conversations", { params });

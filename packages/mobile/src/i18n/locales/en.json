@@ -272,6 +272,10 @@
     "reportFailed": "Failed to submit report. Please try again.",
     "groupMembers": "{{count}} members",
     "groupPostsComingSoon": "Group posts coming soon",
+    "groupChat": "Group Chat",
+    "openGroupChat": "Open Group Chat",
+    "chatWithMembers": "Chat with group members",
+    "groupChatError": "Could not open group chat. Please try again.",
     "publicGroup": "Public Group",
     "privateGroup": "Private Group"
   },

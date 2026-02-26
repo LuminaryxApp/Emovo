@@ -84,7 +84,7 @@ interface CommunityState {
 
   // Conversation actions
   fetchConversations: () => Promise<void>;
-  createConversation: (participantIds: string[]) => Promise<ConversationPreview>;
+  createConversation: (participantId: string) => Promise<ConversationPreview>;
   markAsRead: (conversationId: string) => Promise<void>;
 
   // Search actions
@@ -294,8 +294,8 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     }
   },
 
-  createConversation: async (participantIds) => {
-    const conversation = await createConversationApi({ participantIds });
+  createConversation: async (participantId) => {
+    const conversation = await createConversationApi(participantId);
     set((state) => ({ conversations: [conversation, ...state.conversations] }));
     return conversation;
   },
