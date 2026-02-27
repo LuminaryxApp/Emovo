@@ -105,7 +105,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.xxl,
     padding: CARD_PADDING,
     ...cardShadow(),
-    overflow: "hidden",
   },
   cardHeader: {
     flexDirection: "row",
@@ -125,8 +124,7 @@ const styles = StyleSheet.create({
     fontFamily: "SourceSerif4_700Bold",
   },
   chartWrapper: {
-    overflow: "hidden",
-    paddingTop: spacing.xs,
+    paddingTop: spacing.md,
   },
   xLabel: {
     fontSize: 11,

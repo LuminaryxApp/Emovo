@@ -131,8 +131,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   pieWrap: {
-    // Prevent pie chart from overflowing
-    overflow: "hidden",
+    // Give the pie chart room to render without clipping
+    padding: 4,
   },
   centerLabel: {
     alignItems: "center",

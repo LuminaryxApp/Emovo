@@ -105,8 +105,7 @@ const styles = StyleSheet.create({
   },
   chartWrapper: {
     alignItems: "center",
-    overflow: "visible",
-    paddingTop: spacing.sm,
+    paddingTop: spacing.lg,
     paddingHorizontal: CHART_HORIZONTAL_PADDING,
   },
   xLabel: {
