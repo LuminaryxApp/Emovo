@@ -1572,7 +1572,15 @@ export default function CommunityScreen() {
                       disabled={isCreatingConvo}
                       style={[styles.conversationItem, { borderBottomColor: colors.borderLight }]}
                     >
-                      <Avatar name={item.displayName} size="md" />
+                      <Avatar
+                        name={item.displayName}
+                        size="md"
+                        uri={
+                          item.avatarBase64
+                            ? `data:image/jpeg;base64,${item.avatarBase64}`
+                            : undefined
+                        }
+                      />
                       <View style={styles.conversationInfo}>
                         <View style={{ flexDirection: "row", alignItems: "center" }}>
                           <Text style={[styles.conversationName, { color: colors.text }]}>

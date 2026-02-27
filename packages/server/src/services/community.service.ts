@@ -455,7 +455,9 @@ export class CommunityService {
     return {
       ...group,
       createdAt: group.createdAt.toISOString(),
+      isMember: true,
       role: "admin" as const,
+      unreadCount: 0,
     };
   }
 

@@ -293,7 +293,9 @@
     "remove": "Remove",
     "admin": "Admin",
     "gradientLabel": "COLOR THEME",
-    "membersList": "Members"
+    "membersList": "Members",
+    "noUsersFound": "No users found",
+    "conversationError": "Could not start conversation. Please try again."
   },
   "charts": {
     "moodDistribution": "MOOD DISTRIBUTION",
