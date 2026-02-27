@@ -2,9 +2,10 @@ import type {
   CreatePostInput,
   CreateCommentInput,
   CreateGroupInput,
+  UpdateGroupInput,
   SendMessageInput,
 } from "@emovo/shared";
-import { eq, and, sql, desc, ne, ilike, notInArray, inArray, isNull } from "drizzle-orm";
+import { eq, and, sql, desc, asc, ne, ilike, notInArray, inArray, isNull } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 
 import { db } from "../config/database.js";
@@ -710,6 +711,206 @@ export class CommunityService {
     }
 
     return { id: conversation.id, isNew: true };
+  }
+
+  // =======================================================================
+  //  GROUP MANAGEMENT
+  // =======================================================================
+
+  /**
+   * List members of a group (paginated by joinedAt ascending).
+   * The requesting user must be a member.
+   */
+  async listGroupMembers(
+    userId: string,
+    groupId: string,
+    options: { cursor?: string; limit: number },
+  ) {
+    // Verify membership
+    const [membership] = await db
+      .select({ id: groupMembers.id })
+      .from(groupMembers)
+      .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.userId, userId)))
+      .limit(1);
+
+    if (!membership) throw new ForbiddenError("You must be a member to view the member list");
+
+    const conditions: SQL[] = [eq(groupMembers.groupId, groupId)];
+
+    if (options.cursor) {
+      const decoded = decodeCursor(options.cursor);
+      if (decoded) {
+        conditions.push(
+          sql`(${groupMembers.joinedAt}, ${groupMembers.id}) > (${decoded.createdAt}::timestamptz, ${decoded.id}::uuid)`,
+        );
+      }
+    }
+
+    const rows = await db
+      .select({
+        memberId: groupMembers.id,
+        userId: groupMembers.userId,
+        role: groupMembers.role,
+        joinedAt: groupMembers.joinedAt,
+        displayName: users.displayName,
+        username: users.username,
+        showRealName: users.showRealName,
+        avatarBase64: users.avatarBase64,
+        verificationTier: users.verificationTier,
+      })
+      .from(groupMembers)
+      .innerJoin(users, eq(groupMembers.userId, users.id))
+      .where(and(...conditions))
+      .orderBy(asc(groupMembers.joinedAt), asc(groupMembers.id))
+      .limit(options.limit + 1);
+
+    const hasMore = rows.length > options.limit;
+    const pageRows = hasMore ? rows.slice(0, options.limit) : rows;
+
+    const data = pageRows.map((row) => ({
+      id: row.memberId,
+      userId: row.userId,
+      displayName: getPublicName(row),
+      username: row.username,
+      showRealName: row.showRealName,
+      avatarBase64: row.avatarBase64,
+      verificationTier: row.verificationTier,
+      role: row.role,
+      joinedAt: row.joinedAt.toISOString(),
+    }));
+
+    const nextCursor = hasMore
+      ? encodeCursor({
+          createdAt: pageRows[pageRows.length - 1].joinedAt.toISOString(),
+          id: pageRows[pageRows.length - 1].memberId,
+        })
+      : null;
+
+    return { members: data, nextCursor };
+  }
+
+  /**
+   * Update a group. Only the group admin may update.
+   */
+  async updateGroup(userId: string, groupId: string, input: UpdateGroupInput) {
+    // Verify admin
+    const [membership] = await db
+      .select({ role: groupMembers.role })
+      .from(groupMembers)
+      .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.userId, userId)))
+      .limit(1);
+
+    if (!membership) throw new NotFoundError("Group not found");
+    if (membership.role !== "admin") throw new ForbiddenError("Only admins can edit the group");
+
+    const setFields: Record<string, unknown> = {};
+    if (input.name !== undefined) setFields.name = input.name;
+    if (input.description !== undefined) setFields.description = input.description;
+    if (input.icon !== undefined) setFields.icon = input.icon;
+    if (input.gradientStart !== undefined) setFields.gradientStart = input.gradientStart;
+    if (input.gradientEnd !== undefined) setFields.gradientEnd = input.gradientEnd;
+
+    if (Object.keys(setFields).length === 0) {
+      throw new AppError("VALIDATION_FAILED", "No fields to update", 400);
+    }
+
+    const [updated] = await db
+      .update(groups)
+      .set(setFields)
+      .where(eq(groups.id, groupId))
+      .returning();
+
+    return {
+      id: updated.id,
+      name: updated.name,
+      description: updated.description,
+      icon: updated.icon,
+      gradientStart: updated.gradientStart,
+      gradientEnd: updated.gradientEnd,
+      isPublic: updated.isPublic,
+      memberCount: updated.memberCount,
+      createdBy: updated.createdBy,
+      createdAt: updated.createdAt.toISOString(),
+    };
+  }
+
+  /**
+   * Delete a group. Only the group admin may delete.
+   * FK cascades handle group_members, conversations, messages.
+   */
+  async deleteGroup(userId: string, groupId: string) {
+    // Verify admin
+    const [membership] = await db
+      .select({ role: groupMembers.role })
+      .from(groupMembers)
+      .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.userId, userId)))
+      .limit(1);
+
+    if (!membership) throw new NotFoundError("Group not found");
+    if (membership.role !== "admin") throw new ForbiddenError("Only admins can delete the group");
+
+    await db.delete(groups).where(eq(groups.id, groupId));
+  }
+
+  /**
+   * Remove a member from a group. Admin only.
+   * Cannot remove yourself or other admins.
+   */
+  async removeMember(adminUserId: string, groupId: string, targetUserId: string) {
+    if (adminUserId === targetUserId) {
+      throw new AppError("VALIDATION_FAILED", "Cannot remove yourself. Use leave instead.", 400);
+    }
+
+    // Verify caller is admin
+    const [adminMembership] = await db
+      .select({ role: groupMembers.role })
+      .from(groupMembers)
+      .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.userId, adminUserId)))
+      .limit(1);
+
+    if (!adminMembership) throw new NotFoundError("Group not found");
+    if (adminMembership.role !== "admin") {
+      throw new ForbiddenError("Only admins can remove members");
+    }
+
+    // Get target membership
+    const [targetMembership] = await db
+      .select({ id: groupMembers.id, role: groupMembers.role })
+      .from(groupMembers)
+      .where(and(eq(groupMembers.groupId, groupId), eq(groupMembers.userId, targetUserId)))
+      .limit(1);
+
+    if (!targetMembership) throw new NotFoundError("Member not found in this group");
+    if (targetMembership.role === "admin") {
+      throw new ForbiddenError("Cannot remove another admin");
+    }
+
+    // Remove from group
+    await db.delete(groupMembers).where(eq(groupMembers.id, targetMembership.id));
+
+    // Decrement member count
+    await db
+      .update(groups)
+      .set({ memberCount: sql`GREATEST(${groups.memberCount} - 1, 0)` })
+      .where(eq(groups.id, groupId));
+
+    // Also remove from group conversation if exists
+    const [groupConv] = await db
+      .select({ id: conversations.id })
+      .from(conversations)
+      .where(and(eq(conversations.groupId, groupId), eq(conversations.type, "group")))
+      .limit(1);
+
+    if (groupConv) {
+      await db
+        .delete(conversationParticipants)
+        .where(
+          and(
+            eq(conversationParticipants.conversationId, groupConv.id),
+            eq(conversationParticipants.userId, targetUserId),
+          ),
+        );
+    }
   }
 
   // =======================================================================

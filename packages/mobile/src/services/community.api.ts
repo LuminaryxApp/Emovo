@@ -2,6 +2,8 @@ import type {
   PostWithAuthor,
   Comment,
   GroupWithMembership,
+  GroupMember,
+  UpdateGroupInput,
   ConversationPreview,
   Message,
   UserSearchResult,
@@ -64,6 +66,8 @@ export async function createGroupApi(input: {
   description?: string;
   icon?: string;
   isPublic?: boolean;
+  gradientStart?: string;
+  gradientEnd?: string;
 }) {
   const { data } = await api.post("/community/groups", input);
   return data.data as GroupWithMembership;
@@ -90,6 +94,27 @@ export async function joinGroupApi(id: string) {
 
 export async function leaveGroupApi(id: string) {
   await api.delete(`/community/groups/${id}/leave`);
+}
+
+export async function listGroupMembersApi(
+  groupId: string,
+  params: { cursor?: string; limit?: number },
+) {
+  const { data } = await api.get(`/community/groups/${groupId}/members`, { params });
+  return { members: data.data as GroupMember[], cursor: data.meta?.cursor ?? null };
+}
+
+export async function updateGroupApi(groupId: string, input: UpdateGroupInput) {
+  const { data } = await api.put(`/community/groups/${groupId}`, input);
+  return data.data as GroupWithMembership;
+}
+
+export async function deleteGroupApi(groupId: string) {
+  await api.delete(`/community/groups/${groupId}`);
+}
+
+export async function removeGroupMemberApi(groupId: string, userId: string) {
+  await api.delete(`/community/groups/${groupId}/members/${userId}`);
 }
 
 export async function searchUsersApi(params: { q: string; cursor?: string; limit?: number }) {

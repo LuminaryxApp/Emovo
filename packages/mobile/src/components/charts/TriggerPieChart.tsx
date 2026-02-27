@@ -43,7 +43,6 @@ export function TriggerPieChart({ triggers }: TriggerPieChartProps) {
   const pieData = triggers.slice(0, 8).map((item, i) => ({
     value: item.count,
     color: pieColors[i % pieColors.length],
-    text: `${Math.round((item.count / total) * 100)}%`,
   }));
 
   return (
@@ -63,9 +62,6 @@ export function TriggerPieChart({ triggers }: TriggerPieChartProps) {
               data={pieData}
               radius={75}
               innerRadius={45}
-              textColor={colors.textInverse}
-              textSize={10}
-              showText
               focusOnPress
               innerCircleColor={colors.cardBackground}
               centerLabelComponent={() => (
@@ -88,7 +84,7 @@ export function TriggerPieChart({ triggers }: TriggerPieChartProps) {
                   {item.trigger.name}
                 </Text>
                 <Text style={[styles.legendCount, { color: colors.textSecondary }]}>
-                  {item.count}
+                  {Math.round((item.count / total) * 100)}%
                 </Text>
               </View>
             ))}
@@ -131,7 +127,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   pieWrap: {
-    // Give the pie chart room to render without clipping
     padding: 4,
   },
   centerLabel: {

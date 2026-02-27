@@ -47,6 +47,25 @@ export const groupQuerySchema = z.object({
   search: z.string().max(100).optional(),
 });
 
+export const updateGroupSchema = z.object({
+  name: z.string().min(1).max(100).trim().optional(),
+  description: z.string().max(500).trim().nullable().optional(),
+  icon: z.string().min(1).max(10).optional(),
+  gradientStart: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
+  gradientEnd: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
+});
+
+export const groupMembersQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
 export const messageQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
@@ -103,3 +122,5 @@ export type CreateConversationInput = z.infer<typeof createConversationSchema>;
 export type CreateReportInput = z.infer<typeof createReportSchema>;
 export type ResolveReportInput = z.infer<typeof resolveReportSchema>;
 export type ReportQueryInput = z.infer<typeof reportQuerySchema>;
+export type UpdateGroupInput = z.infer<typeof updateGroupSchema>;
+export type GroupMembersQueryInput = z.infer<typeof groupMembersQuerySchema>;

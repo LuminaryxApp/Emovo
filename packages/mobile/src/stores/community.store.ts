@@ -2,6 +2,7 @@ import type {
   PostWithAuthor,
   Comment,
   GroupWithMembership,
+  UpdateGroupInput,
   ConversationPreview,
   UserSearchResult,
 } from "@emovo/shared";
@@ -21,6 +22,9 @@ import {
   discoverGroupsApi,
   joinGroupApi,
   leaveGroupApi,
+  updateGroupApi,
+  deleteGroupApi,
+  removeGroupMemberApi,
   searchUsersApi,
   listConversationsApi,
   createConversationApi,
@@ -80,7 +84,12 @@ interface CommunityState {
     description?: string;
     icon?: string;
     isPublic?: boolean;
+    gradientStart?: string;
+    gradientEnd?: string;
   }) => Promise<GroupWithMembership>;
+  updateGroup: (id: string, input: UpdateGroupInput) => Promise<GroupWithMembership>;
+  deleteGroup: (id: string) => Promise<void>;
+  removeMember: (groupId: string, userId: string) => Promise<void>;
 
   // Conversation actions
   fetchConversations: () => Promise<void>;
@@ -280,6 +289,30 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
     const group = await createGroupApi(input);
     set((state) => ({ myGroups: [group, ...state.myGroups] }));
     return group;
+  },
+
+  updateGroup: async (id, input) => {
+    const updated = await updateGroupApi(id, input);
+    set((state) => ({
+      myGroups: state.myGroups.map((g) => (g.id === id ? { ...g, ...updated } : g)),
+    }));
+    return updated as GroupWithMembership;
+  },
+
+  deleteGroup: async (id) => {
+    await deleteGroupApi(id);
+    set((state) => ({
+      myGroups: state.myGroups.filter((g) => g.id !== id),
+    }));
+  },
+
+  removeMember: async (groupId, userId) => {
+    await removeGroupMemberApi(groupId, userId);
+    set((state) => ({
+      myGroups: state.myGroups.map((g) =>
+        g.id === groupId ? { ...g, memberCount: Math.max(0, g.memberCount - 1) } : g,
+      ),
+    }));
   },
 
   // ── Conversations ───────────────────────────────────────────

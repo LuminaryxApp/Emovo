@@ -12,7 +12,6 @@ interface MoodBarChartProps {
   distribution: Record<number, number>;
 }
 
-const CHART_HORIZONTAL_PADDING = 20;
 const CARD_PADDING = 20;
 const SCREEN_PADDING = 16;
 
@@ -35,12 +34,11 @@ export function MoodBarChart({ distribution }: MoodBarChartProps) {
   const hasData = barData.some((d) => d.value > 0);
   if (!hasData) return null;
 
-  // Calculate available width for the chart
+  // Calculate bar sizing — account for the full card width minus padding
   const screenWidth = Dimensions.get("window").width;
-  const availableWidth =
-    screenWidth - SCREEN_PADDING * 2 - CARD_PADDING * 2 - CHART_HORIZONTAL_PADDING * 2;
-  const barWidth = Math.min(44, Math.floor((availableWidth - 5 * 14) / 5));
-  const barSpacing = Math.max(10, Math.floor((availableWidth - barWidth * 5) / 5));
+  const chartAreaWidth = screenWidth - SCREEN_PADDING * 2 - CARD_PADDING * 2;
+  const barWidth = Math.min(36, Math.floor(chartAreaWidth / 8));
+  const barSpacing = Math.max(8, Math.floor((chartAreaWidth - barWidth * 5) / 6));
 
   return (
     <View style={styles.container}>
@@ -58,17 +56,18 @@ export function MoodBarChart({ distribution }: MoodBarChartProps) {
             data={barData}
             barWidth={barWidth}
             spacing={barSpacing}
+            initialSpacing={barSpacing / 2}
             roundedTop
             roundedBottom
             noOfSections={4}
             yAxisThickness={0}
             xAxisThickness={0}
             hideRules
+            hideYAxisText
             isAnimated
             barBorderRadius={8}
-            height={160}
+            height={150}
             xAxisLabelTextStyle={[styles.xLabel, { color: colors.textSecondary }]}
-            yAxisTextStyle={[styles.yLabel, { color: colors.textTertiary }]}
             disableScroll
           />
         </View>
@@ -105,15 +104,10 @@ const styles = StyleSheet.create({
   },
   chartWrapper: {
     alignItems: "center",
-    paddingTop: spacing.lg,
-    paddingHorizontal: CHART_HORIZONTAL_PADDING,
+    paddingTop: spacing.sm,
   },
   xLabel: {
     fontSize: 18,
-  },
-  yLabel: {
-    fontSize: 10,
-    fontFamily: "SourceSerif4_400Regular",
   },
   barTopLabel: {
     fontSize: 11,

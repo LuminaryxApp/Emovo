@@ -67,6 +67,7 @@ export interface GroupMember {
   username: string | null;
   showRealName: boolean;
   verificationTier: VerificationTier;
+  avatarBase64: string | null;
   role: "admin" | "moderator" | "member";
   joinedAt: string;
 }

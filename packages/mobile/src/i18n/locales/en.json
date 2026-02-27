@@ -279,7 +279,21 @@
     "publicGroup": "Public Group",
     "privateGroup": "Private Group",
     "newMessage": "New Message",
-    "searchUsers": "Search users..."
+    "searchUsers": "Search users...",
+    "editGroup": "Edit Group",
+    "deleteGroup": "Delete Group",
+    "deleteGroupTitle": "Delete Group?",
+    "deleteGroupMessage": "This will permanently delete the group, all members, and all messages.",
+    "deleteGroupError": "Failed to delete group. Please try again.",
+    "editGroupError": "Failed to update group. Please try again.",
+    "removeMember": "Remove Member",
+    "removeMemberTitle": "Remove Member?",
+    "removeMemberMessage": "This person will be removed from the group.",
+    "removeMemberError": "Failed to remove member. Please try again.",
+    "remove": "Remove",
+    "admin": "Admin",
+    "gradientLabel": "COLOR THEME",
+    "membersList": "Members"
   },
   "charts": {
     "moodDistribution": "MOOD DISTRIBUTION",

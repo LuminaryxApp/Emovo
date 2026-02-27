@@ -2,6 +2,8 @@ import {
   createPostSchema,
   createCommentSchema,
   createGroupSchema,
+  updateGroupSchema,
+  groupMembersQuerySchema,
   sendMessageSchema,
   createConversationSchema,
   feedQuerySchema,
@@ -245,6 +247,70 @@ export async function communityRoutes(fastify: FastifyInstance) {
       const result = await communityService.getOrCreateGroupConversation(request.userId, id);
 
       return reply.status(result.isNew ? 201 : 200).send({ data: result });
+    },
+  );
+
+  /**
+   * GET /community/groups/:id/members
+   * List members of a group (paginated).
+   */
+  fastify.get("/community/groups/:id/members", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const query = groupMembersQuerySchema.parse(request.query);
+    const result = await communityService.listGroupMembers(request.userId, id, {
+      cursor: query.cursor,
+      limit: query.limit,
+    });
+
+    return reply.send({
+      data: result.members,
+      meta: { cursor: result.nextCursor },
+    });
+  });
+
+  /**
+   * PUT /community/groups/:id
+   * Update a group (admin only).
+   */
+  fastify.put(
+    "/community/groups/:id",
+    { preHandler: [fastify.requireNotBanned] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const input = updateGroupSchema.parse(request.body);
+      const group = await communityService.updateGroup(request.userId, id, input);
+
+      return reply.send({ data: group });
+    },
+  );
+
+  /**
+   * DELETE /community/groups/:id
+   * Delete a group (admin only).
+   */
+  fastify.delete(
+    "/community/groups/:id",
+    { preHandler: [fastify.requireNotBanned] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      await communityService.deleteGroup(request.userId, id);
+
+      return reply.status(204).send();
+    },
+  );
+
+  /**
+   * DELETE /community/groups/:id/members/:userId
+   * Remove a member from a group (admin only).
+   */
+  fastify.delete(
+    "/community/groups/:id/members/:userId",
+    { preHandler: [fastify.requireNotBanned] },
+    async (request, reply) => {
+      const { id, userId } = request.params as { id: string; userId: string };
+      await communityService.removeMember(request.userId, id, userId);
+
+      return reply.status(204).send();
     },
   );
 

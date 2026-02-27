@@ -1,6 +1,5 @@
 import type { UserSearchResult } from "@emovo/shared";
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -26,8 +25,16 @@ import {
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Card, Avatar, Badge, ActionSheet, type ActionSheetItem } from "../../src/components/ui";
+import {
+  Card,
+  Avatar,
+  Badge,
+  ActionSheet,
+  type ActionSheetItem,
+  ContextMenu,
+} from "../../src/components/ui";
 import { VerifiedBadge } from "../../src/components/ui/VerifiedBadge";
+import { GROUP_EMOJIS, GRADIENT_PRESETS } from "../../src/constants/groups";
 import { getPublicName } from "../../src/lib/display-name";
 import { searchUsersApi, createConversationApi } from "../../src/services/community.api";
 import { getUnreadCountApi } from "../../src/services/notification.api";
@@ -148,12 +155,12 @@ export default function CommunityScreen() {
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
-  const [groupIcon, setGroupIcon] = useState("🌿");
+  const [groupIcon, setGroupIcon] = useState("\u{1F33F}");
+  const [groupGradientStart, setGroupGradientStart] = useState("#75863C");
+  const [groupGradientEnd, setGroupGradientEnd] = useState("#8FA04E");
   const [isSubmittingGroup, setIsSubmittingGroup] = useState(false);
 
-  // Action sheet
-  const [actionSheetVisible, setActionSheetVisible] = useState(false);
-  const [actionSheetItems, setActionSheetItems] = useState<ActionSheetItem[]>([]);
+  // (ContextMenu handles long-press menus inline)
 
   // New message modal
   const [showNewMessage, setShowNewMessage] = useState(false);
@@ -330,21 +337,32 @@ export default function CommunityScreen() {
         name: groupName.trim(),
         description: groupDescription.trim() || undefined,
         icon: groupIcon,
+        gradientStart: groupGradientStart,
+        gradientEnd: groupGradientEnd,
       });
       setShowCreateGroup(false);
       setGroupName("");
       setGroupDescription("");
-      setGroupIcon("🌿");
+      setGroupIcon("\u{1F33F}");
+      setGroupGradientStart("#75863C");
+      setGroupGradientEnd("#8FA04E");
     } catch {
       Alert.alert(t("common.error"), t("community.groupError"));
     } finally {
       setIsSubmittingGroup(false);
     }
-  }, [groupName, groupDescription, groupIcon, createGroup, t]);
+  }, [
+    groupName,
+    groupDescription,
+    groupIcon,
+    groupGradientStart,
+    groupGradientEnd,
+    createGroup,
+    t,
+  ]);
 
-  const handlePostLongPress = useCallback(
-    (postId: string, isOwn: boolean) => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  const getPostActions = useCallback(
+    (postId: string, isOwn: boolean): ActionSheetItem[] => {
       const items: ActionSheetItem[] = [];
 
       if (isOwn) {
@@ -380,8 +398,7 @@ export default function CommunityScreen() {
         },
       });
 
-      setActionSheetItems(items);
-      setActionSheetVisible(true);
+      return items;
     },
     [deletePost, t],
   );
@@ -470,8 +487,8 @@ export default function CommunityScreen() {
       try {
         const { users } = await searchUsersApi({ q: newMsgSearch.trim(), limit: 20 });
         setNewMsgResults(users);
-      } catch {
-        // silent
+      } catch (err) {
+        console.error("DM user search failed:", err);
       } finally {
         setIsSearchingUsers(false);
       }
@@ -643,111 +660,110 @@ export default function CommunityScreen() {
 
     return (
       <Animated.View key={post.id} entering={FadeInDown.delay(150 + index * 60).duration(400)}>
-        <Pressable
-          onPress={() => handleOpenComments(post.id)}
-          onLongPress={() => handlePostLongPress(post.id, isOwnPost)}
-        >
-          <Card variant="elevated" padding="md" style={styles.postCard}>
-            {/* Author row */}
-            <View style={styles.postAuthorRow}>
-              <Pressable
-                onPress={() => router.push(`/profile/${post.author.id}`)}
-                style={styles.postAuthorTap}
-              >
-                <Avatar name={post.author.displayName} size="md" />
-                <View style={styles.postAuthorInfo}>
-                  <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <Text style={[styles.postAuthorName, { color: colors.text }]}>
-                      {getPublicName(post.author)}
+        <ContextMenu actions={getPostActions(post.id, isOwnPost)}>
+          <Pressable onPress={() => handleOpenComments(post.id)}>
+            <Card variant="elevated" padding="md" style={styles.postCard}>
+              {/* Author row */}
+              <View style={styles.postAuthorRow}>
+                <Pressable
+                  onPress={() => router.push(`/profile/${post.author.id}`)}
+                  style={styles.postAuthorTap}
+                >
+                  <Avatar name={post.author.displayName} size="md" />
+                  <View style={styles.postAuthorInfo}>
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                      <Text style={[styles.postAuthorName, { color: colors.text }]}>
+                        {getPublicName(post.author)}
+                      </Text>
+                      <VerifiedBadge tier={post.author.verificationTier} size="md" />
+                    </View>
+                    <Text style={[styles.postTimestamp, { color: colors.textTertiary }]}>
+                      {formatRelativeTime(post.createdAt)}
                     </Text>
-                    <VerifiedBadge tier={post.author.verificationTier} size="md" />
                   </View>
-                  <Text style={[styles.postTimestamp, { color: colors.textTertiary }]}>
-                    {formatRelativeTime(post.createdAt)}
+                </Pressable>
+                {post.moodScore != null && (
+                  <Badge variant={getMoodBadgeVariant(post.moodScore)} size="sm">
+                    {`${moodEmojis[post.moodScore as MoodLevel] ?? ""} ${post.moodScore}/5`}
+                  </Badge>
+                )}
+              </View>
+
+              {/* Post type tag */}
+              {post.type === "tip" && (
+                <View style={[styles.postTypeTag, { backgroundColor: colors.accent + "18" }]}>
+                  <Ionicons name="bulb" size={13} color={colors.accent} />
+                  <Text style={[styles.postTypeTagText, { color: colors.accent }]}>
+                    {t("community.tip")}
                   </Text>
                 </View>
-              </Pressable>
-              {post.moodScore != null && (
-                <Badge variant={getMoodBadgeVariant(post.moodScore)} size="sm">
-                  {`${moodEmojis[post.moodScore as MoodLevel] ?? ""} ${post.moodScore}/5`}
-                </Badge>
               )}
-            </View>
+              {post.type === "photo" && (
+                <View style={[styles.postTypeTag, { backgroundColor: colors.warning + "18" }]}>
+                  <Ionicons name="image" size={13} color={colors.warning} />
+                  <Text style={[styles.postTypeTagText, { color: colors.warning }]}>
+                    {t("community.photo")}
+                  </Text>
+                </View>
+              )}
 
-            {/* Post type tag */}
-            {post.type === "tip" && (
-              <View style={[styles.postTypeTag, { backgroundColor: colors.accent + "18" }]}>
-                <Ionicons name="bulb" size={13} color={colors.accent} />
-                <Text style={[styles.postTypeTagText, { color: colors.accent }]}>
-                  {t("community.tip")}
-                </Text>
-              </View>
-            )}
-            {post.type === "photo" && (
-              <View style={[styles.postTypeTag, { backgroundColor: colors.warning + "18" }]}>
-                <Ionicons name="image" size={13} color={colors.warning} />
-                <Text style={[styles.postTypeTagText, { color: colors.warning }]}>
-                  {t("community.photo")}
-                </Text>
-              </View>
-            )}
+              {/* Photo */}
+              {post.imageBase64 && (
+                <View style={styles.postImageWrap}>
+                  <Image
+                    source={{ uri: post.imageBase64 }}
+                    style={styles.postImage}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
 
-            {/* Photo */}
-            {post.imageBase64 && (
-              <View style={styles.postImageWrap}>
-                <Image
-                  source={{ uri: post.imageBase64 }}
-                  style={styles.postImage}
-                  resizeMode="cover"
-                />
-              </View>
-            )}
+              {/* Content */}
+              <Text style={[styles.postContent, { color: colors.text }]}>{post.content}</Text>
 
-            {/* Content */}
-            <Text style={[styles.postContent, { color: colors.text }]}>{post.content}</Text>
+              {/* Actions row */}
+              <View style={[styles.postActionsRow, { borderTopColor: colors.borderLight }]}>
+                <Pressable onPress={() => handleToggleLike(post.id)} style={styles.postAction}>
+                  <Ionicons
+                    name={post.isLiked ? "heart" : "heart-outline"}
+                    size={iconSizes.sm}
+                    color={post.isLiked ? colors.error : colors.textTertiary}
+                  />
+                  <Text
+                    style={[
+                      styles.postActionCount,
+                      { color: post.isLiked ? colors.error : colors.textSecondary },
+                    ]}
+                  >
+                    {post.likeCount > 0 ? post.likeCount : ""}
+                  </Text>
+                </Pressable>
 
-            {/* Actions row */}
-            <View style={[styles.postActionsRow, { borderTopColor: colors.borderLight }]}>
-              <Pressable onPress={() => handleToggleLike(post.id)} style={styles.postAction}>
-                <Ionicons
-                  name={post.isLiked ? "heart" : "heart-outline"}
-                  size={iconSizes.sm}
-                  color={post.isLiked ? colors.error : colors.textTertiary}
-                />
-                <Text
-                  style={[
-                    styles.postActionCount,
-                    { color: post.isLiked ? colors.error : colors.textSecondary },
-                  ]}
+                <Pressable onPress={() => handleOpenComments(post.id)} style={styles.postAction}>
+                  <Ionicons
+                    name="chatbubble-outline"
+                    size={iconSizes.sm}
+                    color={colors.textSecondary}
+                  />
+                  <Text style={[styles.postActionCount, { color: colors.textSecondary }]}>
+                    {post.commentCount > 0 ? post.commentCount : ""}
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    Share.share({
+                      message: `${post.author?.displayName}: ${post.content.substring(0, 200)}`,
+                    });
+                  }}
+                  style={styles.postAction}
                 >
-                  {post.likeCount > 0 ? post.likeCount : ""}
-                </Text>
-              </Pressable>
-
-              <Pressable onPress={() => handleOpenComments(post.id)} style={styles.postAction}>
-                <Ionicons
-                  name="chatbubble-outline"
-                  size={iconSizes.sm}
-                  color={colors.textSecondary}
-                />
-                <Text style={[styles.postActionCount, { color: colors.textSecondary }]}>
-                  {post.commentCount > 0 ? post.commentCount : ""}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                onPress={() => {
-                  Share.share({
-                    message: `${post.author?.displayName}: ${post.content.substring(0, 200)}`,
-                  });
-                }}
-                style={styles.postAction}
-              >
-                <Ionicons name="share-outline" size={iconSizes.sm} color={colors.textSecondary} />
-              </Pressable>
-            </View>
-          </Card>
-        </Pressable>
+                  <Ionicons name="share-outline" size={iconSizes.sm} color={colors.textSecondary} />
+                </Pressable>
+              </View>
+            </Card>
+          </Pressable>
+        </ContextMenu>
       </Animated.View>
     );
   };
@@ -1382,59 +1398,109 @@ export default function CommunityScreen() {
               </Pressable>
             </View>
 
-            {/* Icon picker */}
-            <View style={styles.groupIconPicker}>
-              <Text style={[styles.moodSelectorLabel, { color: colors.sectionLabel }]}>
-                {t("community.groupIconLabel")}
-              </Text>
-              <View style={styles.moodEmojiRow}>
-                {["🌿", "💬", "🧘", "💪", "🌈", "❤️", "🎯", "📚"].map((emoji) => (
-                  <Pressable
-                    key={emoji}
-                    onPress={() => setGroupIcon(emoji)}
-                    style={[
-                      styles.moodEmojiBtn,
-                      { backgroundColor: colors.inputBackground },
-                      groupIcon === emoji && [
-                        styles.moodEmojiBtnActive,
-                        { backgroundColor: colors.primaryMuted, borderColor: colors.primary },
-                      ],
-                    ]}
-                  >
-                    <Text style={styles.moodEmoji}>{emoji}</Text>
-                  </Pressable>
-                ))}
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {/* Live preview */}
+              <View style={styles.createGroupPreview}>
+                <LinearGradient
+                  colors={[groupGradientStart, groupGradientEnd]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.createGroupPreviewBanner}
+                >
+                  <Text style={styles.createGroupPreviewIcon}>{groupIcon}</Text>
+                </LinearGradient>
               </View>
-            </View>
 
-            {/* Name input */}
-            <TextInput
-              style={[
-                styles.groupInput,
-                { color: colors.text, backgroundColor: colors.inputBackground },
-              ]}
-              placeholder={t("community.groupNamePlaceholder")}
-              placeholderTextColor={colors.textTertiary}
-              value={groupName}
-              onChangeText={setGroupName}
-              maxLength={100}
-              autoFocus
-            />
+              {/* Icon picker */}
+              <View style={styles.groupIconPicker}>
+                <Text style={[styles.moodSelectorLabel, { color: colors.sectionLabel }]}>
+                  {t("community.groupIconLabel")}
+                </Text>
+                <View style={styles.createGroupEmojiGrid}>
+                  {GROUP_EMOJIS.map((emoji) => (
+                    <Pressable
+                      key={emoji}
+                      onPress={() => setGroupIcon(emoji)}
+                      style={[
+                        styles.createGroupEmojiBtn,
+                        { backgroundColor: colors.inputBackground },
+                        groupIcon === emoji && [
+                          styles.createGroupEmojiBtnActive,
+                          { backgroundColor: colors.primaryMuted, borderColor: colors.primary },
+                        ],
+                      ]}
+                    >
+                      <Text style={styles.createGroupEmojiBtnText}>{emoji}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </View>
 
-            {/* Description input */}
-            <TextInput
-              style={[
-                styles.groupInput,
-                styles.groupDescInput,
-                { color: colors.text, backgroundColor: colors.inputBackground },
-              ]}
-              placeholder={t("community.groupDescPlaceholder")}
-              placeholderTextColor={colors.textTertiary}
-              value={groupDescription}
-              onChangeText={setGroupDescription}
-              multiline
-              maxLength={500}
-            />
+              {/* Gradient picker */}
+              <View style={styles.groupIconPicker}>
+                <Text style={[styles.moodSelectorLabel, { color: colors.sectionLabel }]}>
+                  {t("community.gradientLabel")}
+                </Text>
+                <View style={styles.createGroupGradientGrid}>
+                  {GRADIENT_PRESETS.map((preset) => {
+                    const isSelected =
+                      groupGradientStart === preset.start && groupGradientEnd === preset.end;
+                    return (
+                      <Pressable
+                        key={preset.label}
+                        onPress={() => {
+                          setGroupGradientStart(preset.start);
+                          setGroupGradientEnd(preset.end);
+                        }}
+                        style={[
+                          styles.createGroupGradientSwatch,
+                          isSelected && {
+                            borderWidth: 2,
+                            borderColor: colors.primary,
+                          },
+                        ]}
+                      >
+                        <LinearGradient
+                          colors={[preset.start, preset.end]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={styles.createGroupGradientSwatchInner}
+                        />
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Name input */}
+              <TextInput
+                style={[
+                  styles.groupInput,
+                  { color: colors.text, backgroundColor: colors.inputBackground },
+                ]}
+                placeholder={t("community.groupNamePlaceholder")}
+                placeholderTextColor={colors.textTertiary}
+                value={groupName}
+                onChangeText={setGroupName}
+                maxLength={100}
+                autoFocus
+              />
+
+              {/* Description input */}
+              <TextInput
+                style={[
+                  styles.groupInput,
+                  styles.groupDescInput,
+                  { color: colors.text, backgroundColor: colors.inputBackground },
+                ]}
+                placeholder={t("community.groupDescPlaceholder")}
+                placeholderTextColor={colors.textTertiary}
+                value={groupDescription}
+                onChangeText={setGroupDescription}
+                multiline
+                maxLength={500}
+              />
+            </ScrollView>
           </View>
         </KeyboardAvoidingView>
       </Modal>
@@ -1531,13 +1597,6 @@ export default function CommunityScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-
-      {/* Long-press Action Sheet */}
-      <ActionSheet
-        visible={actionSheetVisible}
-        onClose={() => setActionSheetVisible(false)}
-        actions={actionSheetItems}
-      />
 
       {/* Report reason picker */}
       <ActionSheet
@@ -2107,6 +2166,59 @@ const styles = StyleSheet.create({
   groupDescInput: {
     minHeight: 80,
     textAlignVertical: "top",
+  },
+
+  // ── Create Group Modal (expanded) ───────────────────────────
+  createGroupPreview: {
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  },
+  createGroupPreviewBanner: {
+    width: "100%",
+    height: 100,
+    borderRadius: radii.lg,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  createGroupPreviewIcon: {
+    fontSize: 40,
+  },
+  createGroupEmojiGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  createGroupEmojiBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  createGroupEmojiBtnActive: {
+    borderWidth: 2,
+  },
+  createGroupEmojiBtnText: {
+    fontSize: 22,
+  },
+  createGroupGradientGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  createGroupGradientSwatch: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.md,
+    overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  createGroupGradientSwatchInner: {
+    flex: 1,
+    borderRadius: radii.md - 2,
   },
 
   // ── Loading / Empty ─────────────────────────────────────────

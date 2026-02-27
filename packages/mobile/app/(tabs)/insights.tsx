@@ -14,10 +14,9 @@ import {
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { MoodBarChart } from "../../src/components/charts/MoodBarChart";
-import { MoodLineChart } from "../../src/components/charts/MoodLineChart";
+import { MoodTrendChart } from "../../src/components/charts/MoodTrendChart";
 import { PeriodSelector } from "../../src/components/charts/PeriodSelector";
-import { TriggerPieChart } from "../../src/components/charts/TriggerPieChart";
+import { TriggerBreakdown } from "../../src/components/charts/TriggerBreakdown";
 import { ProgressBar } from "../../src/components/ui";
 import { useMoodStats } from "../../src/hooks/useMoodStats";
 import { moodEmojis, moodLabels, getMoodGradient, type MoodLevel } from "../../src/theme";
@@ -376,35 +375,30 @@ export default function InsightsScreen() {
               </View>
             </Animated.View>
 
-            {/* ── Mood Distribution Chart ─────────────────────── */}
-            <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.chartSection}>
-              <MoodBarChart distribution={summary.moodDistribution} />
-            </Animated.View>
-
             {/* ── Mood Trend Chart ────────────────────────────── */}
             {trend && trend.dataPoints.length >= 2 && (
+              <Animated.View
+                entering={FadeInDown.delay(400).springify()}
+                style={styles.chartSection}
+              >
+                <MoodTrendChart dataPoints={trend.dataPoints} period={period} />
+              </Animated.View>
+            )}
+
+            {/* ── Trigger Breakdown ────────────────────────────── */}
+            {triggers && triggers.length > 0 && (
               <Animated.View
                 entering={FadeInDown.delay(500).springify()}
                 style={styles.chartSection}
               >
-                <MoodLineChart dataPoints={trend.dataPoints} period={period} />
-              </Animated.View>
-            )}
-
-            {/* ── Triggers Chart ──────────────────────────────── */}
-            {triggers && triggers.length > 0 && (
-              <Animated.View
-                entering={FadeInDown.delay(600).springify()}
-                style={styles.chartSection}
-              >
-                <TriggerPieChart triggers={triggers} />
+                <TriggerBreakdown triggers={triggers} />
               </Animated.View>
             )}
 
             {/* ── AI Insights ─────────────────────────────────── */}
             {computedInsights.length > 0 && (
               <Animated.View
-                entering={FadeInDown.delay(700).springify()}
+                entering={FadeInDown.delay(600).springify()}
                 style={styles.insightsSection}
               >
                 <View style={styles.insightsHeader}>
@@ -426,7 +420,7 @@ export default function InsightsScreen() {
                 {computedInsights.map((insight, index) => (
                   <Animated.View
                     key={insight.title}
-                    entering={FadeInDown.delay(750 + index * 80).springify()}
+                    entering={FadeInDown.delay(650 + index * 80).springify()}
                   >
                     <View style={[styles.insightCard, { backgroundColor: colors.cardBackground }]}>
                       <LinearGradient

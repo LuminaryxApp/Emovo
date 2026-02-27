@@ -1,6 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useRef } from "react";
-import { Animated, Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useCallback, useEffect } from "react";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useTheme } from "../../theme/ThemeContext";
@@ -25,50 +32,42 @@ interface ActionSheetProps {
 }
 
 // ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const SPRING_CONFIG = { damping: 20, stiffness: 200, mass: 0.8 };
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export function ActionSheet({ visible, onClose, actions, title }: ActionSheetProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const slideAnim = useRef(new Animated.Value(300)).current;
-  const backdropAnim = useRef(new Animated.Value(0)).current;
+  const translateY = useSharedValue(300);
+  const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
-      Animated.parallel([
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          damping: 20,
-          stiffness: 200,
-          mass: 0.8,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 1,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      translateY.value = withSpring(0, SPRING_CONFIG);
+      backdropOpacity.value = withTiming(1, { duration: 250 });
     }
-  }, [visible, slideAnim, backdropAnim]);
+  }, [visible, translateY, backdropOpacity]);
 
-  const handleClose = () => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: 300,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdropAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onClose();
+  const handleClose = useCallback(() => {
+    translateY.value = withTiming(300, { duration: 200 }, (finished) => {
+      if (finished) runOnJS(onClose)();
     });
-  };
+    backdropOpacity.value = withTiming(0, { duration: 200 });
+  }, [onClose, translateY, backdropOpacity]);
+
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: backdropOpacity.value,
+  }));
 
   if (!visible) return null;
 
@@ -83,16 +82,12 @@ export function ActionSheet({ visible, onClose, actions, title }: ActionSheetPro
       <View style={styles.overlay}>
         {/* Backdrop */}
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose}>
-          <Animated.View style={[styles.backdrop, { opacity: backdropAnim }]} />
+          <Animated.View style={[styles.backdrop, backdropStyle]} />
         </Pressable>
 
         {/* Sheet */}
         <Animated.View
-          style={[
-            styles.sheet,
-            { paddingBottom: insets.bottom + spacing.md },
-            { transform: [{ translateY: slideAnim }] },
-          ]}
+          style={[styles.sheet, { paddingBottom: insets.bottom + spacing.md }, sheetStyle]}
         >
           {/* Handle */}
           <View style={styles.handleRow}>

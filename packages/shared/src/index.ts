@@ -95,6 +95,8 @@ export {
   createConversationSchema,
   feedQuerySchema,
   groupQuerySchema,
+  updateGroupSchema,
+  groupMembersQuerySchema,
   messageQuerySchema,
   createReportSchema,
   resolveReportSchema,
@@ -112,4 +114,6 @@ export type {
   ResolveReportInput,
   ReportQueryInput,
   UserSearchQueryInput,
+  UpdateGroupInput,
+  GroupMembersQueryInput,
 } from "./schemas/community.schema.js";

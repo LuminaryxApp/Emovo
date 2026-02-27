@@ -22,7 +22,7 @@ const CARD_PADDING = 20;
 const SCREEN_PADDING = 16;
 
 function formatLabel(dateStr: string, period: string): string {
-  const date = new Date(dateStr);
+  const date = new Date(dateStr + "T00:00:00");
   if (period === "year") {
     return date.toLocaleDateString(undefined, { month: "short" });
   }

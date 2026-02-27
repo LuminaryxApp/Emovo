@@ -16,7 +16,7 @@ export const moodLabels: Record<MoodLevel, string> = {
 
 export const moodEmojis: Record<MoodLevel, string> = {
   1: "\u{1F622}",
-  2: "\u{1F614}",
+  2: "\u{1F641}",
   3: "\u{1F610}",
   4: "\u{1F60A}",
   5: "\u{1F604}",

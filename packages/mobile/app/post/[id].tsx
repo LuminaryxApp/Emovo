@@ -1,6 +1,5 @@
 import type { Comment } from "@emovo/shared";
 import { Ionicons } from "@expo/vector-icons";
-import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,7 +18,15 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Avatar, Badge, Card, ActionSheet, type ActionSheetItem } from "../../src/components/ui";
+import {
+  Avatar,
+  Badge,
+  Card,
+  ActionSheet,
+  type ActionSheetItem,
+  PopoverMenu,
+  ContextMenu,
+} from "../../src/components/ui";
 import { getPublicName } from "../../src/lib/display-name";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useCommunityStore } from "../../src/stores/community.store";
@@ -89,13 +96,21 @@ export default function PostDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [commentText, setCommentText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [actionSheetVisible, setActionSheetVisible] = useState(false);
-  const [actionSheetItems, setActionSheetItems] = useState<ActionSheetItem[]>([]);
   const [reportSheetVisible, setReportSheetVisible] = useState(false);
   const [reportTarget, setReportTarget] = useState<{
     targetType: string;
     targetId: string;
   } | null>(null);
+
+  // Popover menu state (three-dot button)
+  const [popoverVisible, setPopoverVisible] = useState(false);
+  const [popoverAnchor, setPopoverAnchor] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+  const triggerRef = useRef<View>(null);
 
   const inputRef = useRef<TextInput>(null);
 
@@ -152,9 +167,52 @@ export default function PostDetailScreen() {
     if (id) toggleLike(id);
   }, [id, toggleLike]);
 
-  const handleCommentLongPress = useCallback(
-    (comment: Comment) => {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  // Memoized post actions (shared by PopoverMenu and ContextMenu)
+  const postActions = useMemo<ActionSheetItem[]>(() => {
+    if (!id || !post) return [];
+    const isOwn = user?.id === post.author.id;
+    const items: ActionSheetItem[] = [];
+
+    if (isOwn) {
+      items.push({
+        label: t("community.delete"),
+        icon: "trash-outline",
+        destructive: true,
+        onPress: () => {
+          Alert.alert(t("community.deletePostTitle"), t("community.deletePostMessage"), [
+            { text: t("common.cancel"), style: "cancel" },
+            {
+              text: t("community.delete"),
+              style: "destructive",
+              onPress: async () => {
+                try {
+                  await deletePost(id);
+                  router.back();
+                } catch {
+                  Alert.alert(t("common.error"), t("community.deletePostError"));
+                }
+              },
+            },
+          ]);
+        },
+      });
+    }
+
+    items.push({
+      label: t("community.report"),
+      icon: "flag-outline",
+      onPress: () => {
+        setReportTarget({ targetType: "post", targetId: id });
+        setReportSheetVisible(true);
+      },
+    });
+
+    return items;
+  }, [id, post, user, deletePost, router, t]);
+
+  // Build comment actions per comment
+  const getCommentActions = useCallback(
+    (comment: Comment): ActionSheetItem[] => {
       const isOwn = user?.id === comment.author.id;
       const items: ActionSheetItem[] = [];
 
@@ -193,55 +251,17 @@ export default function PostDetailScreen() {
         },
       });
 
-      setActionSheetItems(items);
-      setActionSheetVisible(true);
+      return items;
     },
     [id, user, deleteComment, t],
   );
 
-  const handlePostLongPress = useCallback(() => {
-    if (!id || !post) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const isOwn = user?.id === post.author.id;
-    const items: ActionSheetItem[] = [];
-
-    if (isOwn) {
-      items.push({
-        label: t("community.delete"),
-        icon: "trash-outline",
-        destructive: true,
-        onPress: () => {
-          Alert.alert(t("community.deletePostTitle"), t("community.deletePostMessage"), [
-            { text: t("common.cancel"), style: "cancel" },
-            {
-              text: t("community.delete"),
-              style: "destructive",
-              onPress: async () => {
-                try {
-                  await deletePost(id);
-                  router.back();
-                } catch {
-                  Alert.alert(t("common.error"), t("community.deletePostError"));
-                }
-              },
-            },
-          ]);
-        },
-      });
-    }
-
-    items.push({
-      label: t("community.report"),
-      icon: "flag-outline",
-      onPress: () => {
-        setReportTarget({ targetType: "post", targetId: id });
-        setReportSheetVisible(true);
-      },
+  const handleOpenPopover = useCallback(() => {
+    triggerRef.current?.measureInWindow((x, y, width, height) => {
+      setPopoverAnchor({ x, y, width, height });
+      setPopoverVisible(true);
     });
-
-    setActionSheetItems(items);
-    setActionSheetVisible(true);
-  }, [id, post, user, deletePost, router, t]);
+  }, []);
 
   const reportReasons = useMemo(
     () =>
@@ -327,7 +347,7 @@ export default function PostDetailScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.text }]}>{t("community.comments")}</Text>
-        <Pressable onPress={handlePostLongPress} style={styles.backButton}>
+        <Pressable ref={triggerRef} onPress={handleOpenPopover} style={styles.backButton}>
           <Ionicons name="ellipsis-horizontal" size={20} color={colors.text} />
         </Pressable>
       </View>
@@ -338,7 +358,7 @@ export default function PostDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Post */}
-        <Pressable onLongPress={handlePostLongPress}>
+        <ContextMenu actions={postActions}>
           <Card variant="elevated" padding="md" style={styles.postCard}>
             <View style={styles.postAuthorRow}>
               <Pressable
@@ -402,7 +422,7 @@ export default function PostDetailScreen() {
               </View>
             </View>
           </Card>
-        </Pressable>
+        </ContextMenu>
 
         {/* Comments section */}
         <Text style={[styles.sectionLabel, { color: colors.sectionLabel }]}>
@@ -426,7 +446,7 @@ export default function PostDetailScreen() {
         ) : (
           <>
             {comments.map((comment) => (
-              <Pressable key={comment.id} onLongPress={() => handleCommentLongPress(comment)}>
+              <ContextMenu key={comment.id} actions={getCommentActions(comment)}>
                 <View style={styles.commentItem}>
                   <Pressable onPress={() => router.push(`/profile/${comment.author.id}`)}>
                     <Avatar name={comment.author.displayName} size="sm" />
@@ -449,7 +469,7 @@ export default function PostDetailScreen() {
                     </Text>
                   </View>
                 </View>
-              </Pressable>
+              </ContextMenu>
             ))}
             {cursor && (
               <Pressable onPress={loadMoreComments} style={styles.loadMoreBtn}>
@@ -505,11 +525,12 @@ export default function PostDetailScreen() {
         </Pressable>
       </View>
 
-      {/* Long-press Action Sheet */}
-      <ActionSheet
-        visible={actionSheetVisible}
-        onClose={() => setActionSheetVisible(false)}
-        actions={actionSheetItems}
+      {/* Popover menu for three-dot button */}
+      <PopoverMenu
+        visible={popoverVisible}
+        onClose={() => setPopoverVisible(false)}
+        actions={postActions}
+        anchorPosition={popoverAnchor}
       />
 
       {/* Report reason picker */}

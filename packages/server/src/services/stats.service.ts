@@ -130,7 +130,7 @@ export class StatsService {
       period === "year"
         ? await client`
             SELECT
-              date_trunc('month', logged_at)::text AS date,
+              TO_CHAR(date_trunc('month', logged_at), 'YYYY-MM-DD') AS date,
               COALESCE(AVG(mood_score)::numeric(3,2), 0) AS avg_mood,
               COUNT(*)::int AS count
             FROM mood_entries
@@ -142,7 +142,7 @@ export class StatsService {
           `
         : await client`
             SELECT
-              date_trunc('day', logged_at)::text AS date,
+              TO_CHAR(date_trunc('day', logged_at), 'YYYY-MM-DD') AS date,
               COALESCE(AVG(mood_score)::numeric(3,2), 0) AS avg_mood,
               COUNT(*)::int AS count
             FROM mood_entries
