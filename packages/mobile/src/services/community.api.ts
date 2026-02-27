@@ -161,6 +161,10 @@ export async function markConversationReadApi(conversationId: string) {
   await api.patch(`/community/conversations/${conversationId}/read`);
 }
 
+export async function deleteMessageApi(conversationId: string, messageId: string) {
+  await api.delete(`/community/conversations/${conversationId}/messages/${messageId}`);
+}
+
 // ── Reports ──────────────────────────────────────────────────
 
 export async function submitReportApi(input: {

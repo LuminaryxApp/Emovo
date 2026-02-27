@@ -295,7 +295,11 @@
     "gradientLabel": "COLOR THEME",
     "membersList": "Members",
     "noUsersFound": "No users found",
-    "conversationError": "Could not start conversation. Please try again."
+    "conversationError": "Could not start conversation. Please try again.",
+    "deleteMessageTitle": "Delete Message?",
+    "deleteMessageBody": "This message will be permanently deleted.",
+    "deleteMessageError": "Failed to delete message. Please try again.",
+    "reportMessage": "Report"
   },
   "charts": {
     "moodDistribution": "MOOD DISTRIBUTION",

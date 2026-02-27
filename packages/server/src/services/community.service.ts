@@ -833,6 +833,9 @@ export class CommunityService {
       memberCount: updated.memberCount,
       createdBy: updated.createdBy,
       createdAt: updated.createdAt.toISOString(),
+      isMember: true,
+      role: membership.role,
+      unreadCount: 0,
     };
   }
 
@@ -1158,6 +1161,7 @@ export class CommunityService {
       id: row.id,
       conversationId: row.conversationId,
       senderId: row.senderId,
+      senderName: row.senderName,
       content: row.content,
       type: row.type,
       createdAt: row.createdAt.toISOString(),
@@ -1250,6 +1254,7 @@ export class CommunityService {
       id: message.id,
       conversationId: message.conversationId,
       senderId: message.senderId,
+      senderName: sender?.displayName || "Unknown",
       content: message.content,
       type: message.type,
       createdAt: message.createdAt.toISOString(),
@@ -1281,6 +1286,40 @@ export class CommunityService {
     }
   }
 
+  /**
+   * Delete a message. Only the sender can delete their own messages.
+   */
+  async deleteMessage(userId: string, conversationId: string, messageId: string) {
+    // Verify participant
+    const [participant] = await db
+      .select({ id: conversationParticipants.id })
+      .from(conversationParticipants)
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, conversationId),
+          eq(conversationParticipants.userId, userId),
+        ),
+      )
+      .limit(1);
+
+    if (!participant) throw new ForbiddenError("Not a participant in this conversation");
+
+    const result = await db
+      .delete(messages)
+      .where(
+        and(
+          eq(messages.id, messageId),
+          eq(messages.conversationId, conversationId),
+          eq(messages.senderId, userId),
+        ),
+      )
+      .returning({ id: messages.id });
+
+    if (result.length === 0) {
+      throw new NotFoundError("Message not found");
+    }
+  }
+
   // =======================================================================
   //  USER SEARCH
   // =======================================================================
@@ -1288,7 +1327,7 @@ export class CommunityService {
   /**
    * Search users by username or display name. Paginated by createdAt DESC.
    */
-  async searchUsers(options: { q: string; cursor?: string; limit: number }) {
+  async searchUsers(options: { q: string; cursor?: string; limit: number; userId?: string }) {
     const { q, cursor, limit } = options;
     const searchPattern = `%${q}%`;
 
@@ -1296,6 +1335,11 @@ export class CommunityService {
       sql`(${users.username} ILIKE ${searchPattern} OR ${users.displayName} ILIKE ${searchPattern})`,
       isNull(users.bannedAt),
     ];
+
+    // Exclude the current user from results
+    if (options.userId) {
+      conditions.push(ne(users.id, options.userId));
+    }
 
     if (cursor) {
       const decoded = decodeCursor(cursor);

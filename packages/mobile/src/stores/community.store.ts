@@ -294,7 +294,17 @@ export const useCommunityStore = create<CommunityState>((set, get) => ({
   updateGroup: async (id, input) => {
     const updated = await updateGroupApi(id, input);
     set((state) => ({
-      myGroups: state.myGroups.map((g) => (g.id === id ? { ...g, ...updated } : g)),
+      myGroups: state.myGroups.map((g) =>
+        g.id === id
+          ? {
+              ...g,
+              ...updated,
+              isMember: updated.isMember ?? g.isMember,
+              role: updated.role ?? g.role,
+              unreadCount: updated.unreadCount ?? g.unreadCount,
+            }
+          : g,
+      ),
     }));
     return updated as GroupWithMembership;
   },

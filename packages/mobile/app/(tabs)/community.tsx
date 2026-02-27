@@ -1508,17 +1508,18 @@ export default function CommunityScreen() {
       {/* ================================================================ */}
       {/* New Message Modal */}
       {/* ================================================================ */}
-      <Modal visible={showNewMessage} animationType="slide" transparent>
+      <Modal visible={showNewMessage} animationType="slide">
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.modalOverlay}
+          style={{ flex: 1, backgroundColor: colors.surface }}
         >
-          <Pressable style={styles.modalBackdrop} onPress={() => setShowNewMessage(false)} />
           <View
-            style={[
-              styles.modalSheet,
-              { paddingBottom: insets.bottom + spacing.md, backgroundColor: colors.surface },
-            ]}
+            style={{
+              flex: 1,
+              paddingTop: insets.top,
+              paddingBottom: insets.bottom,
+              paddingHorizontal: screenPadding.horizontal,
+            }}
           >
             {/* Modal header */}
             <View style={styles.modalHeader}>

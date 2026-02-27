@@ -68,6 +68,7 @@ export async function communityRoutes(fastify: FastifyInstance) {
       q: query.q,
       cursor: query.cursor,
       limit: query.limit,
+      userId: request.userId,
     });
 
     return reply.send({
@@ -387,4 +388,21 @@ export async function communityRoutes(fastify: FastifyInstance) {
 
     return reply.status(204).send();
   });
+
+  /**
+   * DELETE /community/conversations/:conversationId/messages/:messageId
+   * Delete a message (sender only).
+   */
+  fastify.delete(
+    "/community/conversations/:conversationId/messages/:messageId",
+    async (request, reply) => {
+      const { conversationId, messageId } = request.params as {
+        conversationId: string;
+        messageId: string;
+      };
+      await communityService.deleteMessage(request.userId, conversationId, messageId);
+
+      return reply.status(204).send();
+    },
+  );
 }

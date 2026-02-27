@@ -1,7 +1,7 @@
 import type { Message } from "@emovo/shared";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -12,13 +12,18 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { ActionSheet } from "../../src/components/ui";
+import type { ActionSheetItem } from "../../src/components/ui/ActionSheet";
 import {
   listMessagesApi,
   sendMessageApi,
   markConversationReadApi,
+  deleteMessageApi,
+  submitReportApi,
 } from "../../src/services/community.api";
 import { useAuthStore } from "../../src/stores/auth.store";
 import { useTheme } from "../../src/theme/ThemeContext";
@@ -53,6 +58,16 @@ function formatMessageTime(dateStr: string): string {
   });
 }
 
+const REPORT_REASONS = [
+  { key: "spam", label: "Spam", icon: "mail-outline" as const },
+  { key: "harassment", label: "Harassment", icon: "hand-left-outline" as const },
+  { key: "hate_speech", label: "Hate Speech", icon: "alert-outline" as const },
+  { key: "self_harm", label: "Self-Harm Concern", icon: "heart-outline" as const },
+  { key: "misinformation", label: "Misinformation", icon: "alert-circle-outline" as const },
+  { key: "inappropriate", label: "Inappropriate Content", icon: "eye-off-outline" as const },
+  { key: "other", label: "Other", icon: "ellipsis-horizontal-outline" as const },
+];
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -72,6 +87,11 @@ export default function ConversationScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [inputText, setInputText] = useState("");
+
+  // Action sheet state
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [actionSheetVisible, setActionSheetVisible] = useState(false);
+  const [reportSheetVisible, setReportSheetVisible] = useState(false);
 
   const flatListRef = useRef<FlatList<Message>>(null);
 
@@ -138,6 +158,86 @@ export default function ConversationScreen() {
   }, [inputText, id, isSending]);
 
   // ---------------------------------------------------------------------------
+  // Message actions
+  // ---------------------------------------------------------------------------
+
+  const handleDeleteMessage = useCallback(
+    (message: Message) => {
+      if (!id) return;
+      Alert.alert("Delete Message?", "This message will be permanently deleted.", [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteMessageApi(id, message.id);
+              setMessages((prev) => prev.filter((m) => m.id !== message.id));
+            } catch {
+              Alert.alert("Error", "Failed to delete message.");
+            }
+          },
+        },
+      ]);
+    },
+    [id],
+  );
+
+  const handleLongPress = useCallback((message: Message) => {
+    setSelectedMessage(message);
+    setActionSheetVisible(true);
+  }, []);
+
+  const messageActions = useMemo((): ActionSheetItem[] => {
+    if (!selectedMessage) return [];
+    const isMine = selectedMessage.senderId === user?.id;
+    const items: ActionSheetItem[] = [];
+
+    if (isMine) {
+      items.push({
+        label: "Delete",
+        icon: "trash-outline",
+        destructive: true,
+        onPress: () => handleDeleteMessage(selectedMessage),
+      });
+    } else {
+      items.push({
+        label: "Report",
+        icon: "flag-outline",
+        onPress: () => {
+          setActionSheetVisible(false);
+          setTimeout(() => setReportSheetVisible(true), 300);
+        },
+      });
+    }
+
+    return items;
+  }, [selectedMessage, user?.id, handleDeleteMessage]);
+
+  const reportActions = useMemo(
+    (): ActionSheetItem[] =>
+      REPORT_REASONS.map((r) => ({
+        label: r.label,
+        icon: r.icon,
+        onPress: async () => {
+          if (!selectedMessage) return;
+          try {
+            await submitReportApi({
+              targetType: "message",
+              targetId: selectedMessage.id,
+              reason: r.key,
+            });
+            Alert.alert("Report Submitted", "Thank you. We will review this report.");
+          } catch {
+            Alert.alert("Error", "Failed to submit report.");
+          }
+          setSelectedMessage(null);
+        },
+      })),
+    [selectedMessage],
+  );
+
+  // ---------------------------------------------------------------------------
   // Render helpers
   // ---------------------------------------------------------------------------
 
@@ -162,7 +262,9 @@ export default function ConversationScreen() {
       }
 
       return (
-        <View
+        <Pressable
+          onLongPress={() => handleLongPress(item)}
+          delayLongPress={400}
           style={[styles.messageRow, isMine ? styles.messageRowSent : styles.messageRowReceived]}
         >
           <View
@@ -197,10 +299,10 @@ export default function ConversationScreen() {
               {formatMessageTime(item.createdAt)}
             </Text>
           </View>
-        </View>
+        </Pressable>
       );
     },
-    [user?.id, messages, colors],
+    [user?.id, messages, colors, handleLongPress],
   );
 
   const keyExtractor = useCallback((item: Message) => item.id, []);
@@ -317,6 +419,27 @@ export default function ConversationScreen() {
           )}
         </Pressable>
       </View>
+
+      {/* Message action sheet */}
+      <ActionSheet
+        visible={actionSheetVisible}
+        onClose={() => {
+          setActionSheetVisible(false);
+          setSelectedMessage(null);
+        }}
+        actions={messageActions}
+      />
+
+      {/* Report reason picker */}
+      <ActionSheet
+        visible={reportSheetVisible}
+        onClose={() => {
+          setReportSheetVisible(false);
+          setSelectedMessage(null);
+        }}
+        actions={reportActions}
+        title="Why are you reporting this?"
+      />
     </KeyboardAvoidingView>
   );
 }
