@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { Textarea } from "@/components/ui/textarea";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/cn";
 import { getPublicName } from "@/lib/display-name";
 import { createReportApi } from "@/services/moderation.api";
@@ -147,12 +148,17 @@ export function PostCard({ post }: PostCardProps) {
           </Link>
 
           <div className="min-w-0 flex-1">
-            <Link
-              href={`/profile/${post.userId}`}
-              className="block text-[15px] font-bold text-text-primary hover:underline"
-            >
-              {post.author ? getPublicName(post.author) : "Anonymous"}
-            </Link>
+            <div className="flex items-center gap-1">
+              <Link
+                href={`/profile/${post.userId}`}
+                className="text-[15px] font-bold text-text-primary hover:underline"
+              >
+                {post.author ? getPublicName(post.author) : "Anonymous"}
+              </Link>
+              {post.author?.verificationTier && (
+                <VerifiedBadge tier={post.author.verificationTier} size={15} />
+              )}
+            </div>
             <p className="text-xs text-text-tertiary">
               {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
             </p>

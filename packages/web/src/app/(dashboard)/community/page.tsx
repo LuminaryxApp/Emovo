@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/cn";
 import { getPublicName } from "@/lib/display-name";
 import { searchUsersApi } from "@/services/community.api";
@@ -272,8 +273,11 @@ export default function CommunityPage() {
                     className="flex flex-col items-center gap-1.5 rounded-[var(--radius-md)] border border-border-default bg-card-bg p-3 transition-colors hover:bg-card-hover min-w-[100px]"
                   >
                     <Avatar name={getPublicName(user)} size="md" src={user.avatarBase64} />
-                    <span className="text-xs font-medium text-text-primary text-center line-clamp-1">
+                    <span className="flex items-center gap-1 text-xs font-medium text-text-primary text-center line-clamp-1">
                       {getPublicName(user)}
+                      {user.verificationTier && (
+                        <VerifiedBadge tier={user.verificationTier} size={12} />
+                      )}
                     </span>
                     {user.username && (
                       <span className="text-[10px] text-text-tertiary">@{user.username}</span>

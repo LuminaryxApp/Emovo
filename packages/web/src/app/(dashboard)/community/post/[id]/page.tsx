@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import { VerifiedBadge } from "@/components/ui/verified-badge";
 import { cn } from "@/lib/cn";
 import { getPublicName } from "@/lib/display-name";
 import { listCommentsApi, createCommentApi } from "@/services/community.api";
@@ -246,13 +247,16 @@ export default function PostDetailPage() {
                   </Link>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <Link
                         href={`/profile/${comment.userId}`}
                         className="truncate text-sm font-semibold text-text-primary hover:text-brand-green transition-colors"
                       >
                         {comment.author ? getPublicName(comment.author) : "User"}
                       </Link>
+                      {comment.author?.verificationTier && (
+                        <VerifiedBadge tier={comment.author.verificationTier} size={13} />
+                      )}
                       <span className="shrink-0 text-xs text-text-tertiary">
                         {formatDistanceToNow(new Date(comment.createdAt), {
                           addSuffix: true,
