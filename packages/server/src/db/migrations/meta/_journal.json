@@ -43,6 +43,13 @@
       "when": 1772200000000,
       "tag": "0006_increase_bio_length",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772300000000,
+      "tag": "0007_add_verification",
+      "breakpoints": true
     }
   ]
 }

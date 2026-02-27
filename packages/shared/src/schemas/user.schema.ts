@@ -90,6 +90,11 @@ export const updateProfileSchema = z.object({
   themePreference: z.enum(["light", "dark", "system"]).optional(),
 });
 
+export const setVerificationSchema = z.object({
+  tier: z.enum(["none", "verified", "official"]),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type SetVerificationInput = z.infer<typeof setVerificationSchema>;

@@ -27,6 +27,8 @@ export const users = pgTable("users", {
   reminderTime: varchar("reminder_time", { length: 5 }),
   themePreference: varchar("theme_preference", { length: 10 }).default("system").notNull(),
   isAdmin: boolean("is_admin").default(false).notNull(),
+  verificationTier: varchar("verification_tier", { length: 10 }).default("none").notNull(),
+  verifiedAt: timestamp("verified_at", { withTimezone: true }),
   bannedAt: timestamp("banned_at", { withTimezone: true }),
   banReason: text("ban_reason"),
   suspendedUntil: timestamp("suspended_until", { withTimezone: true }),

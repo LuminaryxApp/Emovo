@@ -1,7 +1,18 @@
-import { createReportSchema, resolveReportSchema, reportQuerySchema } from "@emovo/shared";
+import {
+  createReportSchema,
+  resolveReportSchema,
+  reportQuerySchema,
+  adminUserSearchSchema,
+  setVerificationSchema,
+} from "@emovo/shared";
+import { eq, and, sql, desc } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 
+import { db } from "../config/database.js";
+import { users } from "../db/schema/users.js";
 import { ModerationService } from "../services/moderation.service.js";
+import { NotFoundError } from "../utils/errors.js";
 
 export async function moderationRoutes(fastify: FastifyInstance) {
   const moderationService = new ModerationService();
@@ -107,6 +118,136 @@ export async function moderationRoutes(fastify: FastifyInstance) {
       await moderationService.unbanUser(id);
 
       return reply.status(204).send();
+    },
+  );
+
+  // =========================================================================
+  //  ADMIN USER MANAGEMENT
+  // =========================================================================
+
+  /**
+   * GET /admin/users
+   * Search and list users (admin only).
+   */
+  fastify.get(
+    "/admin/users",
+    { preHandler: [fastify.authenticate, fastify.requireAdmin] },
+    async (request, reply) => {
+      const query = adminUserSearchSchema.parse(request.query);
+      const { q, cursor, limit } = query;
+
+      const conditions: SQL[] = [];
+
+      if (q) {
+        const pattern = `%${q}%`;
+        conditions.push(
+          sql`(${users.displayName} ILIKE ${pattern} OR ${users.username} ILIKE ${pattern} OR ${users.email} ILIKE ${pattern})`,
+        );
+      }
+
+      if (cursor) {
+        try {
+          const parsed = JSON.parse(Buffer.from(cursor, "base64url").toString("utf-8"));
+          if (parsed.createdAt && parsed.id) {
+            conditions.push(
+              sql`(${users.createdAt}, ${users.id}) < (${parsed.createdAt}::timestamptz, ${parsed.id}::uuid)`,
+            );
+          }
+        } catch {
+          // Invalid cursor, ignore
+        }
+      }
+
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+      const rows = await db
+        .select({
+          id: users.id,
+          displayName: users.displayName,
+          username: users.username,
+          email: users.email,
+          verificationTier: users.verificationTier,
+          isAdmin: users.isAdmin,
+          bannedAt: users.bannedAt,
+          createdAt: users.createdAt,
+        })
+        .from(users)
+        .where(whereClause)
+        .orderBy(desc(users.createdAt), desc(users.id))
+        .limit(limit + 1);
+
+      const hasMore = rows.length > limit;
+      const pageRows = hasMore ? rows.slice(0, limit) : rows;
+
+      const nextCursor = hasMore
+        ? Buffer.from(
+            JSON.stringify({
+              createdAt: pageRows[pageRows.length - 1].createdAt.toISOString(),
+              id: pageRows[pageRows.length - 1].id,
+            }),
+          ).toString("base64url")
+        : null;
+
+      return reply.send({
+        data: pageRows.map((r) => ({
+          id: r.id,
+          displayName: r.displayName,
+          username: r.username,
+          email: r.email,
+          verificationTier: r.verificationTier,
+          isAdmin: r.isAdmin,
+          bannedAt: r.bannedAt?.toISOString() ?? null,
+          createdAt: r.createdAt.toISOString(),
+        })),
+        meta: { cursor: nextCursor },
+      });
+    },
+  );
+
+  /**
+   * PATCH /admin/users/:id/verification
+   * Set verification tier for a user (admin only).
+   */
+  fastify.patch(
+    "/admin/users/:id/verification",
+    { preHandler: [fastify.authenticate, fastify.requireAdmin] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const { tier } = setVerificationSchema.parse(request.body);
+
+      const [updated] = await db
+        .update(users)
+        .set({
+          verificationTier: tier,
+          verifiedAt: tier === "none" ? null : new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, id))
+        .returning({
+          id: users.id,
+          displayName: users.displayName,
+          username: users.username,
+          email: users.email,
+          verificationTier: users.verificationTier,
+          isAdmin: users.isAdmin,
+          bannedAt: users.bannedAt,
+          createdAt: users.createdAt,
+        });
+
+      if (!updated) throw new NotFoundError("User not found");
+
+      return reply.send({
+        data: {
+          id: updated.id,
+          displayName: updated.displayName,
+          username: updated.username,
+          email: updated.email,
+          verificationTier: updated.verificationTier,
+          isAdmin: updated.isAdmin,
+          bannedAt: updated.bannedAt?.toISOString() ?? null,
+          createdAt: updated.createdAt.toISOString(),
+        },
+      });
     },
   );
 }

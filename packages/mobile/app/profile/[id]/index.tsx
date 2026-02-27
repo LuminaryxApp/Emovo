@@ -18,6 +18,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Avatar } from "../../../src/components/ui";
+import { VerifiedBadge } from "../../../src/components/ui/VerifiedBadge";
 import { getPublicName } from "../../../src/lib/display-name";
 import { createConversationApi } from "../../../src/services/community.api";
 import {
@@ -378,7 +379,10 @@ export default function PublicProfileScreen() {
 
         {/* Profile info */}
         <Animated.View entering={FadeInDown.duration(400).delay(300)} style={styles.profileInfo}>
-          <Text style={[styles.displayName, { color: colors.text }]}>{displayName}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+            <Text style={[styles.displayName, { color: colors.text }]}>{displayName}</Text>
+            <VerifiedBadge tier={profile.verificationTier} size="lg" />
+          </View>
 
           {profile.username && (
             <Text style={[styles.username, { color: colors.textSecondary }]}>

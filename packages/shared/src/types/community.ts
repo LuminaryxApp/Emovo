@@ -1,3 +1,5 @@
+import type { VerificationTier } from "./user.js";
+
 export interface Post {
   id: string;
   userId: string;
@@ -18,6 +20,7 @@ export interface PostWithAuthor extends Post {
     displayName: string;
     username: string | null;
     showRealName: boolean;
+    verificationTier: VerificationTier;
   };
   isLiked: boolean;
 }
@@ -32,6 +35,7 @@ export interface Comment {
     displayName: string;
     username: string | null;
     showRealName: boolean;
+    verificationTier: VerificationTier;
   };
   createdAt: string;
   updatedAt: string;
@@ -62,6 +66,7 @@ export interface GroupMember {
   displayName: string;
   username: string | null;
   showRealName: boolean;
+  verificationTier: VerificationTier;
   role: "admin" | "moderator" | "member";
   joinedAt: string;
 }
@@ -137,5 +142,6 @@ export interface UserSearchResult {
   username: string | null;
   showRealName: boolean;
   avatarBase64: string | null;
+  verificationTier: VerificationTier;
   bio: string | null;
 }

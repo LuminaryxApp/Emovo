@@ -76,6 +76,7 @@ export class CommunityService {
         displayName: users.displayName,
         username: users.username,
         showRealName: users.showRealName,
+        verificationTier: users.verificationTier,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -90,6 +91,7 @@ export class CommunityService {
         displayName: author.displayName,
         username: author.username,
         showRealName: author.showRealName,
+        verificationTier: author.verificationTier,
       },
       isLiked: false,
     };
@@ -134,6 +136,7 @@ export class CommunityService {
         authorName: users.displayName,
         authorUsername: users.username,
         authorShowRealName: users.showRealName,
+        authorVerificationTier: users.verificationTier,
       })
       .from(posts)
       .innerJoin(users, eq(posts.userId, users.id))
@@ -170,6 +173,7 @@ export class CommunityService {
         displayName: row.authorName,
         username: row.authorUsername,
         showRealName: row.authorShowRealName,
+        verificationTier: row.authorVerificationTier,
       },
       isLiked: likedSet.has(row.id),
     }));
@@ -301,6 +305,7 @@ export class CommunityService {
         displayName: users.displayName,
         username: users.username,
         showRealName: users.showRealName,
+        verificationTier: users.verificationTier,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -326,6 +331,7 @@ export class CommunityService {
         displayName: author.displayName,
         username: author.username,
         showRealName: author.showRealName,
+        verificationTier: author.verificationTier,
       },
     };
   }
@@ -358,6 +364,7 @@ export class CommunityService {
         authorName: users.displayName,
         authorUsername: users.username,
         authorShowRealName: users.showRealName,
+        authorVerificationTier: users.verificationTier,
       })
       .from(comments)
       .innerJoin(users, eq(comments.userId, users.id))
@@ -380,6 +387,7 @@ export class CommunityService {
         displayName: row.authorName,
         username: row.authorUsername,
         showRealName: row.authorShowRealName,
+        verificationTier: row.authorVerificationTier,
       },
     }));
 
@@ -931,6 +939,7 @@ export class CommunityService {
         type: messages.type,
         createdAt: messages.createdAt,
         senderName: users.displayName,
+        senderVerificationTier: users.verificationTier,
       })
       .from(messages)
       .innerJoin(users, eq(messages.senderId, users.id))
@@ -948,7 +957,11 @@ export class CommunityService {
       content: row.content,
       type: row.type,
       createdAt: row.createdAt.toISOString(),
-      sender: { id: row.senderId, displayName: row.senderName },
+      sender: {
+        id: row.senderId,
+        displayName: row.senderName,
+        verificationTier: row.senderVerificationTier,
+      },
     }));
 
     const nextCursor = hasMore
@@ -1000,6 +1013,7 @@ export class CommunityService {
         displayName: users.displayName,
         username: users.username,
         showRealName: users.showRealName,
+        verificationTier: users.verificationTier,
       })
       .from(users)
       .where(eq(users.id, userId))
@@ -1035,7 +1049,11 @@ export class CommunityService {
       content: message.content,
       type: message.type,
       createdAt: message.createdAt.toISOString(),
-      sender: { id: userId, displayName: sender.displayName },
+      sender: {
+        id: userId,
+        displayName: sender.displayName,
+        verificationTier: sender.verificationTier,
+      },
     };
   }
 
@@ -1091,6 +1109,7 @@ export class CommunityService {
         username: users.username,
         showRealName: users.showRealName,
         avatarBase64: users.avatarBase64,
+        verificationTier: users.verificationTier,
         bio: users.bio,
         createdAt: users.createdAt,
       })
@@ -1108,6 +1127,7 @@ export class CommunityService {
       username: row.username,
       showRealName: row.showRealName,
       avatarBase64: row.avatarBase64,
+      verificationTier: row.verificationTier,
       bio: row.bio ?? null,
     }));
 

@@ -1,0 +1,2 @@
+ALTER TABLE users ADD COLUMN verification_tier VARCHAR(10) NOT NULL DEFAULT 'none';
+ALTER TABLE users ADD COLUMN verified_at TIMESTAMPTZ;

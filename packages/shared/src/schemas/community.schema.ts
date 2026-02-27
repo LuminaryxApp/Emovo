@@ -89,6 +89,12 @@ export const userSearchQuerySchema = z.object({
 });
 export type UserSearchQueryInput = z.infer<typeof userSearchQuerySchema>;
 
+export const adminUserSearchSchema = z.object({
+  q: z.string().max(100).optional(),
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;
 export type CreateGroupInput = z.infer<typeof createGroupSchema>;

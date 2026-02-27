@@ -16,6 +16,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Card, Avatar } from "../src/components/ui";
+import { VerifiedBadge } from "../src/components/ui/VerifiedBadge";
 import { getPublicName } from "../src/lib/display-name";
 import { useCommunityStore } from "../src/stores/community.store";
 import { moodEmojis } from "../src/theme";
@@ -124,9 +125,12 @@ export default function SearchScreen() {
                   >
                     <Avatar name={getPublicName(user)} size="md" />
                     <View style={styles.userInfo}>
-                      <Text style={[styles.userName, { color: colors.text }]} numberOfLines={1}>
-                        {getPublicName(user)}
-                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Text style={[styles.userName, { color: colors.text }]} numberOfLines={1}>
+                          {getPublicName(user)}
+                        </Text>
+                        <VerifiedBadge tier={user.verificationTier} size="sm" />
+                      </View>
                       {user.username && getPublicName(user) !== `@${user.username}` && (
                         <Text
                           style={[styles.userHandle, { color: colors.textTertiary }]}
@@ -165,9 +169,12 @@ export default function SearchScreen() {
                 <Pressable key={post.id} onPress={() => router.push(`/post/${post.id}`)}>
                   <Card variant="elevated" padding="md" style={styles.postCard}>
                     <View style={styles.postAuthorRow}>
-                      <Text style={[styles.postAuthorName, { color: colors.text }]}>
-                        {getPublicName(post.author)}
-                      </Text>
+                      <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        <Text style={[styles.postAuthorName, { color: colors.text }]}>
+                          {getPublicName(post.author)}
+                        </Text>
+                        <VerifiedBadge tier={post.author.verificationTier} size="sm" />
+                      </View>
                       {post.moodScore != null && (
                         <Text style={styles.postMoodEmoji}>
                           {moodEmojis[post.moodScore as MoodLevel] ?? ""}

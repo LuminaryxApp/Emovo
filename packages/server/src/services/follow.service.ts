@@ -15,6 +15,7 @@ interface PublicProfileResult {
   avatarBase64: string | null;
   bio: string | null;
   isPrivate: boolean;
+  verificationTier: string;
   followerCount: number;
   followingCount: number;
   followStatus: "none" | "following" | "pending" | "self";
@@ -27,6 +28,7 @@ interface FollowListItemResult {
   username: string | null;
   showRealName: boolean;
   avatarBase64: string | null;
+  verificationTier: string;
   isFollowing: boolean;
 }
 
@@ -43,6 +45,7 @@ export class FollowService {
         avatarBase64: users.avatarBase64,
         bio: users.bio,
         isPrivate: users.isPrivate,
+        verificationTier: users.verificationTier,
         createdAt: users.createdAt,
       })
       .from(users)
@@ -80,6 +83,7 @@ export class FollowService {
       avatarBase64: target.avatarBase64,
       bio: target.bio,
       isPrivate: target.isPrivate,
+      verificationTier: target.verificationTier,
       followerCount: counts.follower_count,
       followingCount: counts.following_count,
       followStatus,
@@ -181,6 +185,7 @@ export class FollowService {
         u.username,
         u.show_real_name,
         u.avatar_base64,
+        u.verification_tier,
         f.created_at,
         EXISTS(
           SELECT 1 FROM follows vf
@@ -207,6 +212,7 @@ export class FollowService {
         username: r.username as string | null,
         showRealName: r.show_real_name as boolean,
         avatarBase64: r.avatar_base64 as string | null,
+        verificationTier: r.verification_tier as string,
         isFollowing: r.is_following as boolean,
       })),
       nextCursor: hasMore ? (pageRows[pageRows.length - 1].created_at as Date).toISOString() : null,
@@ -227,6 +233,7 @@ export class FollowService {
         u.username,
         u.show_real_name,
         u.avatar_base64,
+        u.verification_tier,
         f.created_at,
         EXISTS(
           SELECT 1 FROM follows vf
@@ -253,6 +260,7 @@ export class FollowService {
         username: r.username as string | null,
         showRealName: r.show_real_name as boolean,
         avatarBase64: r.avatar_base64 as string | null,
+        verificationTier: r.verification_tier as string,
         isFollowing: r.is_following as boolean,
       })),
       nextCursor: hasMore ? (pageRows[pageRows.length - 1].created_at as Date).toISOString() : null,
@@ -276,7 +284,8 @@ export class FollowService {
         u.display_name,
         u.username,
         u.show_real_name,
-        u.avatar_base64
+        u.avatar_base64,
+        u.verification_tier
       FROM follows f
       INNER JOIN users u ON f.follower_id = u.id
       WHERE f.following_id = ${userId}
@@ -298,6 +307,7 @@ export class FollowService {
           username: r.username as string | null,
           showRealName: r.show_real_name as boolean,
           avatarBase64: r.avatar_base64 as string | null,
+          verificationTier: r.verification_tier as string,
           isFollowing: false,
         },
         createdAt: (r.created_at as Date).toISOString(),

@@ -16,6 +16,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Avatar } from "../../../src/components/ui";
+import { VerifiedBadge } from "../../../src/components/ui/VerifiedBadge";
 import { getPublicName } from "../../../src/lib/display-name";
 import { getFollowingApi, followUserApi, unfollowUserApi } from "../../../src/services/follow.api";
 import { useAuthStore } from "../../../src/stores/auth.store";
@@ -158,9 +159,12 @@ export default function FollowingScreen() {
           >
             <Avatar name={item.displayName} size="lg" uri={item.avatarBase64 ?? undefined} />
             <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: colors.text }]} numberOfLines={1}>
-                {getPublicName(item)}
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text style={[styles.userName, { color: colors.text }]} numberOfLines={1}>
+                  {getPublicName(item)}
+                </Text>
+                <VerifiedBadge tier={item.verificationTier} size="sm" />
+              </View>
               {item.username && (
                 <Text
                   style={[styles.userHandle, { color: colors.textSecondary }]}

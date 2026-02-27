@@ -1,3 +1,5 @@
+export type VerificationTier = "none" | "verified" | "official";
+
 export interface User {
   id: string;
   email: string;
@@ -14,6 +16,7 @@ export interface User {
   reminderTime: string | null;
   themePreference: string;
   isAdmin: boolean;
+  verificationTier: VerificationTier;
   bannedAt: string | null;
   suspendedUntil: string | null;
   createdAt: string;
@@ -43,6 +46,7 @@ export interface PublicProfile {
   avatarBase64: string | null;
   bio: string | null;
   isPrivate: boolean;
+  verificationTier: VerificationTier;
   followerCount: number;
   followingCount: number;
   followStatus: "none" | "following" | "pending" | "self";
@@ -55,6 +59,7 @@ export interface FollowListItem {
   username: string | null;
   showRealName: boolean;
   avatarBase64: string | null;
+  verificationTier: VerificationTier;
   isFollowing: boolean;
 }
 

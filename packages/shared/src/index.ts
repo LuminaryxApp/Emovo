@@ -10,6 +10,7 @@ export type {
   PublicProfile,
   FollowListItem,
   FollowRequest,
+  VerificationTier,
 } from "./types/user.js";
 export type {
   MoodEntry,
@@ -61,8 +62,14 @@ export {
   refreshTokenSchema,
   logoutSchema,
   updateProfileSchema,
+  setVerificationSchema,
 } from "./schemas/user.schema.js";
-export type { RegisterInput, LoginInput, UpdateProfileInput } from "./schemas/user.schema.js";
+export type {
+  RegisterInput,
+  LoginInput,
+  UpdateProfileInput,
+  SetVerificationInput,
+} from "./schemas/user.schema.js";
 
 export {
   createMoodSchema,
@@ -93,6 +100,7 @@ export {
   resolveReportSchema,
   reportQuerySchema,
   userSearchQuerySchema,
+  adminUserSearchSchema,
 } from "./schemas/community.schema.js";
 export type {
   CreatePostInput,

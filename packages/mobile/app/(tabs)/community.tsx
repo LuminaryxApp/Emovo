@@ -27,6 +27,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Card, Avatar, Badge, ActionSheet, type ActionSheetItem } from "../../src/components/ui";
+import { VerifiedBadge } from "../../src/components/ui/VerifiedBadge";
 import { getPublicName } from "../../src/lib/display-name";
 import { searchUsersApi, createConversationApi } from "../../src/services/community.api";
 import { getUnreadCountApi } from "../../src/services/notification.api";
@@ -655,9 +656,12 @@ export default function CommunityScreen() {
               >
                 <Avatar name={post.author.displayName} size="md" />
                 <View style={styles.postAuthorInfo}>
-                  <Text style={[styles.postAuthorName, { color: colors.text }]}>
-                    {getPublicName(post.author)}
-                  </Text>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Text style={[styles.postAuthorName, { color: colors.text }]}>
+                      {getPublicName(post.author)}
+                    </Text>
+                    <VerifiedBadge tier={post.author.verificationTier} size="md" />
+                  </View>
                   <Text style={[styles.postTimestamp, { color: colors.textTertiary }]}>
                     {formatRelativeTime(post.createdAt)}
                   </Text>
@@ -1504,9 +1508,12 @@ export default function CommunityScreen() {
                     >
                       <Avatar name={item.displayName} size="md" />
                       <View style={styles.conversationInfo}>
-                        <Text style={[styles.conversationName, { color: colors.text }]}>
-                          {getPublicName(item)}
-                        </Text>
+                        <View style={{ flexDirection: "row", alignItems: "center" }}>
+                          <Text style={[styles.conversationName, { color: colors.text }]}>
+                            {getPublicName(item)}
+                          </Text>
+                          <VerifiedBadge tier={item.verificationTier} size="sm" />
+                        </View>
                         {item.bio ? (
                           <Text
                             style={[styles.conversationLastMsg, { color: colors.textTertiary }]}

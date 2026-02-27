@@ -192,6 +192,14 @@ async function main() {
   const userTz = (user.timezone as string) || "UTC";
   console.log(`Found user: ${userId} (tz: ${userTz}, keyVer: ${keyVersion})`);
 
+  // Ensure admin has "official" verification tier
+  await sql`
+    UPDATE users
+    SET verification_tier = 'official', verified_at = NOW()
+    WHERE id = ${userId} AND verification_tier = 'none'
+  `;
+  console.log(`Set verification tier to "official" for admin account`);
+
   // Get default trigger IDs
   const defaultTriggers = await sql`
     SELECT id, name FROM triggers WHERE is_default = true AND user_id IS NULL

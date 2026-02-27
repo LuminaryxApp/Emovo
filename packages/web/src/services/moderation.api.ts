@@ -46,3 +46,29 @@ export async function getReportStatsApi() {
 export async function unbanUserApi(userId: string) {
   await api.post(`/moderation/users/${userId}/unban`);
 }
+
+// ── Admin User Management ────────────────────────────────────
+
+export interface AdminUser {
+  id: string;
+  displayName: string;
+  username: string | null;
+  email: string;
+  verificationTier: "none" | "verified" | "official";
+  isAdmin: boolean;
+  bannedAt: string | null;
+  createdAt: string;
+}
+
+export async function listUsersApi(params: { q?: string; cursor?: string; limit?: number }) {
+  const { data } = await api.get("/admin/users", { params });
+  return {
+    users: data.data as AdminUser[],
+    cursor: data.meta?.cursor ?? null,
+  };
+}
+
+export async function setVerificationApi(userId: string, tier: "none" | "verified" | "official") {
+  const { data } = await api.patch(`/admin/users/${userId}/verification`, { tier });
+  return data.data as AdminUser;
+}

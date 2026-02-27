@@ -17,8 +17,11 @@ import {
   AlertTriangle,
   UserX,
   Ban,
+  Users,
+  Search,
+  BadgeCheck,
 } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +30,14 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Modal } from "@/components/ui/modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { listReportsApi, resolveReportApi, getReportStatsApi } from "@/services/moderation.api";
+import {
+  listReportsApi,
+  resolveReportApi,
+  getReportStatsApi,
+  listUsersApi,
+  setVerificationApi,
+  type AdminUser,
+} from "@/services/moderation.api";
 import { useAuthStore } from "@/stores/auth.store";
 
 /* ------------------------------------------------------------------ */
@@ -75,8 +85,11 @@ function reasonLabel(reason: string) {
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
+type PageTab = "moderation" | "users";
+
 export default function AdminPage() {
   const isAdmin = useAuthStore((s) => s.user?.isAdmin);
+  const [pageTab, setPageTab] = useState<PageTab>("moderation");
 
   /* ---- data state ---- */
   const [allReports, setAllReports] = useState<ReportWithContext[]>([]);
@@ -191,114 +204,159 @@ export default function AdminPage() {
           <Shield size={20} className="text-brand-green" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Moderation</h1>
-          <p className="text-sm text-text-secondary">Review and act on reported content</p>
+          <h1 className="text-2xl font-bold text-text-primary">Admin Panel</h1>
+          <p className="text-sm text-text-secondary">Manage moderation and users</p>
         </div>
       </div>
 
-      {/* ============================================================ */}
-      {/*  Stats Overview                                              */}
-      {/* ============================================================ */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
-          icon={<Clock size={20} />}
-          count={counts.pending}
-          label="Pending"
-          color="amber"
-          loading={loading}
-        />
-        <StatCard
-          icon={<Eye size={20} />}
-          count={counts.reviewed}
-          label="Reviewed"
-          color="blue"
-          loading={loading}
-        />
-        <StatCard
-          icon={<CheckCircle size={20} />}
-          count={counts.actioned}
-          label="Actioned"
-          color="green"
-          loading={loading}
-        />
-        <StatCard
-          icon={<XCircle size={20} />}
-          count={counts.dismissed}
-          label="Dismissed"
-          color="gray"
-          loading={loading}
-        />
-      </div>
-
-      {/* ============================================================ */}
-      {/*  Filter Tabs                                                 */}
-      {/* ============================================================ */}
+      {/* ---- Top-level Tabs ---- */}
       <div className="border-b border-border-default">
-        <nav className="-mb-px flex gap-6" aria-label="Report status filter">
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.value;
-            return (
-              <button
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={`relative whitespace-nowrap pb-3 text-sm font-semibold transition-colors ${
-                  isActive ? "text-brand-green" : "text-text-tertiary hover:text-text-secondary"
-                }`}
-              >
-                {tab.label}
-                {tab.value === "pending" && counts.pending > 0 && (
-                  <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-bold text-white">
-                    {counts.pending}
-                  </span>
-                )}
-                {isActive && (
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-brand-green" />
-                )}
-              </button>
-            );
-          })}
+        <nav className="-mb-px flex gap-6">
+          <button
+            onClick={() => setPageTab("moderation")}
+            className={`relative flex items-center gap-2 whitespace-nowrap pb-3 text-sm font-semibold transition-colors ${
+              pageTab === "moderation"
+                ? "text-brand-green"
+                : "text-text-tertiary hover:text-text-secondary"
+            }`}
+          >
+            <Gavel size={16} />
+            Moderation
+            {pendingCountFromApi > 0 && (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-bold text-white">
+                {pendingCountFromApi}
+              </span>
+            )}
+            {pageTab === "moderation" && (
+              <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-brand-green" />
+            )}
+          </button>
+          <button
+            onClick={() => setPageTab("users")}
+            className={`relative flex items-center gap-2 whitespace-nowrap pb-3 text-sm font-semibold transition-colors ${
+              pageTab === "users"
+                ? "text-brand-green"
+                : "text-text-tertiary hover:text-text-secondary"
+            }`}
+          >
+            <Users size={16} />
+            Users
+            {pageTab === "users" && (
+              <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-brand-green" />
+            )}
+          </button>
         </nav>
       </div>
 
-      {/* ============================================================ */}
-      {/*  Report List                                                 */}
-      {/* ============================================================ */}
-      {loading ? (
-        <div className="space-y-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full" />
-          ))}
-        </div>
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          icon={<CheckCircle size={40} />}
-          title="No reports"
-          description={
-            activeTab === "all"
-              ? "There are no reports to display."
-              : `No ${activeTab} reports right now.`
-          }
-        />
-      ) : (
-        <div className="space-y-4 animate-stagger">
-          {filtered.map((report) => (
-            <ReportCard
-              key={report.id}
-              report={report}
-              onTakeAction={() => {
-                setResolveTarget(report);
-                setAdminNote("");
-              }}
+      {pageTab === "users" && <UsersPanel />}
+
+      {pageTab === "moderation" && (
+        <>
+          {/* ============================================================ */}
+          {/*  Stats Overview                                              */}
+          {/* ============================================================ */}
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <StatCard
+              icon={<Clock size={20} />}
+              count={counts.pending}
+              label="Pending"
+              color="amber"
+              loading={loading}
             />
-          ))}
-          {cursor && activeTab === "all" && (
-            <div className="flex justify-center pt-4">
-              <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>
-                {loadingMore ? "Loading..." : "Load More Reports"}
-              </Button>
+            <StatCard
+              icon={<Eye size={20} />}
+              count={counts.reviewed}
+              label="Reviewed"
+              color="blue"
+              loading={loading}
+            />
+            <StatCard
+              icon={<CheckCircle size={20} />}
+              count={counts.actioned}
+              label="Actioned"
+              color="green"
+              loading={loading}
+            />
+            <StatCard
+              icon={<XCircle size={20} />}
+              count={counts.dismissed}
+              label="Dismissed"
+              color="gray"
+              loading={loading}
+            />
+          </div>
+
+          {/* ============================================================ */}
+          {/*  Filter Tabs                                                 */}
+          {/* ============================================================ */}
+          <div className="border-b border-border-default">
+            <nav className="-mb-px flex gap-6" aria-label="Report status filter">
+              {TABS.map((tab) => {
+                const isActive = activeTab === tab.value;
+                return (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={`relative whitespace-nowrap pb-3 text-sm font-semibold transition-colors ${
+                      isActive ? "text-brand-green" : "text-text-tertiary hover:text-text-secondary"
+                    }`}
+                  >
+                    {tab.label}
+                    {tab.value === "pending" && counts.pending > 0 && (
+                      <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-bold text-white">
+                        {counts.pending}
+                      </span>
+                    )}
+                    {isActive && (
+                      <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-brand-green" />
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* ============================================================ */}
+          {/*  Report List                                                 */}
+          {/* ============================================================ */}
+          {loading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-32 w-full" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <EmptyState
+              icon={<CheckCircle size={40} />}
+              title="No reports"
+              description={
+                activeTab === "all"
+                  ? "There are no reports to display."
+                  : `No ${activeTab} reports right now.`
+              }
+            />
+          ) : (
+            <div className="space-y-4 animate-stagger">
+              {filtered.map((report) => (
+                <ReportCard
+                  key={report.id}
+                  report={report}
+                  onTakeAction={() => {
+                    setResolveTarget(report);
+                    setAdminNote("");
+                  }}
+                />
+              ))}
+              {cursor && activeTab === "all" && (
+                <div className="flex justify-center pt-4">
+                  <Button variant="secondary" onClick={loadMore} disabled={loadingMore}>
+                    {loadingMore ? "Loading..." : "Load More Reports"}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </>
       )}
 
       {/* ============================================================ */}
@@ -590,5 +648,180 @@ function ActionButton({
       {icon}
       {label}
     </button>
+  );
+}
+
+/* ================================================================== */
+/*  Verification Badge (web)                                           */
+/* ================================================================== */
+
+const TIER_META: Record<string, { label: string; color: string; bg: string }> = {
+  none: { label: "None", color: "text-text-tertiary", bg: "bg-gray-500/10" },
+  verified: { label: "Verified", color: "text-[#6F98B8]", bg: "bg-[#6F98B8]/10" },
+  official: { label: "Official", color: "text-brand-green", bg: "bg-brand-green/10" },
+};
+
+function VerificationBadgeWeb({ tier }: { tier: string }) {
+  if (tier === "none") return null;
+  const meta = TIER_META[tier] ?? TIER_META.none;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${meta.bg} ${meta.color}`}
+    >
+      <BadgeCheck size={12} />
+      {meta.label}
+    </span>
+  );
+}
+
+/* ================================================================== */
+/*  Users Panel                                                        */
+/* ================================================================== */
+
+function UsersPanel() {
+  const [usersList, setUsersList] = useState<AdminUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [userSearch, setUserSearch] = useState("");
+  const [userCursor, setUserCursor] = useState<string | null>(null);
+  const [loadingMoreUsers, setLoadingMoreUsers] = useState(false);
+  const [changingTier, setChangingTier] = useState<string | null>(null);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchUsers = useCallback((q?: string) => {
+    setLoadingUsers(true);
+    setUserCursor(null);
+    listUsersApi({ q: q || undefined, limit: 20 })
+      .then((r) => {
+        setUsersList(r.users);
+        setUserCursor(r.cursor);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingUsers(false));
+  }, []);
+
+  const loadMoreUsers = useCallback(() => {
+    if (!userCursor || loadingMoreUsers) return;
+    setLoadingMoreUsers(true);
+    listUsersApi({ q: userSearch || undefined, cursor: userCursor, limit: 20 })
+      .then((r) => {
+        setUsersList((prev) => [...prev, ...r.users]);
+        setUserCursor(r.cursor);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingMoreUsers(false));
+  }, [userCursor, loadingMoreUsers, userSearch]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const handleSearchChange = (value: string) => {
+    setUserSearch(value);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => fetchUsers(value), 300);
+  };
+
+  const handleTierChange = async (userId: string, newTier: "none" | "verified" | "official") => {
+    setChangingTier(userId);
+    try {
+      const updated = await setVerificationApi(userId, newTier);
+      setUsersList((prev) =>
+        prev.map((u) =>
+          u.id === userId ? { ...u, verificationTier: updated.verificationTier } : u,
+        ),
+      );
+    } catch {
+      // Failed to update
+    } finally {
+      setChangingTier(null);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Search */}
+      <div className="relative">
+        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+        <input
+          type="text"
+          placeholder="Search by name, username, or email..."
+          value={userSearch}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          className="w-full rounded-[var(--radius-md)] border border-border-default bg-input-bg py-2.5 pl-10 pr-4 text-sm text-text-primary placeholder:text-text-tertiary focus:border-brand-green focus:outline-none focus:ring-1 focus:ring-brand-green"
+        />
+      </div>
+
+      {/* User list */}
+      {loadingUsers ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      ) : usersList.length === 0 ? (
+        <EmptyState
+          icon={<Users size={40} />}
+          title="No users found"
+          description="Try a different search term."
+        />
+      ) : (
+        <div className="space-y-2">
+          {usersList.map((u) => (
+            <Card key={u.id} className="p-4">
+              <div className="flex items-center gap-4">
+                {/* User info */}
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-green/10 text-sm font-bold text-brand-green">
+                  {u.displayName.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="truncate text-sm font-semibold text-text-primary">
+                      {u.displayName}
+                    </span>
+                    <VerificationBadgeWeb tier={u.verificationTier} />
+                    {u.isAdmin && (
+                      <span className="rounded-full bg-brand-green/10 px-2 py-0.5 text-[10px] font-bold uppercase text-brand-green">
+                        Admin
+                      </span>
+                    )}
+                    {u.bannedAt && (
+                      <span className="rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-bold uppercase text-red-500">
+                        Banned
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-text-tertiary">
+                    {u.username && <span>@{u.username}</span>}
+                    <span>{u.email}</span>
+                  </div>
+                </div>
+
+                {/* Verification dropdown */}
+                <select
+                  value={u.verificationTier}
+                  disabled={changingTier === u.id}
+                  onChange={(e) =>
+                    handleTierChange(u.id, e.target.value as "none" | "verified" | "official")
+                  }
+                  className="rounded-[var(--radius-md)] border border-border-default bg-input-bg px-3 py-1.5 text-xs font-semibold text-text-primary focus:border-brand-green focus:outline-none focus:ring-1 focus:ring-brand-green disabled:opacity-50"
+                >
+                  <option value="none">No Badge</option>
+                  <option value="verified">✓ Verified</option>
+                  <option value="official">★ Official</option>
+                </select>
+              </div>
+            </Card>
+          ))}
+
+          {userCursor && (
+            <div className="flex justify-center pt-4">
+              <Button variant="secondary" onClick={loadMoreUsers} disabled={loadingMoreUsers}>
+                {loadingMoreUsers ? "Loading..." : "Load More Users"}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
