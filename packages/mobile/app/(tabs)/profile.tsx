@@ -24,6 +24,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Card, Avatar, Badge, Divider } from "../../src/components/ui";
+import { VerifiedBadge } from "../../src/components/ui/VerifiedBadge";
 import {
   SUPPORTED_LANGUAGES,
   changeLanguage,
@@ -520,9 +521,21 @@ export default function ProfileScreen() {
                 <Ionicons name="camera" size={16} color={colors.textInverse} />
               </View>
             </Pressable>
-            <Text style={[styles.name, { color: colors.textInverse }]}>
-              {user?.displayName || "User"}
-            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 4,
+              }}
+            >
+              <Text style={[styles.name, { color: colors.textInverse }]}>
+                {user?.displayName || "User"}
+              </Text>
+              {user?.verificationTier && user.verificationTier !== "none" && (
+                <VerifiedBadge tier={user.verificationTier} size="lg" />
+              )}
+            </View>
             {user?.username ? <Text style={styles.username}>@{user.username}</Text> : null}
             <Text style={styles.email}>{user?.email || ""}</Text>
             {user?.bio ? <Text style={styles.bio}>{user.bio}</Text> : null}

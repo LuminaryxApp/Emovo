@@ -492,6 +492,7 @@ export class CommunityService {
       memberCount: row.memberCount,
       createdBy: row.createdBy,
       createdAt: row.createdAt.toISOString(),
+      isMember: true,
       role: row.role,
       unreadCount: 0,
     }));

@@ -14,7 +14,6 @@ import {
 import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { MoodBarChart } from "../../src/components/charts/MoodBarChart";
 import { MoodLineChart } from "../../src/components/charts/MoodLineChart";
 import { PeriodSelector } from "../../src/components/charts/PeriodSelector";
 import { TriggerPieChart } from "../../src/components/charts/TriggerPieChart";
@@ -336,8 +335,66 @@ export default function InsightsScreen() {
               </LinearGradient>
             </Animated.View>
 
+            {/* ── AI Insights ─────────────────────────────────── */}
+            {computedInsights.length > 0 && (
+              <Animated.View
+                entering={FadeInDown.delay(300).springify()}
+                style={styles.insightsSection}
+              >
+                <View style={styles.insightsHeader}>
+                  <View
+                    style={[styles.sectionIconCircle, { backgroundColor: colors.primaryMuted }]}
+                  >
+                    <Ionicons name="sparkles-outline" size={16} color={colors.primary} />
+                  </View>
+                  <View>
+                    <Text style={[styles.insightsTitle, { color: colors.text }]}>
+                      {t("insights.aiInsights")}
+                    </Text>
+                    <Text style={[styles.insightsSubtitle, { color: colors.textSecondary }]}>
+                      {t("insights.aiInsightsSubtitle")}
+                    </Text>
+                  </View>
+                </View>
+
+                {computedInsights.map((insight, index) => (
+                  <Animated.View
+                    key={insight.title}
+                    entering={FadeInDown.delay(350 + index * 80).springify()}
+                  >
+                    <View style={[styles.insightCard, { backgroundColor: colors.cardBackground }]}>
+                      <LinearGradient
+                        colors={[...insight.gradientColors]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 0, y: 1 }}
+                        style={styles.insightAccentBar}
+                      />
+                      <View style={styles.insightBody}>
+                        <View
+                          style={[
+                            styles.insightIconCircle,
+                            { backgroundColor: insight.color + "18" },
+                          ]}
+                        >
+                          <Ionicons name={insight.icon} size={iconSizes.sm} color={insight.color} />
+                        </View>
+                        <View style={styles.insightTextWrap}>
+                          <Text style={[styles.insightTitle, { color: colors.text }]}>
+                            {insight.title}
+                          </Text>
+                          <Text style={[styles.insightDesc, { color: colors.textSecondary }]}>
+                            {insight.description}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </Animated.View>
+                ))}
+              </Animated.View>
+            )}
+
             {/* ── Mood Distribution ──────────────────────────── */}
-            <Animated.View entering={FadeInDown.delay(300).springify()}>
+            <Animated.View entering={FadeInDown.delay(500).springify()}>
               <View style={[styles.sectionCard, { backgroundColor: colors.cardBackground }]}>
                 <View style={styles.sectionHeader}>
                   <View
@@ -376,21 +433,6 @@ export default function InsightsScreen() {
               </View>
             </Animated.View>
 
-            {/* ── Mood Distribution Chart ─────────────────────── */}
-            <Animated.View entering={FadeInDown.delay(400).springify()} style={styles.chartSection}>
-              <MoodBarChart distribution={summary.moodDistribution} />
-            </Animated.View>
-
-            {/* ── Mood Trend Chart ────────────────────────────── */}
-            {trend && trend.dataPoints.length >= 2 && (
-              <Animated.View
-                entering={FadeInDown.delay(500).springify()}
-                style={styles.chartSection}
-              >
-                <MoodLineChart dataPoints={trend.dataPoints} period={period} />
-              </Animated.View>
-            )}
-
             {/* ── Triggers Chart ──────────────────────────────── */}
             {triggers && triggers.length > 0 && (
               <Animated.View
@@ -401,61 +443,13 @@ export default function InsightsScreen() {
               </Animated.View>
             )}
 
-            {/* ── AI Insights ─────────────────────────────────── */}
-            {computedInsights.length > 0 && (
+            {/* ── Mood Trend Chart ────────────────────────────── */}
+            {trend && trend.dataPoints.length >= 2 && (
               <Animated.View
                 entering={FadeInDown.delay(700).springify()}
-                style={styles.insightsSection}
+                style={styles.chartSection}
               >
-                <View style={styles.insightsHeader}>
-                  <View
-                    style={[styles.sectionIconCircle, { backgroundColor: colors.primaryMuted }]}
-                  >
-                    <Ionicons name="sparkles-outline" size={16} color={colors.primary} />
-                  </View>
-                  <View>
-                    <Text style={[styles.insightsTitle, { color: colors.text }]}>
-                      {t("insights.aiInsights")}
-                    </Text>
-                    <Text style={[styles.insightsSubtitle, { color: colors.textSecondary }]}>
-                      {t("insights.aiInsightsSubtitle")}
-                    </Text>
-                  </View>
-                </View>
-
-                {computedInsights.map((insight, index) => (
-                  <Animated.View
-                    key={insight.title}
-                    entering={FadeInDown.delay(750 + index * 80).springify()}
-                  >
-                    <View style={[styles.insightCard, { backgroundColor: colors.cardBackground }]}>
-                      <LinearGradient
-                        colors={[...insight.gradientColors]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 0, y: 1 }}
-                        style={styles.insightAccentBar}
-                      />
-                      <View style={styles.insightBody}>
-                        <View
-                          style={[
-                            styles.insightIconCircle,
-                            { backgroundColor: insight.color + "18" },
-                          ]}
-                        >
-                          <Ionicons name={insight.icon} size={iconSizes.sm} color={insight.color} />
-                        </View>
-                        <View style={styles.insightTextWrap}>
-                          <Text style={[styles.insightTitle, { color: colors.text }]}>
-                            {insight.title}
-                          </Text>
-                          <Text style={[styles.insightDesc, { color: colors.textSecondary }]}>
-                            {insight.description}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  </Animated.View>
-                ))}
+                <MoodLineChart dataPoints={trend.dataPoints} period={period} />
               </Animated.View>
             )}
 

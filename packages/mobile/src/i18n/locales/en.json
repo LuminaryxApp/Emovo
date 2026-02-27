@@ -277,7 +277,9 @@
     "chatWithMembers": "Chat with group members",
     "groupChatError": "Could not open group chat. Please try again.",
     "publicGroup": "Public Group",
-    "privateGroup": "Private Group"
+    "privateGroup": "Private Group",
+    "newMessage": "New Message",
+    "searchUsers": "Search users..."
   },
   "charts": {
     "moodDistribution": "MOOD DISTRIBUTION",
